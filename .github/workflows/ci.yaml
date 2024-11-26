@@ -1,0 +1,33 @@
+name: Run Continuous Integration Backend Green Env
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'development'
+  pull_request:
+    branches:
+      - 'main'
+      - 'development'
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    name: 'Run unit test'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.23
+      - name: Run unit test
+        run: go test -v ./...
+  build:
+    runs-on: ubuntu-latest
+    name: 'Run golang build'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.23
+      - name: test build golang
+        run: go build -o ./build/main .
