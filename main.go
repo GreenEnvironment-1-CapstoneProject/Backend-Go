@@ -1,6 +1,7 @@
 package main
 
 import (
+	"greenenvironment/configs"
 	_ "greenenvironment/docs"
 
 	"github.com/labstack/echo/v4"
@@ -26,11 +27,12 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	// cfg := configs.InitConfig()
+	cfg := configs.InitConfig()
+
 	// db := databases.InitDB(*cfg)
 
 	e := echo.New()
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
-	e.Logger.Fatal(e.Start(":8000"))
+	e.Logger.Fatal(e.Start(cfg.APP_PORT))
 }
