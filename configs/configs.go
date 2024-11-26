@@ -1,11 +1,16 @@
 package configs
 
 import (
+	"log"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type GEConfig struct {
+	APP_PORT string
+
 	DB_HOST     string
 	DB_PORT     int
 	DB_USER     string
@@ -28,7 +33,15 @@ type OpenAi struct {
 }
 
 func InitConfig() *GEConfig {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+		panic("Failed loading .env file")
+	}
+
 	var res = new(GEConfig)
+
+	res.APP_PORT = os.Getenv("APP_PORT")
 
 	res.DB_HOST = os.Getenv("DB_HOST")
 	res.DB_PORT, _ = strconv.Atoi(os.Getenv("DB_PORT"))
