@@ -5,8 +5,17 @@ import (
 	_ "greenenvironment/docs"
 	"greenenvironment/helper"
 
+	UserController "greenenvironment/features/users/controller"
+	UserRepository "greenenvironment/features/users/repository"
+	UserService "greenenvironment/features/users/service"
+
+	"greenenvironment/routes"
+	"greenenvironment/utils/databases"
+
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -30,12 +39,27 @@ import (
 // @name Authorization
 func main() {
 	cfg := configs.InitConfig()
+	db, err := databases.InitDB(*cfg)
+	if err != nil {
+		logrus.Error("terjadi kesalahan pada database, error:", err.Error())
+	}
+	databases.Migrate(db)
+	jwt := helper.NewJWT(cfg.JWT_Secret)
 
 	// db := databases.InitDB(*cfg)
 
 	e := echo.New()
 	e.Validator = &helper.CustomValidator{Validator: validator.New()}
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+	}))
 
+	userRepo := UserRepository.NewUserRepository(db)
+	userService := UserService.NewUserService(userRepo, jwt)
+	UserController := UserController.NewUserController(userService, jwt)
+
+	routes.RouteUser(e, UserController)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
 }

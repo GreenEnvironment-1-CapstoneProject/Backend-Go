@@ -1,5 +1,7 @@
 package helper
 
+// Response represents the structure for API responses
+// @Description Standard API response format
 type Response struct {
 	Status  bool        `json:"status"`
 	Message string      `json:"message"`

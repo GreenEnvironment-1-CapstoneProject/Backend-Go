@@ -1,4 +1,173 @@
+basePath: /api/v1
+definitions:
+  controller.UserLoginRequest:
+    properties:
+      'email validate:':
+        type: string
+      password:
+        type: string
+    required:
+    - password
+    type: object
+  controller.UserLoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  controller.UserRegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  controller.UserRegisterResponse:
+    properties:
+      address:
+        type: string
+      avatar_url:
+        type: string
+      coin:
+        type: integer
+      email:
+        type: string
+      exp:
+        type: integer
+      gender:
+        type: string
+      id:
+        type: string
+      is_membership:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      username:
+        type: string
+    type: object
+  helper.Response:
+    description: Standard API response format
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
+host: https://greenenvironment.my.id
 info:
-  contact: {}
-paths: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server Swagger server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: capstone project green environment
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and generate JWT token
+      parameters:
+      - description: User login payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.UserLoginResponse'
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: User login
+      tags:
+      - Users
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account in the system
+      parameters:
+      - description: User registration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UserRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.UserRegisterResponse'
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Register a new user
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
