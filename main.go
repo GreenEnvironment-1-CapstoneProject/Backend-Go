@@ -5,6 +5,9 @@ import (
 	_ "greenenvironment/docs"
 	"greenenvironment/helper"
 
+	AdminContoller "greenenvironment/features/admin/controller"
+	AdminRepository "greenenvironment/features/admin/repository"
+	AdminService "greenenvironment/features/admin/service"
 	UserController "greenenvironment/features/users/controller"
 	UserRepository "greenenvironment/features/users/repository"
 	UserService "greenenvironment/features/users/service"
@@ -43,10 +46,9 @@ func main() {
 	if err != nil {
 		logrus.Error("terjadi kesalahan pada database, error:", err.Error())
 	}
+
 	databases.Migrate(db)
 	jwt := helper.NewJWT(cfg.JWT_Secret)
-
-	// db := databases.InitDB(*cfg)
 
 	e := echo.New()
 	e.Validator = &helper.CustomValidator{Validator: validator.New()}
@@ -57,9 +59,14 @@ func main() {
 
 	userRepo := UserRepository.NewUserRepository(db)
 	userService := UserService.NewUserService(userRepo, jwt)
-	UserController := UserController.NewUserController(userService, jwt)
+	userController := UserController.NewUserController(userService, jwt)
 
-	routes.RouteUser(e, UserController)
+	adminRepo := AdminRepository.NewAdminRepository(db)
+	adminService := AdminService.NewAdminService(adminRepo, jwt)
+	adminController := AdminContoller.NewAdminController(adminService, jwt)
+
+	routes.RouteUser(e, userController)
+	routes.RouteAdmin(e, adminController, *cfg)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
 }
