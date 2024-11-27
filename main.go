@@ -3,7 +3,9 @@ package main
 import (
 	"greenenvironment/configs"
 	_ "greenenvironment/docs"
+	"greenenvironment/helper"
 
+	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
@@ -32,6 +34,7 @@ func main() {
 	// db := databases.InitDB(*cfg)
 
 	e := echo.New()
+	e.Validator = &helper.CustomValidator{Validator: validator.New()}
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
