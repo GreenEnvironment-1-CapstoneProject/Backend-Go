@@ -1,12 +1,55 @@
 basePath: /api/v1
 definitions:
-  controller.UserLoginRequest:
+  controller.AdminInfoResponse:
     properties:
-      'email validate:':
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  controller.AdminLoginRequest:
+    properties:
+      email:
         type: string
       password:
         type: string
     required:
+    - email
+    - password
+    type: object
+  controller.AdminLoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  controller.AdminUpdateRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - username
+    type: object
+  controller.UserLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
     - password
     type: object
   controller.UserLoginResponse:
@@ -75,6 +118,187 @@ info:
   title: capstone project green environment
   version: "1.0"
 paths:
+  /admin:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an admin account from the system
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Delete successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete admin account
+      tags:
+      - Admin
+    get:
+      consumes:
+      - application/json
+      description: Get admin details based on the JWT token provided
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Admin data retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.AdminInfoResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Retrieve admin details
+      tags:
+      - Admin
+    put:
+      consumes:
+      - application/json
+      description: Update admin details such as name, username, email, or password
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Admin update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.AdminUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update admin profile
+      tags:
+      - Admin
+  /admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate admin and generate JWT token
+      parameters:
+      - description: Admin login payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.AdminLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.AdminLoginResponse'
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Admin login
+      tags:
+      - Admin
   /login:
     post:
       consumes:

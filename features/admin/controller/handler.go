@@ -6,7 +6,7 @@ import (
 	"greenenvironment/helper"
 	"net/http"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type AdminController struct {
@@ -21,6 +21,17 @@ func NewAdminController(u admin.AdminServiceInterface, j helper.JWTInterface) ad
 	}
 }
 
+// Login Admin
+// @Summary      Admin login
+// @Description  Authenticate admin and generate JWT token
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.AdminLoginRequest  true  "Admin login payload"
+// @Success      200      {object}  helper.Response{data=AdminLoginResponse} "Login successful"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /admin/login [post]
 func (h *AdminController) Login(c echo.Context) error {
 
 	var AdminLoginRequest AdminLoginRequest
@@ -49,6 +60,20 @@ func (h *AdminController) Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, "login successfully", response))
 
 }
+
+// Update Admin
+// @Summary      Update admin profile
+// @Description  Update admin details such as name, username, email, or password
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string                         true  "Bearer token"
+// @Param        request        body      controller.AdminUpdateRequest  true  "Admin update payload"
+// @Success      200            {object}  helper.Response{data=string}   "Update successful"
+// @Failure      400            {object}  helper.Response{data=string}   "Invalid input or validation error"
+// @Failure      401            {object}  helper.Response{data=string}   "Unauthorized"
+// @Failure      500            {object}  helper.Response{data=string}   "Internal server error"
+// @Router       /admin [put]
 func (h *AdminController) Update(c echo.Context) error {
 
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
@@ -88,6 +113,17 @@ func (h *AdminController) Update(c echo.Context) error {
 	return c.JSON(http.StatusOK, helper.FormatResponse(true, "update admin successfully", nil))
 
 }
+
+// Delete Admin
+// @Summary      Delete admin account
+// @Description  Remove an admin account from the system
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string                        true  "Bearer token"
+// @Success      200            {object}  helper.Response{data=string}  "Delete successful"
+// @Failure      500            {object}  helper.Response{data=string}  "Internal server error"
+// @Router       /admin [delete]
 func (h *AdminController) Delete(c echo.Context) error {
 	admin := c.Get("admin").(admin.Admin)
 	err := h.s.Delete(admin)
@@ -99,6 +135,17 @@ func (h *AdminController) Delete(c echo.Context) error {
 
 }
 
+// Get Admin Data
+// @Summary      Retrieve admin details
+// @Description  Get admin details based on the JWT token provided
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string                          true  "Bearer token"
+// @Success      200            {object}  helper.Response{data=AdminInfoResponse} "Admin data retrieved successfully"
+// @Failure      401            {object}  helper.Response{data=string}    "Unauthorized"
+// @Failure      500            {object}  helper.Response{data=string}    "Internal server error"
+// @Router       /admin [get]
 func (h *AdminController) GetAdminData(c echo.Context) error {
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
