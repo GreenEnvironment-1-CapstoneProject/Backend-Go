@@ -20,6 +20,11 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
+func ValidateEmail(email string) bool {
+	regex := regexp.MustCompile(`^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$`)
+	return regex.MatchString(email)
+}
+
 func IsValidInput(input string) bool {
 	trimmed := strings.TrimSpace(input)
 	if len(trimmed) == 0 {
@@ -44,4 +49,10 @@ func IsValidInput(input string) bool {
 func ValidateUsername(username string) bool {
 	trimmed := strings.TrimSpace(username)
 	return len(trimmed) >= 6 && IsValidInput(trimmed)
+}
+
+func ValidatePhone(phone string) bool {
+	trimmed := strings.TrimSpace(phone)
+	regex := regexp.MustCompile(`^08\d{8,11}$`)
+	return regex.MatchString(trimmed)
 }
