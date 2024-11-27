@@ -20,22 +20,6 @@ func NewUserService(data users.UserRepoInterface, jwt helper.JWTInterface) users
 }
 
 func (s *UserService) Register(user users.User) (users.User, error) {
-	switch {
-	case user.Email == "":
-		return users.User{}, constant.ErrEmptyEmailRegister
-	case user.Password == "":
-		return users.User{}, constant.ErrEmptyPasswordRegister
-	case user.Name == "":
-		return users.User{}, constant.ErrEmptyNameRegister
-	}
-
-	user.Email = strings.ToLower(user.Email)
-
-	isEmailValid := helper.ValidateEmail(user.Email)
-	if !isEmailValid {
-		return users.User{}, constant.ErrInvalidEmail
-	}
-
 	hashedPassword, err := helper.HashPassword(user.Password)
 	if err != nil {
 		return users.User{}, err
@@ -52,15 +36,7 @@ func (s *UserService) Register(user users.User) (users.User, error) {
 	return createdUser, nil
 }
 
-
 func (s *UserService) Login(user users.User) (users.UserLogin, error) {
-	if user.Email == "" || user.Password == "" {
-		return users.UserLogin{}, constant.ErrEmptyLogin
-	}
-	isEmailValid := helper.ValidateEmail(user.Email)
-	if !isEmailValid {
-		return users.UserLogin{}, constant.ErrInvalidEmail
-	}
 	user.Email = strings.ToLower(user.Email)
 
 	userData, err := s.userRepo.Login(user)
@@ -69,7 +45,6 @@ func (s *UserService) Login(user users.User) (users.UserLogin, error) {
 	}
 
 	var UserLogin helper.UserJWT
-
 	UserLogin.ID = userData.ID
 	UserLogin.Name = userData.Name
 	UserLogin.Email = userData.Email

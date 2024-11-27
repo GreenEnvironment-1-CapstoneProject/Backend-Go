@@ -21,53 +21,70 @@ func NewUserController(u users.UserServiceInterface, j helper.JWTInterface) user
 	}
 }
 
-func (h *UserHandler) Register() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var UserRegisterRequest UserRegisterRequest
+func (h *UserHandler) Register(c echo.Context) error {
+	var UserRegisterRequest UserRegisterRequest
 
-		err := c.Bind(&UserRegisterRequest)
-		if err != nil {
-			err, message := helper.HandleEchoError(err)
-			return c.JSON(err, helper.FormatResponse(false, message, nil))
-		}
+	err := c.Bind(&UserRegisterRequest)
+	if err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+	}
 
-		user := users.User{
+	if err := c.Validate(UserRegisterRequest); err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+	}
+
+	user := users.User{
 			Name:     UserRegisterRequest.Name,
 			Email:    UserRegisterRequest.Email,
 			Password: UserRegisterRequest.Password,
-		}
-
-		createdUser, err := h.userService.Register(user)
-		if err != nil {
-			return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
-		}
-
-		return c.JSON(http.StatusCreated, helper.FormatResponse(true, constant.UserSuccessRegister, createdUser))
 	}
+
+	createdUser, err := h.userService.Register(user)
+	if err != nil {
+			return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	userResponse := UserRegisterResponse{
+			ID:           createdUser.ID,
+			Username:     createdUser.Username,
+			Name:         createdUser.Name,
+			Email:        createdUser.Email,
+			Address:      createdUser.Address,
+			Gender:       createdUser.Gender,
+			Phone:        createdUser.Phone,
+			Exp:          createdUser.Exp,
+			Coin:         createdUser.Coin,
+			AvatarURL:    createdUser.AvatarURL,
+			IsMembership: createdUser.IsMembership,
+	}
+
+	return c.JSON(http.StatusCreated, helper.FormatResponse(true, constant.UserSuccessRegister, userResponse))
 }
 
-func (h *UserHandler) Login() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var UserLoginRequest UserLoginRequest
 
-		err := c.Bind(&UserLoginRequest)
-		if err != nil {
-			err, message := helper.HandleEchoError(err)
-			return c.JSON(err, helper.FormatResponse(false, message, nil))
-		}
+func (h *UserHandler) Login(c echo.Context) error {
+	var UserLoginRequest UserLoginRequest
 
-		user := users.User{
-			Email:    UserLoginRequest.Email,
-			Password: UserLoginRequest.Password,
-		}
-
-		userLogin, err := h.userService.Login(user)
-		if err != nil {
-			return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
-		}
-
-		var response UserLoginResponse
-		response.Token = userLogin.Token
-		return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessLogin, response))
+	err := c.Bind(&UserLoginRequest)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
 	}
+
+	if err := c.Validate(UserLoginRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+	}
+
+	user := users.User{
+		Email:    UserLoginRequest.Email,
+		Password: UserLoginRequest.Password,
+	}
+
+	userLogin, err := h.userService.Login(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	var response UserLoginResponse
+	response.Token = userLogin.Token
+	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessLogin, response))
 }

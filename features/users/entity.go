@@ -40,6 +40,6 @@ type UserServiceInterface interface {
 }
 
 type UserControllerInterface interface {
-	Register() echo.HandlerFunc
-	Login() echo.HandlerFunc
+	Register(c echo.Context) error
+	Login(c echo.Context) error
 }

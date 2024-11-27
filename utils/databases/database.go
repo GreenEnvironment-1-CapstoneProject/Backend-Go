@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDB(c configs.GEConfig, ) (*gorm.DB, error) {
+func InitDB(c configs.GEConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		c.DB_USER,
 		c.DB_PASSWORD,

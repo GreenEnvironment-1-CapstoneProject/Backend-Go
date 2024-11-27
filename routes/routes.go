@@ -8,6 +8,6 @@ import (
 )
 
 func RouteUser(e *echo.Echo, uh users.UserControllerInterface) {
-	e.POST(route.UserRegister, uh.Register())
-	e.POST(route.UserLogin, uh.Login())
+	e.POST(route.UserRegister, uh.Register)
+	e.POST(route.UserLogin, uh.Login)
 }
