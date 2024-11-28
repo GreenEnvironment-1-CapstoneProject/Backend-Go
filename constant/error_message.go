@@ -45,3 +45,10 @@ var ErrGenerateJWT = errors.New("failed to generate jwt token")
 var ErrValidateJWT = errors.New("failed to validate jwt token")
 
 var ErrHashPassword = errors.New("failed to hash password")
+
+// Users By Admin
+var ErrUserDataEmpty = errors.New("User Data Empty")
+var ErrGetUser = errors.New("Failed to get user")
+var ErrUserNotFound = errors.New("User Not Found")
+var ErrUserIDNotFound = errors.New("User ID Not Found")
+var ErrEditUserByAdmin = errors.New("Error, Update at least one field")

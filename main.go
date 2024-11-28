@@ -65,7 +65,7 @@ func main() {
 	adminService := AdminService.NewAdminService(adminRepo, jwt)
 	adminController := AdminContoller.NewAdminController(adminService, jwt)
 
-	routes.RouteUser(e, userController)
+	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))

@@ -2,7 +2,7 @@ package route
 
 const BasePath = "/api/v1"
 
-const UserPath = BasePath + "/user"
+const UserPath = BasePath + "/users"
 const UserLogin = UserPath + "/login"
 const UserRegister = UserPath + "/register"
 
