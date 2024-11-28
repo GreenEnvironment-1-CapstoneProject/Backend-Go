@@ -17,7 +17,7 @@ type User struct {
 	Exp          int    `gorm:"type:int;not null;column:exp"`
 	Coin         int    `gorm:"type:int;not nullcolumn:coin"`
 	AvatarURL    string `gorm:"type:varchar(255);column:avatar_url"`
-	IsMembership bool   `gorm:"type:boolean;column:ismembership;default:false"`
+	IsMembership bool   `gorm:"type:boolean;column:is_membership;default:false"`
 }
 
 func (u *User) TableName() string {
