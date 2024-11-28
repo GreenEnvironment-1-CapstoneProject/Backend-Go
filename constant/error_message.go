@@ -46,6 +46,9 @@ var ErrValidateJWT = errors.New("failed to validate jwt token")
 
 var ErrHashPassword = errors.New("failed to hash password")
 
+var ErrSizeFile = errors.New("file size exceeds limit")
+var ErrContentTypeFile = errors.New("only image allowed")
+
 // Users By Admin
 var ErrUserDataEmpty = errors.New("User Data Empty")
 var ErrGetUser = errors.New("Failed to get user")

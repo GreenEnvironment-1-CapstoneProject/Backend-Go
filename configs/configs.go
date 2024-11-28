@@ -19,8 +19,15 @@ type GEConfig struct {
 
 	JWT_Secret string
 
-	Midtrans MidtransConfig
-	OpenAi   OpenAi
+	Cloudinary CloudinaryConfig
+	Midtrans   MidtransConfig
+	OpenAi     OpenAi
+}
+
+type CloudinaryConfig struct {
+	CloudName        string
+	ApiKeyStorage    string
+	ApiSecretStorage string
 }
 
 type MidtransConfig struct {
@@ -50,6 +57,10 @@ func InitConfig() *GEConfig {
 	res.DB_NAME = os.Getenv("DB_NAME")
 
 	res.JWT_Secret = os.Getenv("JWT_SECRET")
+
+	res.Cloudinary.CloudName = os.Getenv("CLOUD_NAME")
+	res.Cloudinary.ApiKeyStorage = os.Getenv("STORAGE_API_KEY")
+	res.Cloudinary.ApiSecretStorage = os.Getenv("STORAGE_API_SECRET")
 
 	res.Midtrans.ClientKey = os.Getenv("MIDTRANS_CLIENT_KEY")
 	res.Midtrans.ServerKey = os.Getenv("MIDTRANS_SERVER_KEY")
