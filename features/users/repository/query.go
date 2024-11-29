@@ -151,6 +151,12 @@ func (u *UserData) GetUserByID(id string) (users.User, error) {
 	return user, nil
 }
 
+func (u *UserData) GetUserByEmail(email string) (users.User, error) {
+	var user users.User
+	err := u.DB.Where("email = ?", email).First(&user).Error
+	return user, err
+}
+
 // Admin
 func (u *UserData) GetUserByIDForAdmin(id string) (users.User, error) {
 	var users users.User

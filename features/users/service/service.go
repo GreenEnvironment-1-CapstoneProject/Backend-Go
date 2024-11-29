@@ -5,6 +5,8 @@ import (
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type UserService struct {
@@ -142,6 +144,27 @@ func (s *UserService) Delete(user users.User) error {
 		return constant.ErrDeleteUser
 	}
 	return s.userRepo.Delete(user)
+}
+
+func (s *UserService) RegisterOrLoginGoogle(user users.User) (users.User, error) {
+	existingUser, err := s.userRepo.GetUserByEmail(user.Email)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return users.User{}, err
+	}
+
+	if existingUser.ID != "" {
+		// User exists, return existing user
+		return existingUser, nil
+	}
+
+	// Register new user
+	user.Username = "google_" + helper.GenerateRandomString(8)
+	newUser, err := s.Register(user)
+	if err != nil {
+		return users.User{}, err
+	}
+
+	return newUser, nil
 }
 
 // Admin
