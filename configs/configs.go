@@ -22,6 +22,7 @@ type GEConfig struct {
 	Cloudinary CloudinaryConfig
 	Midtrans   MidtransConfig
 	OpenAi     OpenAi
+	Google     Google
 }
 
 type CloudinaryConfig struct {
@@ -33,6 +34,11 @@ type CloudinaryConfig struct {
 type MidtransConfig struct {
 	ClientKey string
 	ServerKey string
+}
+
+type Google struct {
+	ClientID  string
+	ClientKey string
 }
 
 type OpenAi struct {
@@ -66,6 +72,9 @@ func InitConfig() *GEConfig {
 	res.Midtrans.ServerKey = os.Getenv("MIDTRANS_SERVER_KEY")
 
 	res.OpenAi.ApiKey = os.Getenv("OPENAI_API_KEY")
+
+	res.Google.ClientID = os.Getenv("GOOGLE_CLIENT_ID")
+	res.Google.ClientKey = os.Getenv("GOOGLE_CLIENT_SECRET")
 
 	return res
 }

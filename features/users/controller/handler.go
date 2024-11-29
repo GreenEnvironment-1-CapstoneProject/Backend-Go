@@ -1,12 +1,16 @@
 package controller
 
 import (
+	"context"
+	"encoding/json"
 	"greenenvironment/constant"
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
+	"greenenvironment/utils/google"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/oauth2"
 )
 
 type UserHandler struct {
@@ -265,4 +269,57 @@ func (h *UserHandler) Delete(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessDelete, nil))
+}
+
+func (h *UserHandler) GoogleLogin(c echo.Context) error {
+	url := google.GoogleOauthConfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	return c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func (h *UserHandler) GoogleCallback(c echo.Context) error {
+	code := c.QueryParam("code")
+	if code == "" {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "No code provided", nil))
+	}
+
+	token, err := google.GoogleOauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to exchange token", nil))
+	}
+
+	client := google.GoogleOauthConfig.Client(context.Background(), token)
+
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to get user info", nil))
+	}
+	defer resp.Body.Close()
+
+	var userInfo struct {
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to parse user info", nil))
+	}
+
+	user := users.User{
+		Name:  userInfo.Name,
+		Email: userInfo.Email,
+	}
+	createdUser, err := h.userService.RegisterOrLoginGoogle(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to process user", nil))
+	}
+
+	tokenString, err := h.jwt.GenerateUserJWT(helper.UserJWT{
+		ID:    createdUser.ID,
+		Name:  createdUser.Name,
+		Email: createdUser.Email,
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to generate token", nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, "Login successful", map[string]string{"token": tokenString}))
 }

@@ -15,6 +15,9 @@ func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GECon
 	e.POST(route.UserRegister, uh.Register)
 	e.POST(route.UserLogin, uh.Login)
 
+	e.GET(route.UserLoginGoogle, uh.GoogleLogin)
+	e.GET(route.UserGoogleCallback, uh.GoogleCallback)
+
 	jwtConfig := echojwt.Config{
 		SigningKey:   []byte(cfg.JWT_Secret),
 		ErrorHandler: helper.JWTErrorHandler,
