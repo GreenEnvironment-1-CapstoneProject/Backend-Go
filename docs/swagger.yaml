@@ -1128,6 +1128,49 @@ paths:
       summary: Delete user account
       tags:
       - Users
+  /users/google-callback:
+    get:
+      description: Handle the OAuth 2.0 callback from Google and authenticate the
+        user
+      parameters:
+      - description: Authorization code from Google
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful with JWT token
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.UserLoginResponse'
+              type: object
+        "400":
+          description: Invalid request or missing code
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Google OAuth Callback
+      tags:
+      - Users
   /users/login:
     post:
       consumes:
@@ -1171,6 +1214,28 @@ paths:
                   type: string
               type: object
       summary: User login
+      tags:
+      - Users
+  /users/login-google:
+    get:
+      description: Redirect to Google's OAuth 2.0 authentication page
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to Google OAuth
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Google Login
       tags:
       - Users
   /users/profile:
