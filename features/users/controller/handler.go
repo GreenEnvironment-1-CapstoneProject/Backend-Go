@@ -271,11 +271,29 @@ func (h *UserHandler) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessDelete, nil))
 }
 
+// Google Login
+// @Summary      Google Login
+// @Description  Redirect to Google's OAuth 2.0 authentication page
+// @Tags         Users
+// @Produce      json
+// @Success      302  {string}  string  "Redirect to Google OAuth"
+// @Failure      500  {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/login-google [get]
 func (h *UserHandler) GoogleLogin(c echo.Context) error {
 	url := google.GoogleOauthConfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	return c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
+// Google Callback
+// @Summary      Google OAuth Callback
+// @Description  Handle the OAuth 2.0 callback from Google and authenticate the user
+// @Tags         Users
+// @Produce      json
+// @Param        code  query     string  true  "Authorization code from Google"
+// @Success      200   {object}  helper.Response{data=UserLoginResponse} "Login successful with JWT token"
+// @Failure      400   {object}  helper.Response{data=string} "Invalid request or missing code"
+// @Failure      500   {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/google-callback [get]
 func (h *UserHandler) GoogleCallback(c echo.Context) error {
 	code := c.QueryParam("code")
 	if code == "" {
@@ -321,5 +339,5 @@ func (h *UserHandler) GoogleCallback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to generate token", nil))
 	}
 
-	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, "Login successful", map[string]string{"token": tokenString}))
+	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessLogin, map[string]string{"token": tokenString}))
 }
