@@ -45,3 +45,23 @@ var ErrGenerateJWT = errors.New("failed to generate jwt token")
 var ErrValidateJWT = errors.New("failed to validate jwt token")
 
 var ErrHashPassword = errors.New("failed to hash password")
+
+var ErrSizeFile = errors.New("file size exceeds limit")
+var ErrContentTypeFile = errors.New("only image allowed")
+
+// Users By Admin
+var ErrUserDataEmpty = errors.New("User Data Empty")
+var ErrGetUser = errors.New("Failed to get user")
+var ErrUserNotFound = errors.New("User Not Found")
+var ErrUserIDNotFound = errors.New("User ID Not Found")
+var ErrEditUserByAdmin = errors.New("Error, Update at least one field")
+
+var ErrCreateProduct = errors.New("failed to create product")
+var ErrProductEmpty = errors.New("product is empty")
+var ErrGetProduct = errors.New("failed to get product")
+var ErrUpdateProduct = errors.New("failed to update product")
+var ErrDeleteProduct = errors.New("failed to delete product")
+
+var ErrImpactCategoryNotFound = errors.New("failed to get impact category")
+var ErrCreateImpactCategory = errors.New("failed to create impact category")
+var ErrDeleteImpactCategory = errors.New("failed to delete impact category")

@@ -19,13 +19,26 @@ type GEConfig struct {
 
 	JWT_Secret string
 
-	Midtrans MidtransConfig
-	OpenAi   OpenAi
+	Cloudinary CloudinaryConfig
+	Midtrans   MidtransConfig
+	OpenAi     OpenAi
+	Google     Google
+}
+
+type CloudinaryConfig struct {
+	CloudName        string
+	ApiKeyStorage    string
+	ApiSecretStorage string
 }
 
 type MidtransConfig struct {
 	ClientKey string
 	ServerKey string
+}
+
+type Google struct {
+	ClientID  string
+	ClientKey string
 }
 
 type OpenAi struct {
@@ -51,10 +64,17 @@ func InitConfig() *GEConfig {
 
 	res.JWT_Secret = os.Getenv("JWT_SECRET")
 
+	res.Cloudinary.CloudName = os.Getenv("CLOUD_NAME")
+	res.Cloudinary.ApiKeyStorage = os.Getenv("STORAGE_API_KEY")
+	res.Cloudinary.ApiSecretStorage = os.Getenv("STORAGE_API_SECRET")
+
 	res.Midtrans.ClientKey = os.Getenv("MIDTRANS_CLIENT_KEY")
 	res.Midtrans.ServerKey = os.Getenv("MIDTRANS_SERVER_KEY")
 
 	res.OpenAi.ApiKey = os.Getenv("OPENAI_API_KEY")
+
+	res.Google.ClientID = os.Getenv("GOOGLE_CLIENT_ID")
+	res.Google.ClientKey = os.Getenv("GOOGLE_CLIENT_SECRET")
 
 	return res
 }

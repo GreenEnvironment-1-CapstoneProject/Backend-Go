@@ -8,12 +8,19 @@ import (
 	AdminContoller "greenenvironment/features/admin/controller"
 	AdminRepository "greenenvironment/features/admin/repository"
 	AdminService "greenenvironment/features/admin/service"
+	ImpactController "greenenvironment/features/impacts/controller"
+	ImpactRepository "greenenvironment/features/impacts/repository"
+	ImpactService "greenenvironment/features/impacts/service"
+	ProductController "greenenvironment/features/products/controller"
+	ProductRepository "greenenvironment/features/products/repository"
+	ProductService "greenenvironment/features/products/service"
 	UserController "greenenvironment/features/users/controller"
 	UserRepository "greenenvironment/features/users/repository"
 	UserService "greenenvironment/features/users/service"
 
 	"greenenvironment/routes"
 	"greenenvironment/utils/databases"
+	"greenenvironment/utils/storages"
 
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
@@ -49,6 +56,7 @@ func main() {
 
 	databases.Migrate(db)
 	jwt := helper.NewJWT(cfg.JWT_Secret)
+	storage := storages.NewStorage(cfg.Cloudinary)
 
 	e := echo.New()
 	e.Validator = &helper.CustomValidator{Validator: validator.New()}
@@ -65,8 +73,19 @@ func main() {
 	adminService := AdminService.NewAdminService(adminRepo, jwt)
 	adminController := AdminContoller.NewAdminController(adminService, jwt)
 
-	routes.RouteUser(e, userController)
+	impactRepo := ImpactRepository.NewImpactRepository(db)
+	impactService := ImpactService.NewNewImpactService(impactRepo)
+	impactController := ImpactController.NewImpactController(impactService, jwt)
+
+	productRepo := ProductRepository.NewProductRepository(db)
+	productService := ProductService.NewProductService(productRepo, impactRepo)
+	productController := ProductController.NewProductController(productService, jwt)
+
+	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
+	routes.RoutesProducts(e, productController, *cfg)
+	routes.RouteImpacts(e, impactController, *cfg)
+	routes.RouteStorage(e, storage, *cfg)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
 }
