@@ -12,3 +12,10 @@ const AdminPath = BasePath + "/admin"
 const AdminLogin = AdminPath + "/login"
 const AdminEdit = AdminPath + "/edit/:id"
 const AdminDelete = AdminPath + "/delete"
+
+const ProductPath = BasePath + "/products"
+const CategoryProduct = ProductPath + "/categories/:category_name"
+const ProductByID = ProductPath + "/:id"
+
+const ImpactCategoryPath = BasePath + "/impacts"
+const ImpactCategoryByID = ImpactCategoryPath + "/:id"
