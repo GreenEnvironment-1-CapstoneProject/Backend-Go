@@ -42,6 +42,109 @@ definitions:
     - password
     - username
     type: object
+  controller.CreateImpactRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+      impact_point:
+        minimum: 0
+        type: integer
+      name:
+        minLength: 1
+        type: string
+    required:
+    - description
+    - impact_point
+    - name
+    type: object
+  controller.ImpactCategory:
+    properties:
+      impact_point:
+        type: integer
+      name:
+        type: string
+    type: object
+  controller.ImpactCategoryResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      impact_point:
+        type: integer
+      name:
+        type: string
+    type: object
+  controller.ProductImage:
+    properties:
+      image_url:
+        type: string
+    type: object
+  controller.ProductImpactCategory:
+    properties:
+      impact_category:
+        $ref: '#/definitions/controller.ImpactCategory'
+    type: object
+  controller.ProductRequest:
+    properties:
+      category:
+        items:
+          type: string
+        type: array
+      coin:
+        minimum: 0
+        type: integer
+      description:
+        type: string
+      images:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      stock:
+        minimum: 0
+        type: integer
+    required:
+    - category
+    - coin
+    - description
+    - images
+    - name
+    - price
+    - stock
+    type: object
+  controller.ProductResponse:
+    properties:
+      category:
+        items:
+          $ref: '#/definitions/controller.ProductImpactCategory'
+        type: array
+      coin:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/controller.ProductImage'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: string
+      stock:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   controller.UserInfoResponse:
     properties:
       address:
@@ -148,6 +251,15 @@ definitions:
     - phone
     - username
     type: object
+  helper.MetadataResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      metadata: {}
+      status:
+        type: boolean
+    type: object
   helper.Response:
     description: Standard API response format
     properties:
@@ -156,6 +268,11 @@ definitions:
         type: string
       status:
         type: boolean
+    type: object
+  storages.ImageResponse:
+    properties:
+      image_url:
+        type: string
     type: object
 host: https://greenenvironment.my.id
 info:
@@ -352,6 +469,621 @@ paths:
       summary: Admin login
       tags:
       - Admin
+  /impacts:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all impact categories
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Retrieve impacts successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.ImpactCategoryResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Retrieve all impacts
+      tags:
+      - Impact
+    post:
+      consumes:
+      - application/json
+      description: Add a new impact category to the system
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Create impact payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateImpactRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Impact created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a new impact
+      tags:
+      - Impact
+  /impacts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an impact category by its ID
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Impact ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Impact deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Impact not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete an impact
+      tags:
+      - Impact
+    get:
+      consumes:
+      - application/json
+      description: Get a specific impact category by its ID
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Impact ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Retrieve impact successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.ImpactCategoryResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Impact not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Retrieve impact by ID
+      tags:
+      - Impact
+  /media/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload an image to Cloudinary and return the image URL
+      parameters:
+      - description: Image file to upload
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Upload success
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/storages.ImageResponse'
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Upload Image
+      tags:
+      - Upload
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all products with pagination.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: pages
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Products retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.MetadataResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.ProductResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get all products
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: Create a new product with associated images and categories. Requires
+        admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Product data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Product created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a product
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a product by its ID. Requires admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Product not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete a product
+      tags:
+      - Products
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific product by its unique identifier.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.ProductResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Product not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get a product by ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: Update product details including images and categories. Requires
+        admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated product data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Product updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update a product
+      tags:
+      - Products
+  /products/categories/{category_name}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve products by a specific category name with pagination.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category name
+        in: path
+        name: category_name
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: pages
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Products retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.MetadataResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.ProductResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get products by category
+      tags:
+      - Products
   /users/delete:
     delete:
       consumes:
