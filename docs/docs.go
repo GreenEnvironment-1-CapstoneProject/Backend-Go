@@ -2135,7 +2135,8 @@ const docTemplate = `{
         "controller.ProductRequest": {
             "type": "object",
             "required": [
-                "category",
+                "category_impact",
+                "category_product",
                 "coin",
                 "description",
                 "images",
@@ -2144,11 +2145,14 @@ const docTemplate = `{
                 "stock"
             ],
             "properties": {
-                "category": {
+                "category_impact": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "category_product": {
+                    "type": "string"
                 },
                 "coin": {
                     "type": "integer",
@@ -2179,11 +2183,14 @@ const docTemplate = `{
         "controller.ProductResponse": {
             "type": "object",
             "properties": {
-                "category": {
+                "category_impact": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/controller.ProductImpactCategory"
                     }
+                },
+                "category_product": {
+                    "type": "string"
                 },
                 "coin": {
                     "type": "integer"

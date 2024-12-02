@@ -14,6 +14,7 @@ type Product struct {
 	Price            float64
 	Coin             int
 	Stock            int
+	Category         string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	Images           []ProductImage
