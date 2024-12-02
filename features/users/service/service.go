@@ -66,10 +66,6 @@ func (s *UserService) Login(user users.User) (users.UserLogin, error) {
 }
 
 func (s *UserService) Update(user users.UserUpdate) (users.UserUpdate, error) {
-	if user.Email == "" && user.Username == "" && user.Password == "" && user.Address == "" && user.Name == "" && user.Gender == "" && user.Phone == "" && user.AvatarURL == "" {
-		return users.UserUpdate{}, constant.ErrEmptyUpdate
-	}
-
 	if user.ID == "" {
 		return users.UserUpdate{}, constant.ErrUpdateUser
 	}
@@ -106,10 +102,6 @@ func (s *UserService) Update(user users.UserUpdate) (users.UserUpdate, error) {
 			return users.UserUpdate{}, err
 		}
 		user.Password = hashedPassword
-	}
-
-	if !helper.IsValidInput(user.Name) || !helper.IsValidInput(user.Address) || !helper.IsValidInput(user.Gender) {
-		return users.UserUpdate{}, constant.ErrFieldData
 	}
 
 	userData, err := s.userRepo.Update(user)
@@ -166,6 +158,15 @@ func (s *UserService) RegisterOrLoginGoogle(user users.User) (users.User, error)
 
 	return newUser, nil
 }
+
+func (s *UserService) UpdateAvatar(userID, avatarURL string) error {
+	err := s.userRepo.UpdateAvatar(userID, avatarURL)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 
 // Admin
 func (s *UserService) GetUserByIDForAdmin(id string) (users.User, error) {

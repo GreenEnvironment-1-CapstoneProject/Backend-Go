@@ -58,6 +58,7 @@ type UserRepoInterface interface {
 	Delete(User) error
 	GetUserByID(id string) (User, error)
 	GetUserByEmail(email string) (User, error)
+	UpdateAvatar(userID, avatarURL string) error
 
 	// Admin
 	GetUserByIDForAdmin(id string) (User, error)
@@ -74,6 +75,7 @@ type UserServiceInterface interface {
 	Update(UserUpdate) (UserUpdate, error)
 	GetUserData(User) (User, error)
 	Delete(User) error
+	UpdateAvatar(userID, avatarURL string) error
 
 	// Admin
 	GetUserByIDForAdmin(id string) (User, error)
@@ -91,6 +93,7 @@ type UserControllerInterface interface {
 	Update(c echo.Context) error
 	GetUserData(c echo.Context) error
 	Delete(c echo.Context) error
+	UpdateAvatar(c echo.Context) error
 
 	// Admin
 	GetAllUsersForAdmin(c echo.Context) error

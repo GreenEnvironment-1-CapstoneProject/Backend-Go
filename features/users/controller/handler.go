@@ -7,6 +7,7 @@ import (
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
 	"greenenvironment/utils/google"
+	"greenenvironment/utils/storages"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,12 +19,14 @@ import (
 type UserHandler struct {
 	userService users.UserServiceInterface
 	jwt         helper.JWTInterface
+	storage     storages.StorageInterface
 }
 
-func NewUserController(u users.UserServiceInterface, j helper.JWTInterface) users.UserControllerInterface {
+func NewUserController(u users.UserServiceInterface, j helper.JWTInterface, s storages.StorageInterface) users.UserControllerInterface {
 	return &UserHandler{
 		userService: u,
 		jwt:         j,
+		storage:     s,
 	}
 }
 
@@ -164,9 +167,6 @@ func (h *UserHandler) Update(c echo.Context) error {
 	if UserUpdateRequest.Username == "" {
 		UserUpdateRequest.Username = currentUser.Username
 	}
-	if UserUpdateRequest.AvatarURL == "" {
-		UserUpdateRequest.AvatarURL = currentUser.AvatarURL
-	}
 
 	user := users.UserUpdate{
 		ID:        userId.(string),
@@ -177,7 +177,6 @@ func (h *UserHandler) Update(c echo.Context) error {
 		Address:   UserUpdateRequest.Address,
 		Gender:    UserUpdateRequest.Gender,
 		Phone:     UserUpdateRequest.Phone,
-		AvatarURL: UserUpdateRequest.AvatarURL,
 	}
 
 	FromUserService, err := h.userService.Update(user)
@@ -189,6 +188,7 @@ func (h *UserHandler) Update(c echo.Context) error {
 	UserToken.Token = FromUserService.Token
 	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessUpdate, UserToken))
 }
+
 
 // Get User Data
 // @Summary      Get user data
@@ -345,6 +345,57 @@ func (h *UserHandler) GoogleCallback(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessLogin, map[string]string{"token": tokenString}))
 }
+
+// Update Avatar
+// @Summary      Update User Avatar
+// @Description  Upload a new avatar for the authenticated user
+// @Tags         Users
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        Authorization  header    string  true  "Bearer token"
+// @Param        avatar         formData  file    true  "Avatar image"
+// @Success      200            {object}  helper.Response{data=string} "Avatar updated successfully"
+// @Failure      400            {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/avatar [put]
+func (h *UserHandler) UpdateAvatar(c echo.Context) error {
+	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+	if tokenString == "" {
+			return helper.UnauthorizedError(c)
+	}
+
+	token, err := h.jwt.ValidateToken(tokenString)
+	if err != nil {
+			return helper.UnauthorizedError(c)
+	}
+	userData := h.jwt.ExtractUserToken(token)
+	userID := userData[constant.JWT_ID].(string)
+
+	file, err := c.FormFile("avatar")
+	if err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Avatar file is required", nil))
+	}
+
+	src, err := h.storage.ImageValidation(file)
+	if err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	avatarURL, err := h.storage.UploadImageToCloudinary(src, "ecomate/avatars/")
+	if err != nil {
+			return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to upload avatar", nil))
+	}
+
+	err = h.userService.UpdateAvatar(userID, avatarURL)
+	if err != nil {
+			return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to update avatar", nil))
+	}
+
+	// Respon sukses
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Avatar updated successfully", avatarURL))
+}
+
 
 // Admin
 

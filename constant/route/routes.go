@@ -7,6 +7,7 @@ const UserLogin = UserPath + "/login"
 const UserLoginGoogle = UserPath + "/login-google"
 const UserGoogleCallback = UserPath + "/google-callback"
 const UserRegister = UserPath + "/register"
+const UserUpdateAvatar = UserPath + "/avatar"
 
 const AdminPath = BasePath + "/admin"
 const AdminLogin = AdminPath + "/login"

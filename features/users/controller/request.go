@@ -19,7 +19,6 @@ type UserUpdateRequest struct {
 	Gender    string `json:"gender" validate:"required"`
 	Phone     string `json:"phone" validate:"required"`
 	Password  string `json:"password" validate:"required"`
-	AvatarURL string `json:"avatar_url" validate:"required"`
 }
 
 // Admin

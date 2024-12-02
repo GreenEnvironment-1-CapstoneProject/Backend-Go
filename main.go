@@ -67,7 +67,7 @@ func main() {
 
 	userRepo := UserRepository.NewUserRepository(db)
 	userService := UserService.NewUserService(userRepo, jwt)
-	userController := UserController.NewUserController(userService, jwt)
+	userController := UserController.NewUserController(userService, jwt, storage)
 
 	adminRepo := AdminRepository.NewAdminRepository(db)
 	adminService := AdminService.NewAdminService(adminRepo, jwt)
