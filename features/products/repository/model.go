@@ -2,7 +2,7 @@ package repository
 
 import (
 	impactcategory "greenenvironment/features/impacts/repository"
-	"greenenvironment/features/users"
+	users "greenenvironment/features/users/repository"
 
 	"gorm.io/gorm"
 )
@@ -15,6 +15,7 @@ type Product struct {
 	Price            float64                 `gorm:"type:float;not null;column:price"`
 	Coin             int                     `gorm:"type:int;not null;column:coin"`
 	Stock            int                     `gorm:"type:int;not null;column:stock"`
+	Category         string                  `gorm:"type:varchar(255);not null;column:category"`
 	Images           []ProductImage          `gorm:"foreignKey:ProductID"`
 	ImpactCategories []ProductImpactCategory `gorm:"foreignKey:ProductID"`
 }

@@ -67,9 +67,10 @@ func (pc *ProductController) Create(c echo.Context) error {
 		Price:       productInput.Price,
 		Coin:        productInput.Coin,
 		Stock:       productInput.Stock,
+		Category:    productInput.CategoryProduct,
 	}
 
-	for _, categoryID := range productInput.Category {
+	for _, categoryID := range productInput.CategoryImpact {
 		productData.ImpactCategories = append(productData.ImpactCategories, products.ProductImpactCategory{
 			ProductID:        productData.ID,
 			ImpactCategoryID: categoryID,
@@ -222,12 +223,16 @@ func (pc *ProductController) GetByCategory(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
 
+	var response []interface{}
+	for _, product := range products {
+		response = append(response, new(ProductResponse).ToResponse(product))
+	}
 	metadata := map[string]interface{}{
 		"TotalPage": totalPages,
 		"Page":      page,
 	}
 
-	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "get all products by category name successfully", metadata, products))
+	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "get all products by category name successfully", metadata, response))
 
 }
 
@@ -283,9 +288,10 @@ func (pc *ProductController) Update(c echo.Context) error {
 		Price:       productInput.Price,
 		Coin:        productInput.Coin,
 		Stock:       productInput.Stock,
+		Category:    productInput.CategoryProduct,
 	}
 
-	for _, categoryID := range productInput.Category {
+	for _, categoryID := range productInput.CategoryImpact {
 		productData.ImpactCategories = append(productData.ImpactCategories, products.ProductImpactCategory{
 			ProductID:        productData.ID,
 			ImpactCategoryID: categoryID,

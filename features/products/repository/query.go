@@ -23,6 +23,7 @@ func (pr *ProductRepository) Create(product products.Product) error {
 		Description: product.Description,
 		Price:       product.Price,
 		Stock:       product.Stock,
+		Category:    product.Category,
 	}
 
 	for _, image := range product.Images {
@@ -60,7 +61,7 @@ func (pr *ProductRepository) GetAllByPage(page int) ([]products.Product, int, er
 	productDataPerPage := 20
 	totalPages := int((totalproductData + int64(productDataPerPage) - 1) / int64(productDataPerPage))
 
-	response := pr.DB.Preload("Images").Preload("ImpactCategories.ImpactCategory").Offset((page - 1) * productDataPerPage).Limit(productDataPerPage).Find(&productDataData)
+	response := pr.DB.Preload("Images").Preload("ImpactCategories.ImpactCategory").Where("deleted_at IS NULL").Offset((page - 1) * productDataPerPage).Limit(productDataPerPage).Find(&productDataData)
 
 	if response.Error != nil {
 		return nil, 0, constant.ErrGetProduct
@@ -158,7 +159,7 @@ func (pr *ProductRepository) GetByCategory(categoryName string, page int) ([]pro
 
 	var totalproductData int64
 
-	err := pr.DB.Model(&Product{}).Joins("Join product_impact_categories ON product_impact_categories.product_id = products.id").Joins("JOIN impact_categories ON impact_categories.id = product_impact_categories.impact_category_id").Where("impact_categories.name = ? ", categoryName).Count(&totalproductData).Error
+	err := pr.DB.Model(&Product{}).Where("category = ? ", categoryName).Count(&totalproductData).Error
 	if err != nil {
 		return nil, 0, constant.ErrProductEmpty
 	}
@@ -166,10 +167,7 @@ func (pr *ProductRepository) GetByCategory(categoryName string, page int) ([]pro
 	productDataPerPage := 20
 	totalPages := int((totalproductData + int64(productDataPerPage) - 1) / int64(productDataPerPage))
 
-	tx := pr.DB.Model(&Product{}).
-		Joins("JOIN product_impact_categories ON product_impact_categories.product_id = products.id").
-		Joins("JOIN impact_categories ON impact_categories.id = product_impact_categories.impact_category_id").
-		Where("impact_categories.name = ?", categoryName).
+	tx := pr.DB.Model(&Product{}).Where("category = ?", categoryName).
 		Preload("Images").
 		Preload("ImpactCategories.ImpactCategory").
 		Offset((page - 1) * productDataPerPage).Limit(productDataPerPage).

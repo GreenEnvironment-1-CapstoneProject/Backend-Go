@@ -5,16 +5,17 @@ import (
 )
 
 type ProductResponse struct {
-	ID          string                  `json:"product_id"`
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
-	Price       float64                 `json:"price"`
-	Coin        int                     `json:"coin"`
-	Stock       int                     `json:"stock"`
-	CreatedAt   string                  `json:"created_at"`
-	UpdatedAt   string                  `json:"updated_at"`
-	Category    []ProductImpactCategory `json:"category"`
-	Images      []ProductImage          `json:"images"`
+	ID              string                  `json:"product_id"`
+	Name            string                  `json:"name"`
+	Description     string                  `json:"description"`
+	Price           float64                 `json:"price"`
+	Coin            int                     `json:"coin"`
+	Stock           int                     `json:"stock"`
+	CreatedAt       string                  `json:"created_at"`
+	UpdatedAt       string                  `json:"updated_at"`
+	CategoryProduct string                  `json:"category_product"`
+	CategoryImpact  []ProductImpactCategory `json:"category_impact"`
+	Images          []ProductImage          `json:"images"`
 }
 
 type ProductImpactCategory struct {
@@ -47,15 +48,16 @@ func (p ProductResponse) ToResponse(product products.Product) ProductResponse {
 		}
 	}
 	return ProductResponse{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		Coin:        product.Coin,
-		Stock:       product.Stock,
-		CreatedAt:   product.CreatedAt.Format("02/01/2006"),
-		UpdatedAt:   product.UpdatedAt.Format("02/01/2006"),
-		Images:      images,
-		Category:    impactCategories,
+		ID:              product.ID,
+		Name:            product.Name,
+		Description:     product.Description,
+		Price:           product.Price,
+		Coin:            product.Coin,
+		Stock:           product.Stock,
+		CategoryProduct: product.Category,
+		CreatedAt:       product.CreatedAt.Format("02/01/2006"),
+		UpdatedAt:       product.UpdatedAt.Format("02/01/2006"),
+		Images:          images,
+		CategoryImpact:  impactCategories,
 	}
 }

@@ -88,10 +88,12 @@ definitions:
     type: object
   controller.ProductRequest:
     properties:
-      category:
+      category_impact:
         items:
           type: string
         type: array
+      category_product:
+        type: string
       coin:
         minimum: 0
         type: integer
@@ -110,7 +112,8 @@ definitions:
         minimum: 0
         type: integer
     required:
-    - category
+    - category_impact
+    - category_product
     - coin
     - description
     - images
@@ -120,10 +123,12 @@ definitions:
     type: object
   controller.ProductResponse:
     properties:
-      category:
+      category_impact:
         items:
           $ref: '#/definitions/controller.ProductImpactCategory'
         type: array
+      category_product:
+        type: string
       coin:
         type: integer
       created_at:
