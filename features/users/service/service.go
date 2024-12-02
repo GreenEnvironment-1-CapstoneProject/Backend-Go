@@ -159,7 +159,7 @@ func (s *UserService) RegisterOrLoginGoogle(user users.User) (users.User, error)
 
 	// Register new user
 	user.Username = "google_" + helper.GenerateRandomString(8)
-	newUser, err := s.Register(user)
+	newUser, err := s.userRepo.Register(user)
 	if err != nil {
 		return users.User{}, err
 	}

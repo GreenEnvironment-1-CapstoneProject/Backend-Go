@@ -334,6 +334,8 @@ func (h *UserHandler) GoogleCallback(c echo.Context) error {
 		ID:    createdUser.ID,
 		Name:  createdUser.Name,
 		Email: createdUser.Email,
+		Username: createdUser.Username,
+		Role: constant.RoleUser,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to generate token", nil))
