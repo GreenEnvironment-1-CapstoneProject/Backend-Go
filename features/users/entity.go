@@ -42,6 +42,15 @@ type UserUpdate struct {
 	Token     string
 }
 
+type UpdateUserByAdmin struct {
+	ID       string
+	Name     string
+	Address  string
+	Gender   string
+	Phone    string
+	UpdateAt time.Time
+}
+
 type UserRepoInterface interface {
 	Register(User) (User, error)
 	Login(User) (User, error)
@@ -52,6 +61,10 @@ type UserRepoInterface interface {
 
 	// Admin
 	GetUserByIDForAdmin(id string) (User, error)
+	GetAllUsersForAdmin() ([]User, error)
+	UpdateUserForAdmin(UpdateUserByAdmin) error
+	DeleteUserForAdmin(userID string) error
+	GetAllByPageForAdmin(page int) ([]User, int, error)
 }
 
 type UserServiceInterface interface {
@@ -64,6 +77,10 @@ type UserServiceInterface interface {
 
 	// Admin
 	GetUserByIDForAdmin(id string) (User, error)
+	GetAllUsersForAdmin() ([]User, error)
+	UpdateUserForAdmin(UpdateUserByAdmin) error
+	DeleteUserForAdmin(userID string) error
+	GetAllByPageForAdmin(page int) ([]User, int, error)
 }
 
 type UserControllerInterface interface {
@@ -74,4 +91,10 @@ type UserControllerInterface interface {
 	Update(c echo.Context) error
 	GetUserData(c echo.Context) error
 	Delete(c echo.Context) error
+
+	// Admin
+	GetAllUsersForAdmin(c echo.Context) error
+	GetUserByIDForAdmin(c echo.Context) error
+	UpdateUserForAdmin(c echo.Context) error
+	DeleteUserForAdmin(c echo.Context) error
 }
