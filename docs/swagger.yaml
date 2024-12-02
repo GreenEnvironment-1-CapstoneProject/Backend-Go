@@ -232,8 +232,6 @@ definitions:
     properties:
       address:
         type: string
-      avatar_url:
-        type: string
       email:
         type: string
       gender:
@@ -248,7 +246,6 @@ definitions:
         type: string
     required:
     - address
-    - avatar_url
     - email
     - gender
     - name
@@ -1401,6 +1398,64 @@ paths:
       summary: Get products by category
       tags:
       - Products
+  /users/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a new avatar for the authenticated user
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Avatar image
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Avatar updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update User Avatar
+      tags:
+      - Users
   /users/delete:
     delete:
       consumes:
