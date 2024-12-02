@@ -8,6 +8,8 @@ import (
 	"greenenvironment/helper"
 	"greenenvironment/utils/google"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"golang.org/x/oauth2"
@@ -331,15 +333,196 @@ func (h *UserHandler) GoogleCallback(c echo.Context) error {
 	}
 
 	tokenString, err := h.jwt.GenerateUserJWT(helper.UserJWT{
-		ID:    createdUser.ID,
-		Name:  createdUser.Name,
-		Email: createdUser.Email,
+		ID:       createdUser.ID,
+		Name:     createdUser.Name,
+		Email:    createdUser.Email,
 		Username: createdUser.Username,
-		Role: constant.RoleUser,
+		Role:     constant.RoleUser,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to generate token", nil))
 	}
 
 	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessLogin, map[string]string{"token": tokenString}))
+}
+
+// Admin
+func (h *UserHandler) GetAllUsersForAdmin(c echo.Context) error {
+		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+		if tokenString == "" {
+			return helper.UnauthorizedError(c)
+		}
+
+		token, err := h.jwt.ValidateToken(tokenString)
+		if err != nil {
+			helper.UnauthorizedError(c)
+		}
+
+		adminData := h.jwt.ExtractAdminToken(token)
+		role := adminData[constant.JWT_ROLE]
+
+		if role != constant.RoleAdmin {
+			helper.UnauthorizedError(c)
+		}
+
+		pageStr := c.QueryParam("page")
+		page := 1
+		if pageStr != "" {
+			page, err = strconv.Atoi(pageStr)
+			if err != nil || page < 1 {
+				return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrPageInvalid.Error(), nil))
+			}
+		}
+		var totalPages int
+		var user []users.User
+		user, totalPages, err = h.userService.GetAllByPageForAdmin(page)
+
+		metadata := MetadataResponse{
+			CurrentPage: page,
+			TotalPage:   totalPages,
+		}
+
+		if err != nil {
+			code, message := helper.HandleEchoError(err)
+			return c.JSON(code, helper.FormatResponse(false, message, nil))
+		}
+
+		var response []UserbyAdminandPageResponse
+		for _, user := range user {
+			response = append(response, UserbyAdminandPageResponse{
+				ID:            user.ID,
+				Name:          user.Name,
+				Email:         user.Email,
+				Username:      user.Username,
+				Address:       user.Address,
+				Gender:        user.Gender,
+				Phone:         user.Phone,
+				Is_Membership: user.Is_Membership,
+				AvatarURL:     user.AvatarURL,
+
+				CreatedAt: user.CreatedAt.Format("02/01/06"),
+				UpdatedAt: user.UpdatedAt.Format("02/01/06"),
+			})
+		}
+		return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, constant.AdminSuccessGetAllUser, metadata, response))
+}
+
+func (h *UserHandler) GetUserByIDForAdmin(c echo.Context) error {
+		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+		if tokenString == "" {
+			helper.UnauthorizedError(c)
+		}
+
+		token, err := h.jwt.ValidateToken(tokenString)
+		if err != nil {
+			helper.UnauthorizedError(c)
+		}
+
+		adminData := h.jwt.ExtractAdminToken(token)
+		role := adminData[constant.JWT_ROLE]
+
+		if role != constant.RoleAdmin {
+			return helper.UnauthorizedError(c)
+		}
+
+		userId := c.Param("id")
+		if err != nil {
+			code, message := helper.HandleEchoError(err)
+			return c.JSON(code, helper.FormatResponse(false, message, nil))
+		}
+
+		users, err := h.userService.GetUserByIDForAdmin(userId)
+		if err != nil {
+			return c.JSON(http.StatusNotFound, helper.ObjectFormatResponse(false, constant.ErrUserIDNotFound.Error(), nil))
+		}
+
+		response := UserbyAdminResponse{
+			ID:            users.ID,
+			Name:          users.Name,
+			Email:         users.Email,
+			Username:      users.Username,
+			Address:       users.Address,
+			Gender:        users.Gender,
+			Phone:         users.Phone,
+			AvatarURL:     users.AvatarURL,
+			Is_Membership: users.Is_Membership,
+			CreatedAt:     users.CreatedAt.Format("02/01/06"),
+			UpdatedAt:     users.UpdatedAt.Format("02/01/06"),
+		}
+
+		return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.AdminSuccessGetUser, response))
+}
+
+func (h *UserHandler) UpdateUserForAdmin(c echo.Context) error {
+		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+		if tokenString == "" {
+			return helper.UnauthorizedError(c)
+		}
+
+		token, err := h.jwt.ValidateToken(tokenString)
+		if err != nil {
+			return helper.UnauthorizedError(c)
+		}
+
+		adminData := h.jwt.ExtractAdminToken(token)
+		role := adminData[constant.JWT_ROLE]
+
+		if role != constant.RoleAdmin {
+			return helper.UnauthorizedError(c)
+		}
+
+		id := c.Param("id")
+		_, err = h.userService.GetUserByIDForAdmin(id)
+		if err != nil {
+			return c.JSON(http.StatusNotFound, helper.FormatResponse(false, string(constant.ErrUserIDNotFound.Error()), nil))
+		}
+
+		var userEdit UserbyAdminRequest
+		if err := c.Bind(&userEdit); err != nil {
+			code, message := helper.HandleEchoError(err)
+			return c.JSON(code, helper.FormatResponse(false, message, nil))
+		}
+
+		if err := c.Validate(&userEdit); err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+		}
+
+		response := users.UpdateUserByAdmin{
+			ID:       id,
+			Name:     userEdit.Name,
+			Address:  userEdit.Address,
+			Gender:   userEdit.Gender,
+			Phone:    userEdit.Phone,
+			UpdateAt: time.Now(),
+		}
+
+		if err := h.userService.UpdateUserForAdmin(response); err != nil {
+			return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+		}
+		return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.AdminSuccessUpdateUser, nil))
+}
+
+func (h *UserHandler) DeleteUserForAdmin(c echo.Context) error {
+		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+		if tokenString == "" {
+			return helper.UnauthorizedError(c)
+		}
+
+		token, err := h.jwt.ValidateToken(tokenString)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, helper.FormatResponse(false, constant.Unauthorized, nil))
+		}
+
+		adminData := h.jwt.ExtractAdminToken(token)
+		role := adminData[constant.JWT_ROLE]
+
+		if role != constant.RoleAdmin {
+			return c.JSON(http.StatusUnauthorized, helper.FormatResponse(false, constant.Unauthorized, nil))
+		}
+
+		id := c.Param("id")
+		if err := h.userService.DeleteUserForAdmin(id); err != nil {
+			return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+		}
+		return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.AdminSuccessDeleteUser, nil))
 }

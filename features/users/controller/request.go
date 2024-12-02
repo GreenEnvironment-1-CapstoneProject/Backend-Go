@@ -21,3 +21,11 @@ type UserUpdateRequest struct {
 	Password  string `json:"password" validate:"required"`
 	AvatarURL string `json:"avatar_url" validate:"required"`
 }
+
+// Admin
+type UserbyAdminRequest struct {
+	Name    string `json:"name" validate:"required"`
+	Address string `json:"address" validate:"required"`
+	Gender  string `json:"gender" validate:"required"`
+	Phone   string `json:"phone" validate:"required"`
+}

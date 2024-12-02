@@ -174,3 +174,22 @@ func (s *UserService) GetUserByIDForAdmin(id string) (users.User, error) {
 	}
 	return s.userRepo.GetUserByIDForAdmin(id)
 }
+
+func (s *UserService) GetAllUsersForAdmin() ([]users.User, error) {
+	return s.userRepo.GetAllUsersForAdmin()
+}
+
+func (s *UserService) GetAllByPageForAdmin(page int) ([]users.User, int, error) {
+	return s.userRepo.GetAllByPageForAdmin(page)
+}
+
+func (s *UserService) UpdateUserForAdmin(user users.UpdateUserByAdmin) error {
+	if user.ID == "" {
+		return constant.ErrUserIDNotFound
+	}
+	return s.userRepo.UpdateUserForAdmin(user)
+}
+
+func (s *UserService) DeleteUserForAdmin(userID string) error {
+	return s.userRepo.DeleteUserForAdmin(userID)
+}
