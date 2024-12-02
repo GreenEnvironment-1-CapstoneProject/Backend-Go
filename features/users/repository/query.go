@@ -157,6 +157,14 @@ func (u *UserData) GetUserByEmail(email string) (users.User, error) {
 	return user, err
 }
 
+func (u *UserData) UpdateAvatar(userID, avatarURL string) error {
+	err := u.DB.Model(&User{}).Where("id = ?", userID).Update("avatar_url", avatarURL).Error
+	if err != nil {
+		return constant.ErrUpdateAvatar
+	}
+	return nil
+}
+
 // Admin
 func (u *UserData) GetUserByIDForAdmin(id string) (users.User, error) {
 	var users users.User
