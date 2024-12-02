@@ -347,6 +347,20 @@ func (h *UserHandler) GoogleCallback(c echo.Context) error {
 }
 
 // Admin
+
+// Get All Users
+// @Summary      Get all users
+// @Description  Retrieve a paginated list of all users (admin access only)
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true  "Bearer token"
+// @Param        page           query     int     false "Page number (default is 1)"
+// @Success      200            {object}  helper.MetadataResponse{data=[]UserbyAdminandPageResponse}
+// @Failure      400            {object}  helper.Response{data=string} "Invalid page number"
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /admin/users [get]
 func (h *UserHandler) GetAllUsersForAdmin(c echo.Context) error {
 		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 		if tokenString == "" {
@@ -407,6 +421,19 @@ func (h *UserHandler) GetAllUsersForAdmin(c echo.Context) error {
 		return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, constant.AdminSuccessGetAllUser, metadata, response))
 }
 
+// Get User by ID
+// @Summary      Get user by ID
+// @Description  Retrieve user information by ID (admin access only)
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true  "Bearer token"
+// @Param        id             path      string  true  "User ID"
+// @Success      200            {object}  helper.Response{data=UserbyAdminResponse}
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      404            {object}  helper.Response{data=string} "User not found"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /admin/users/{id} [get]
 func (h *UserHandler) GetUserByIDForAdmin(c echo.Context) error {
 		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 		if tokenString == "" {
@@ -453,6 +480,21 @@ func (h *UserHandler) GetUserByIDForAdmin(c echo.Context) error {
 		return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.AdminSuccessGetUser, response))
 }
 
+// Update User
+// @Summary      Update user data
+// @Description  Update user information (admin access only)
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string             true  "Bearer token"
+// @Param        id             path      string             true  "User ID"
+// @Param        data           body      UserbyAdminRequest true  "User update data"
+// @Success      200            {object}  helper.Response{data=string} "User updated successfully"
+// @Failure      400            {object}  helper.Response{data=string} "Bad request"
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      404            {object}  helper.Response{data=string} "User not found"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /admin/users/{id} [put]
 func (h *UserHandler) UpdateUserForAdmin(c echo.Context) error {
 		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 		if tokenString == "" {
@@ -502,6 +544,19 @@ func (h *UserHandler) UpdateUserForAdmin(c echo.Context) error {
 		return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.AdminSuccessUpdateUser, nil))
 }
 
+// Delete User
+// @Summary      Delete user
+// @Description  Delete user account by ID (admin access only)
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true  "Bearer token"
+// @Param        id             path      string  true  "User ID"
+// @Success      200            {object}  helper.Response{data=string} "User deleted successfully"
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      404            {object}  helper.Response{data=string} "User not found"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /admin/users/{id} [delete]
 func (h *UserHandler) DeleteUserForAdmin(c echo.Context) error {
 		tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 		if tokenString == "" {
