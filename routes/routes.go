@@ -4,6 +4,7 @@ import (
 	"greenenvironment/configs"
 	"greenenvironment/constant/route"
 	"greenenvironment/features/admin"
+	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
 	"greenenvironment/features/users"
@@ -28,8 +29,14 @@ func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GECon
 
 	e.GET(route.UserPath, uh.GetUserData, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.UserPath, uh.Update, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.UserUpdateAvatar, uh.UpdateAvatar, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.UserPath, uh.Delete, echojwt.WithConfig(jwtConfig))
 
+	// Admin
+	e.GET(route.AdminManageUserPath, uh.GetAllUsersForAdmin, echojwt.WithConfig(jwtConfig))
+	e.GET(route.AdminManageUserByID, uh.GetUserByIDForAdmin, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.AdminManageUserByID, uh.UpdateUserForAdmin, echojwt.WithConfig(jwtConfig))
+	e.DELETE(route.AdminManageUserByID, uh.DeleteUserForAdmin, echojwt.WithConfig(jwtConfig))
 }
 
 func RouteAdmin(e *echo.Echo, ah admin.AdminControllerInterface, cfg configs.GEConfig) {
@@ -77,4 +84,8 @@ func RouteStorage(e *echo.Echo, sc storages.StorageInterface, cfg configs.GEConf
 	}
 
 	e.POST("/api/v1/media/upload", sc.UploadFileHandler, echojwt.WithConfig(jwtConfig))
+}
+
+func RouteGuest(e *echo.Echo, gc guest.GuestControllerInterface) {
+	e.GET("/api/v1/guest/products", gc.GetGuestProduct)
 }

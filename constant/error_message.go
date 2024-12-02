@@ -39,6 +39,7 @@ var ErrDeleteUser = errors.New("Failed to delete user")
 var ErrEmptyResetPassword = errors.New("Email, password and confirmation password cannot be empty")
 var ErrPasswordNotMatch = errors.New("Password not match")
 var ErrInvalidEmail = errors.New("Email is not valid")
+var ErrUpdateAvatar = errors.New("Failed to update avatar")
 
 var ErrGenerateJWT = errors.New("failed to generate jwt token")
 

@@ -58,6 +58,17 @@ definitions:
     - impact_point
     - name
     type: object
+  controller.GuestResponse:
+    properties:
+      new_products:
+        items:
+          $ref: '#/definitions/controller.ProductResponse'
+        type: array
+      total_new_product_this_month:
+        type: integer
+      total_product:
+        type: integer
+    type: object
   controller.ImpactCategory:
     properties:
       impact_point:
@@ -88,10 +99,12 @@ definitions:
     type: object
   controller.ProductRequest:
     properties:
-      category:
+      category_impact:
         items:
           type: string
         type: array
+      category_product:
+        type: string
       coin:
         minimum: 0
         type: integer
@@ -110,7 +123,8 @@ definitions:
         minimum: 0
         type: integer
     required:
-    - category
+    - category_impact
+    - category_product
     - coin
     - description
     - images
@@ -120,10 +134,12 @@ definitions:
     type: object
   controller.ProductResponse:
     properties:
-      category:
+      category_impact:
         items:
           $ref: '#/definitions/controller.ProductImpactCategory'
         type: array
+      category_product:
+        type: string
       coin:
         type: integer
       created_at:
@@ -227,8 +243,6 @@ definitions:
     properties:
       address:
         type: string
-      avatar_url:
-        type: string
       email:
         type: string
       gender:
@@ -243,13 +257,78 @@ definitions:
         type: string
     required:
     - address
-    - avatar_url
     - email
     - gender
     - name
     - password
     - phone
     - username
+    type: object
+  controller.UserbyAdminRequest:
+    properties:
+      address:
+        type: string
+      gender:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    required:
+    - address
+    - gender
+    - name
+    - phone
+    type: object
+  controller.UserbyAdminResponse:
+    properties:
+      address:
+        type: string
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      is_membership:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  controller.UserbyAdminandPageResponse:
+    properties:
+      address:
+        type: string
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      is_membership:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
     type: object
   helper.MetadataResponse:
     properties:
@@ -469,6 +548,281 @@ paths:
       summary: Admin login
       tags:
       - Admin
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paginated list of all users (admin access only)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Page number (default is 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.MetadataResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.UserbyAdminandPageResponse'
+                  type: array
+              type: object
+        "400":
+          description: Invalid page number
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get all users
+      tags:
+      - Admin
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user account by ID (admin access only)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: User not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete user
+      tags:
+      - Admin
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user information by ID (admin access only)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.UserbyAdminResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: User not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get user by ID
+      tags:
+      - Admin
+    put:
+      consumes:
+      - application/json
+      description: Update user information (admin access only)
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UserbyAdminRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: User not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update user data
+      tags:
+      - Admin
+  /guest/products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of products available for guest users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with product data
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.GuestResponse'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get Guest Product
+      tags:
+      - Guest
   /impacts:
     get:
       consumes:
@@ -1084,6 +1438,64 @@ paths:
       summary: Get products by category
       tags:
       - Products
+  /users/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a new avatar for the authenticated user
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Avatar image
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Avatar updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update User Avatar
+      tags:
+      - Users
   /users/delete:
     delete:
       consumes:

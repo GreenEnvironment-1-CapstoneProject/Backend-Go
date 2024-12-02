@@ -66,10 +66,6 @@ func (s *UserService) Login(user users.User) (users.UserLogin, error) {
 }
 
 func (s *UserService) Update(user users.UserUpdate) (users.UserUpdate, error) {
-	if user.Email == "" && user.Username == "" && user.Password == "" && user.Address == "" && user.Name == "" && user.Gender == "" && user.Phone == "" && user.AvatarURL == "" {
-		return users.UserUpdate{}, constant.ErrEmptyUpdate
-	}
-
 	if user.ID == "" {
 		return users.UserUpdate{}, constant.ErrUpdateUser
 	}
@@ -106,10 +102,6 @@ func (s *UserService) Update(user users.UserUpdate) (users.UserUpdate, error) {
 			return users.UserUpdate{}, err
 		}
 		user.Password = hashedPassword
-	}
-
-	if !helper.IsValidInput(user.Name) || !helper.IsValidInput(user.Address) || !helper.IsValidInput(user.Gender) {
-		return users.UserUpdate{}, constant.ErrFieldData
 	}
 
 	userData, err := s.userRepo.Update(user)
@@ -159,7 +151,7 @@ func (s *UserService) RegisterOrLoginGoogle(user users.User) (users.User, error)
 
 	// Register new user
 	user.Username = "google_" + helper.GenerateRandomString(8)
-	newUser, err := s.Register(user)
+	newUser, err := s.userRepo.Register(user)
 	if err != nil {
 		return users.User{}, err
 	}
@@ -167,10 +159,38 @@ func (s *UserService) RegisterOrLoginGoogle(user users.User) (users.User, error)
 	return newUser, nil
 }
 
+func (s *UserService) UpdateAvatar(userID, avatarURL string) error {
+	err := s.userRepo.UpdateAvatar(userID, avatarURL)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
 // Admin
 func (s *UserService) GetUserByIDForAdmin(id string) (users.User, error) {
 	if id == "" {
 		return users.User{}, constant.ErrUserIDNotFound
 	}
 	return s.userRepo.GetUserByIDForAdmin(id)
+}
+
+func (s *UserService) GetAllUsersForAdmin() ([]users.User, error) {
+	return s.userRepo.GetAllUsersForAdmin()
+}
+
+func (s *UserService) GetAllByPageForAdmin(page int) ([]users.User, int, error) {
+	return s.userRepo.GetAllByPageForAdmin(page)
+}
+
+func (s *UserService) UpdateUserForAdmin(user users.UpdateUserByAdmin) error {
+	if user.ID == "" {
+		return constant.ErrUserIDNotFound
+	}
+	return s.userRepo.UpdateUserForAdmin(user)
+}
+
+func (s *UserService) DeleteUserForAdmin(userID string) error {
+	return s.userRepo.DeleteUserForAdmin(userID)
 }
