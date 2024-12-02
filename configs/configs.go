@@ -37,8 +37,9 @@ type MidtransConfig struct {
 }
 
 type Google struct {
-	ClientID  string
-	ClientKey string
+	ClientID    string
+	ClientKey   string
+	CallbackURL string
 }
 
 type OpenAi struct {
@@ -75,6 +76,7 @@ func InitConfig() *GEConfig {
 
 	res.Google.ClientID = os.Getenv("GOOGLE_CLIENT_ID")
 	res.Google.ClientKey = os.Getenv("GOOGLE_CLIENT_SECRET")
+	res.Google.CallbackURL = os.Getenv("GOOGLE_CALLBACK_URL")
 
 	return res
 }

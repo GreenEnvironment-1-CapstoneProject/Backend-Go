@@ -12,7 +12,7 @@ var conf = configs.InitConfig().Google
 var GoogleOauthConfig = &oauth2.Config{
 	ClientID:     conf.ClientID,
 	ClientSecret: conf.ClientKey,
-	RedirectURL:  "http://greenenvironment.my.id/api/v1/users/google-callback",
+	RedirectURL:  conf.CallbackURL,
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.profile",
 		"https://www.googleapis.com/auth/userinfo.email",
