@@ -8,6 +8,9 @@ import (
 	AdminContoller "greenenvironment/features/admin/controller"
 	AdminRepository "greenenvironment/features/admin/repository"
 	AdminService "greenenvironment/features/admin/service"
+	GuestController "greenenvironment/features/guest/controller"
+	GuestRepository "greenenvironment/features/guest/repository"
+	guestService "greenenvironment/features/guest/service"
 	ImpactController "greenenvironment/features/impacts/controller"
 	ImpactRepository "greenenvironment/features/impacts/repository"
 	ImpactService "greenenvironment/features/impacts/service"
@@ -81,11 +84,16 @@ func main() {
 	productService := ProductService.NewProductService(productRepo, impactRepo)
 	productController := ProductController.NewProductController(productService, jwt)
 
+	guestRepo := GuestRepository.NewGuestRepository(db)
+	guestService := guestService.NewGuestService(guestRepo)
+	guestController := GuestController.NewGuestController(guestService)
+
 	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	routes.RoutesProducts(e, productController, *cfg)
 	routes.RouteImpacts(e, impactController, *cfg)
 	routes.RouteStorage(e, storage, *cfg)
+	routes.RouteGuest(e, guestController)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
 }
