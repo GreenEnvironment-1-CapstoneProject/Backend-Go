@@ -7,15 +7,20 @@ import (
 )
 
 type Guest struct {
-	Products []products.Product
+	TotalProduct             int
+	TotalNewProductThisMonth int
+	NewProduct               []products.Product
 }
 
-type GuestController interface {
+type GuestControllerInterface interface {
 	GetGuestProduct(c echo.Context) error
 }
-type GuestService interface {
-	GetGuest() (Guest, error)
+type GuestServiceInterface interface {
+	GetGuestProduct() (Guest, error)
 }
-type GuestRepostory interface {
-	GetGuest() (Guest, error)
+type GuestRepostoryInterface interface {
+	GetGuests() (Guest, error)
+	GetTotalProduct() (int, error)
+	GetTotalNewProductThisMonth() (int, error)
+	GetNewProduct() ([]products.Product, error)
 }

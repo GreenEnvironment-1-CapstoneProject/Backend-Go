@@ -796,6 +796,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/guest/products": {
+            "get": {
+                "description": "Retrieve a list of products available for guest users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Guest"
+                ],
+                "summary": "Get Guest Product",
+                "responses": {
+                    "200": {
+                        "description": "Successful response with product data",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.GuestResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/impacts": {
             "get": {
                 "description": "Get a list of all impact categories",
@@ -2635,6 +2688,23 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "minLength": 1
+                }
+            }
+        },
+        "controller.GuestResponse": {
+            "type": "object",
+            "properties": {
+                "new_products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.ProductResponse"
+                    }
+                },
+                "total_new_product_this_month": {
+                    "type": "integer"
+                },
+                "total_product": {
+                    "type": "integer"
                 }
             }
         },

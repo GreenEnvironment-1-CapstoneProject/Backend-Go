@@ -4,6 +4,7 @@ import (
 	"greenenvironment/configs"
 	"greenenvironment/constant/route"
 	"greenenvironment/features/admin"
+	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
 	"greenenvironment/features/users"
@@ -83,4 +84,8 @@ func RouteStorage(e *echo.Echo, sc storages.StorageInterface, cfg configs.GEConf
 	}
 
 	e.POST("/api/v1/media/upload", sc.UploadFileHandler, echojwt.WithConfig(jwtConfig))
+}
+
+func RouteGuest(e *echo.Echo, gc guest.GuestControllerInterface) {
+	e.GET("/api/v1/guest/products", gc.GetGuestProduct)
 }
