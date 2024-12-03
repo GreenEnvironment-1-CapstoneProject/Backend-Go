@@ -42,6 +42,29 @@ definitions:
     - password
     - username
     type: object
+  controller.CartItems:
+    properties:
+      product:
+        $ref: '#/definitions/controller.ProductResponse'
+      quantity:
+        type: integer
+    type: object
+  controller.CartResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/controller.CartItems'
+        type: array
+      user:
+        $ref: '#/definitions/controller.User'
+    type: object
+  controller.CreateCartRequest:
+    properties:
+      product_id:
+        type: string
+    required:
+    - product_id
+    type: object
   controller.CreateImpactRequest:
     properties:
       description:
@@ -71,6 +94,8 @@ definitions:
     type: object
   controller.ImpactCategory:
     properties:
+      description:
+        type: string
       impact_point:
         type: integer
       name:
@@ -159,6 +184,30 @@ definitions:
       stock:
         type: integer
       updated_at:
+        type: string
+    type: object
+  controller.UpdateCartRequest:
+    properties:
+      product_id:
+        type: string
+      type:
+        enum:
+        - increment
+        - decrement
+        type: string
+    required:
+    - product_id
+    - type
+    type: object
+  controller.User:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      username:
         type: string
     type: object
   controller.UserInfoResponse:
@@ -794,6 +843,154 @@ paths:
       summary: Update user data
       tags:
       - Admin
+  /cart:
+    get:
+      consumes:
+      - application/json
+      description: Get all items in the user's cart
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: get cards successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.CartResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Get Cart
+      tags:
+      - Cart
+    post:
+      consumes:
+      - application/json
+      description: Add a product to the user's cart
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Request body for creating a cart
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateCartRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: create card successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Create Cart
+      tags:
+      - Cart
+    put:
+      consumes:
+      - application/json
+      description: Update a product's quantity or type in the user's cart
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Request body for updating a cart
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UpdateCartRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: update card successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Update Cart
+      tags:
+      - Cart
+  /cart/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a product from the user's cart
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: delete card successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Delete Cart
+      tags:
+      - Cart
   /guest/products:
     get:
       consumes:

@@ -1,7 +1,7 @@
 package products
 
 import (
-	impactcategory "greenenvironment/features/impacts/repository"
+	impactcategory "greenenvironment/features/impacts"
 	"time"
 
 	"github.com/labstack/echo/v4"
