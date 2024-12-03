@@ -23,3 +23,6 @@ const ProductByID = ProductPath + "/:id"
 
 const ImpactCategoryPath = BasePath + "/impacts"
 const ImpactCategoryByID = ImpactCategoryPath + "/:id"
+
+const CartPath = BasePath + "/cart"
+const CartByID = CartPath + "/:id"

@@ -66,3 +66,5 @@ var ErrDeleteProduct = errors.New("failed to delete product")
 var ErrImpactCategoryNotFound = errors.New("failed to get impact category")
 var ErrCreateImpactCategory = errors.New("failed to create impact category")
 var ErrDeleteImpactCategory = errors.New("failed to delete impact category")
+
+var ErrFieldType = errors.New("field type error")
