@@ -29,6 +29,7 @@ type ProductImage struct {
 type ImpactCategory struct {
 	Name        string `json:"name"`
 	ImpactPoint int    `json:"impact_point"`
+	Description string `json:"description"`
 }
 
 func (p ProductResponse) ToResponse(product products.Product) ProductResponse {

@@ -4,6 +4,7 @@ import (
 	"greenenvironment/configs"
 	"greenenvironment/constant/route"
 	"greenenvironment/features/admin"
+	"greenenvironment/features/cart"
 	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
@@ -88,4 +89,15 @@ func RouteStorage(e *echo.Echo, sc storages.StorageInterface, cfg configs.GEConf
 
 func RouteGuest(e *echo.Echo, gc guest.GuestControllerInterface) {
 	e.GET("/api/v1/guest/products", gc.GetGuestProduct)
+}
+
+func RouteCart(e *echo.Echo, cc cart.CartControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+	e.GET(route.CartPath, cc.Get, echojwt.WithConfig(jwtConfig))
+	e.POST(route.CartPath, cc.Create, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.CartPath, cc.Update, echojwt.WithConfig(jwtConfig))
+	e.DELETE(route.CartByID, cc.Delete, echojwt.WithConfig(jwtConfig))
 }
