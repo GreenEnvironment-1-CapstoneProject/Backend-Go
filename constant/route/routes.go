@@ -26,3 +26,6 @@ const ImpactCategoryByID = ImpactCategoryPath + "/:id"
 
 const CartPath = BasePath + "/cart"
 const CartByID = CartPath + "/:id"
+
+const TransactionPath = BasePath + "/transactions"
+const TransactionByID = TransactionPath + "/:id"

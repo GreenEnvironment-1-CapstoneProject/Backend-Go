@@ -100,25 +100,12 @@ func (pc *ProductController) Create(c echo.Context) error {
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true   "Bearer Token"
 // @Param        pages          query     int     false  "Page number"
 // @Success      200  {object}  helper.MetadataResponse{data=[]ProductResponse} "Products retrieved successfully"
 // @Failure      401  {object}  helper.Response{data=string} "Unauthorized"
 // @Failure      500  {object}  helper.Response{data=string} "Internal server error"
 // @Router       /products [get]
 func (pc *ProductController) GetAll(c echo.Context) error {
-	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
-	if tokenString == "" {
-		helper.UnauthorizedError(c)
-		return nil
-	}
-
-	_, err := pc.jwtService.ValidateToken(tokenString)
-	if err != nil {
-		helper.UnauthorizedError(c)
-		return nil
-	}
-
 	page, err := strconv.Atoi(c.QueryParam("pages"))
 	if err != nil {
 		page = 1
@@ -149,7 +136,6 @@ func (pc *ProductController) GetAll(c echo.Context) error {
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true   "Bearer Token"
 // @Param        id             path      string  true   "Product ID"
 // @Success      200  {object}  helper.Response{data=ProductResponse} "Product retrieved successfully"
 // @Failure      401  {object}  helper.Response{data=string} "Unauthorized"
@@ -157,18 +143,6 @@ func (pc *ProductController) GetAll(c echo.Context) error {
 // @Failure      500  {object}  helper.Response{data=string} "Internal server error"
 // @Router       /products/{id} [get]
 func (pc *ProductController) GetById(c echo.Context) error {
-	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
-	if tokenString == "" {
-		helper.UnauthorizedError(c)
-		return nil
-	}
-
-	_, err := pc.jwtService.ValidateToken(tokenString)
-	if err != nil {
-		helper.UnauthorizedError(c)
-		return nil
-	}
-
 	paramId := c.Param("id")
 	productId, err := uuid.Parse(paramId)
 
@@ -192,7 +166,6 @@ func (pc *ProductController) GetById(c echo.Context) error {
 // @Tags         Products
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header    string  true   "Bearer Token"
 // @Param        category_name  path      string  true   "Category name"
 // @Param        pages          query     int     false  "Page number"
 // @Success      200  {object}  helper.MetadataResponse{data=[]ProductResponse} "Products retrieved successfully"
@@ -200,17 +173,6 @@ func (pc *ProductController) GetById(c echo.Context) error {
 // @Failure      500  {object}  helper.Response{data=string} "Internal server error"
 // @Router       /products/categories/{category_name} [get]
 func (pc *ProductController) GetByCategory(c echo.Context) error {
-	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
-	if tokenString == "" {
-		helper.UnauthorizedError(c)
-		return nil
-	}
-
-	_, err := pc.jwtService.ValidateToken(tokenString)
-	if err != nil {
-		helper.UnauthorizedError(c)
-		return nil
-	}
 	productCategory := c.Param("category_name")
 	page, err := strconv.Atoi(c.QueryParam("pages"))
 	if err != nil {
@@ -259,14 +221,13 @@ func (pc *ProductController) Update(c echo.Context) error {
 
 	token, err := pc.jwtService.ValidateToken(tokenString)
 	if err != nil {
-		helper.UnauthorizedError(c)
-		return nil
+		return helper.UnauthorizedError(c)
 	}
 
 	adminData := pc.jwtService.ExtractUserToken(token)
 	role := adminData[constant.JWT_ROLE]
 	if role != constant.RoleAdmin {
-		helper.UnauthorizedError(c)
+		return helper.UnauthorizedError(c)
 	}
 
 	productID := c.Param("id")
@@ -343,7 +304,7 @@ func (pc *ProductController) Delete(c echo.Context) error {
 	adminData := pc.jwtService.ExtractUserToken(token)
 	role := adminData[constant.JWT_ROLE]
 	if role != constant.RoleAdmin {
-		helper.UnauthorizedError(c)
+		return helper.UnauthorizedError(c)
 	}
 
 	productID := c.Param("id")

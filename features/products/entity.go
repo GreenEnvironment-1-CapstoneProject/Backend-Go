@@ -36,6 +36,7 @@ type ImpactCategory struct {
 	ID          string
 	Name        string
 	ImpactPoint int
+	Description string
 }
 
 type ProductRepositoryInterface interface {

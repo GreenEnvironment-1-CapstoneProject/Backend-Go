@@ -44,6 +44,8 @@ definitions:
     type: object
   controller.CartItems:
     properties:
+      id:
+        type: string
       product:
         $ref: '#/definitions/controller.ProductResponse'
       quantity:
@@ -185,6 +187,60 @@ definitions:
         type: integer
       updated_at:
         type: string
+    type: object
+  controller.TransactionAllUserResponses:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      product_image:
+        type: string
+      product_name:
+        type: string
+      snap_url:
+        type: string
+      status:
+        type: string
+      total_transaction:
+        type: number
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  controller.TransactionRequest:
+    properties:
+      cart_ids:
+        items:
+          type: string
+        type: array
+      using_coin:
+        type: boolean
+    type: object
+  controller.TransactionResponse:
+    properties:
+      amount:
+        type: integer
+      id:
+        type: string
+      snap_url:
+        type: string
+    type: object
+  controller.TransactionUserResponse:
+    properties:
+      id:
+        type: string
+      product_image:
+        type: string
+      product_name:
+        type: string
+      snap_url:
+        type: string
+      status:
+        type: string
+      total:
+        type: number
     type: object
   controller.UpdateCartRequest:
     properties:
@@ -597,6 +653,53 @@ paths:
       summary: Admin login
       tags:
       - Admin
+  /admin/transactions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all transactions in the system. Only accessible by admin
+        users.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transactions retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.TransactionAllUserResponses'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get all transactions
+      tags:
+      - Transactions
   /admin/users:
     get:
       consumes:
@@ -1298,11 +1401,6 @@ paths:
       - application/json
       description: Retrieve all products with pagination.
       parameters:
-      - description: Bearer Token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: Page number
         in: query
         name: pages
@@ -1464,11 +1562,6 @@ paths:
       - application/json
       description: Retrieve a specific product by its unique identifier.
       parameters:
-      - description: Bearer Token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: Product ID
         in: path
         name: id
@@ -1586,11 +1679,6 @@ paths:
       - application/json
       description: Retrieve products by a specific category name with pagination.
       parameters:
-      - description: Bearer Token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: Category name
         in: path
         name: category_name
@@ -1635,6 +1723,159 @@ paths:
       summary: Get products by category
       tags:
       - Products
+  /transactions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all transactions made by the logged-in user.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transactions retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.TransactionUserResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get user transactions
+      tags:
+      - Transactions
+    post:
+      consumes:
+      - application/json
+      description: Create a new transaction using the specified cart items.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Transaction Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.TransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaction created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.TransactionResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a new transaction
+      tags:
+      - Transactions
+  /transactions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a transaction by ID. Only accessible by admin users.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaction deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete a transaction
+      tags:
+      - Transactions
   /users/avatar:
     put:
       consumes:

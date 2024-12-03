@@ -54,6 +54,10 @@ func (cc *CartController) Create(c echo.Context) error {
 	}
 	userData := cc.jwtService.ExtractUserToken(token)
 	userId := userData[constant.JWT_ID]
+	role := userData[constant.JWT_ROLE]
+	if role != constant.RoleUser {
+		return helper.UnauthorizedError(c)
+	}
 
 	newCart := cart.NewCart{
 		ProductID: cartRequest.ProductID,
@@ -100,6 +104,10 @@ func (cc *CartController) Update(c echo.Context) error {
 	}
 	userData := cc.jwtService.ExtractUserToken(token)
 	userId := userData[constant.JWT_ID]
+	role := userData[constant.JWT_ROLE]
+	if role != constant.RoleUser {
+		return helper.UnauthorizedError(c)
+	}
 
 	newCart := cart.UpdateCart{
 		ProductID: cartRequest.ProductID,
@@ -139,6 +147,10 @@ func (cc *CartController) Delete(c echo.Context) error {
 	}
 	userData := cc.jwtService.ExtractUserToken(token)
 	userId := userData[constant.JWT_ID]
+	role := userData[constant.JWT_ROLE]
+	if role != constant.RoleUser {
+		return helper.UnauthorizedError(c)
+	}
 
 	productID := c.Param("id")
 
@@ -208,6 +220,7 @@ func (cc *CartController) Get(c echo.Context) error {
 		}
 
 		response.Items = append(response.Items, CartItems{
+			ID:       cart.ID,
 			Quantity: cart.Quantity,
 			Product: products.ProductResponse{
 				ID:              cart.Product.ID,

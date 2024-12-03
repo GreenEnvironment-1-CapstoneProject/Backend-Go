@@ -45,6 +45,7 @@ func (p ProductResponse) ToResponse(product products.Product) ProductResponse {
 			ImpactCategory: ImpactCategory{
 				Name:        impactCategory.ImpactCategory.Name,
 				ImpactPoint: impactCategory.ImpactCategory.ImpactPoint,
+				Description: impactCategory.ImpactCategory.Description,
 			},
 		}
 	}
