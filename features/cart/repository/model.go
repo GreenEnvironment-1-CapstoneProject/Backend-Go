@@ -64,6 +64,7 @@ func (c *Cart) ToEntity() cart.Cart {
 
 		Items: []cart.CartItem{
 			{
+				ID:       c.ID,
 				Quantity: c.Quantity,
 				Product: products.Product{
 					ID:               c.Product.ID,

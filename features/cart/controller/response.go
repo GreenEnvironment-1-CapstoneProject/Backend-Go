@@ -15,6 +15,7 @@ type User struct {
 }
 
 type CartItems struct {
+	ID       string                   `json:"id"`
 	Quantity int                      `json:"quantity"`
 	Product  products.ProductResponse `json:"product"`
 }

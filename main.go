@@ -20,12 +20,19 @@ import (
 	ProductController "greenenvironment/features/products/controller"
 	ProductRepository "greenenvironment/features/products/repository"
 	ProductService "greenenvironment/features/products/service"
+	TransactionController "greenenvironment/features/transactions/controller"
+	TransactionRepository "greenenvironment/features/transactions/repository"
+	TransactionService "greenenvironment/features/transactions/service"
 	UserController "greenenvironment/features/users/controller"
 	UserRepository "greenenvironment/features/users/repository"
 	UserService "greenenvironment/features/users/service"
+	WebhookController "greenenvironment/features/webhook/controller"
+	WebHookRepository "greenenvironment/features/webhook/repository"
+	WebhookService "greenenvironment/features/webhook/service"
 
 	"greenenvironment/routes"
 	"greenenvironment/utils/databases"
+	"greenenvironment/utils/midtrans"
 	"greenenvironment/utils/storages"
 
 	"github.com/go-playground/validator"
@@ -63,6 +70,7 @@ func main() {
 	databases.Migrate(db)
 	jwt := helper.NewJWT(cfg.JWT_Secret)
 	storage := storages.NewStorage(cfg.Cloudinary)
+	midtransService := midtrans.NewPaymentGateway(cfg.Midtrans)
 
 	e := echo.New()
 	e.Validator = &helper.CustomValidator{Validator: validator.New()}
@@ -95,6 +103,14 @@ func main() {
 	cartService := CartService.NewCartService(cartRepo)
 	cartController := CartController.NewCartController(cartService, jwt)
 
+	transactionRepo := TransactionRepository.NewTransactionRepository(db)
+	transactionService := TransactionService.NewTransactionService(transactionRepo, midtransService)
+	transactionController := TransactionController.NewTransactionController(transactionService, jwt)
+
+	webhookRepo := WebHookRepository.NewWebhookRepository(db)
+	webhookService := WebhookService.NewWebhookService(webhookRepo)
+	webhookController := WebhookController.NewWebhookRequest(webhookService)
+
 	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	routes.RoutesProducts(e, productController, *cfg)
@@ -102,6 +118,9 @@ func main() {
 	routes.RouteStorage(e, storage, *cfg)
 	routes.RouteGuest(e, guestController)
 	routes.RouteCart(e, cartController, *cfg)
+	routes.RouteTransaction(e, transactionController, *cfg)
+	routes.PaymentNotification(e, webhookController)
+
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
 }
