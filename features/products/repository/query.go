@@ -49,19 +49,40 @@ func (pr *ProductRepository) Create(product products.Product) error {
 	return nil
 }
 
-func (pr *ProductRepository) GetAllByPage(page int) ([]products.Product, int, error) {
+func (pr *ProductRepository) GetAllByPage(page int, search string, sort string) ([]products.Product, int, error) {
 	var productDataData []products.Product
 
-	var totalproductData int64
-	err := pr.DB.Model(&Product{}).Count(&totalproductData).Error
+	var totalProductData int64
+
+	query := pr.DB.Model(&Product{}).Where("deleted_at IS NULL")
+	if search != "" {
+		query = query.Where("name LIKE ?", "%"+search+"%")
+	}
+
+	err := query.Count(&totalProductData).Error
 	if err != nil {
 		return nil, 0, constant.ErrProductEmpty
 	}
 
 	productDataPerPage := 20
-	totalPages := int((totalproductData + int64(productDataPerPage) - 1) / int64(productDataPerPage))
+	totalPages := int((totalProductData + int64(productDataPerPage) - 1) / int64(productDataPerPage))
 
-	response := pr.DB.Preload("Images").Preload("ImpactCategories.ImpactCategory").Where("deleted_at IS NULL").Offset((page - 1) * productDataPerPage).Limit(productDataPerPage).Find(&productDataData)
+	switch sort {
+	case "name_asc":
+		query = query.Order("name ASC")
+	case "name_desc":
+		query = query.Order("name DESC")
+	case "time_asc":
+		query = query.Order("created_at ASC")
+	case "time_desc":
+		query = query.Order("created_at DESC")
+	default:
+		query = query.Order("created_at DESC")
+	}
+
+	response := query.Preload("Images").Preload("ImpactCategories.ImpactCategory").
+		Offset((page - 1) * productDataPerPage).Limit(productDataPerPage).
+		Find(&productDataData)
 
 	if response.Error != nil {
 		return nil, 0, constant.ErrGetProduct
@@ -154,23 +175,42 @@ func (pr *ProductRepository) Delete(id string) error {
 	return tx.Commit().Error
 }
 
-func (pr *ProductRepository) GetByCategory(categoryName string, page int) ([]products.Product, int, error) {
+func (pr *ProductRepository) GetByCategory(categoryName string, page int, search string, sort string) ([]products.Product, int, error) {
 	var products []products.Product
 
-	var totalproductData int64
+	var totalProductData int64
 
-	err := pr.DB.Model(&Product{}).Where("category = ? ", categoryName).Count(&totalproductData).Error
+	query := pr.DB.Model(&Product{}).Where("category = ? AND deleted_at IS NULL", categoryName)
+
+	if search != "" {
+		query = query.Where("name LIKE ?", "%"+search+"%")
+	}
+
+	err := query.Count(&totalProductData).Error
 	if err != nil {
 		return nil, 0, constant.ErrProductEmpty
 	}
 
 	productDataPerPage := 20
-	totalPages := int((totalproductData + int64(productDataPerPage) - 1) / int64(productDataPerPage))
+	totalPages := int((totalProductData + int64(productDataPerPage) - 1) / int64(productDataPerPage))
 
-	tx := pr.DB.Model(&Product{}).Where("category = ?", categoryName).
-		Preload("Images").
+	switch sort {
+	case "name_asc":
+		query = query.Order("name ASC")
+	case "name_desc":
+		query = query.Order("name DESC")
+	case "time_asc":
+		query = query.Order("created_at ASC")
+	case "time_desc":
+		query = query.Order("created_at DESC")
+	default:
+		query = query.Order("created_at DESC") // Default sort by newest
+	}
+
+	tx := query.Preload("Images").
 		Preload("ImpactCategories.ImpactCategory").
-		Offset((page - 1) * productDataPerPage).Limit(productDataPerPage).
+		Offset((page - 1) * productDataPerPage).
+		Limit(productDataPerPage).
 		Find(&products)
 
 	if tx.Error != nil {

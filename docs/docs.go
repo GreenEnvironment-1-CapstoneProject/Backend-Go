@@ -1655,7 +1655,7 @@ const docTemplate = `{
         },
         "/products": {
             "get": {
-                "description": "Retrieve all products with pagination.",
+                "description": "Retrieve all products with pagination, search, and sort functionality.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1671,6 +1671,18 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Page number",
                         "name": "pages",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by product name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by name or time (e.g., name_asc, name_desc, time_asc, time_desc)",
+                        "name": "sort",
                         "in": "query"
                     }
                 ],
@@ -1690,6 +1702,24 @@ const docTemplate = `{
                                             "items": {
                                                 "$ref": "#/definitions/controller.ProductResponse"
                                             }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
                                         }
                                     }
                                 }
@@ -1842,7 +1872,7 @@ const docTemplate = `{
         },
         "/products/categories/{category_name}": {
             "get": {
-                "description": "Retrieve products by a specific category name with pagination.",
+                "description": "Retrieve products by a specific category name with pagination, search, and sort functionality.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1865,6 +1895,18 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Page number",
                         "name": "pages",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by product name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by name or time (e.g., name_asc, name_desc, time_asc, time_desc)",
+                        "name": "sort",
                         "in": "query"
                     }
                 ],
@@ -1890,8 +1932,44 @@ const docTemplate = `{
                             ]
                         }
                     },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
                         "schema": {
                             "allOf": [
                                 {

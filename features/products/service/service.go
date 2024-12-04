@@ -36,8 +36,8 @@ func (ps *ProductService) Create(product products.Product) error {
 	return ps.productRepo.Create(product)
 }
 
-func (ps *ProductService) GetAllByPage(page int) ([]products.Product, int, error) {
-	products, total, err := ps.productRepo.GetAllByPage(page)
+func (ps *ProductService) GetAllByPage(page int, search string, sort string) ([]products.Product, int, error) {
+	products, total, err := ps.productRepo.GetAllByPage(page, search, sort)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -48,8 +48,8 @@ func (ps *ProductService) GetAllByPage(page int) ([]products.Product, int, error
 	return products, total, nil
 }
 
-func (ps *ProductService) GetByCategory(category string, page int) ([]products.Product, int, error) {
-	products, total, err := ps.productRepo.GetByCategory(category, page)
+func (ps *ProductService) GetByCategory(category string, page int, search string, sort string) ([]products.Product, int, error) {
+	products, total, err := ps.productRepo.GetByCategory(category, page, search, sort)
 	if err != nil {
 		return nil, 0, err
 	}
