@@ -61,9 +61,9 @@ func RoutesProducts(e *echo.Echo, ph products.ProductControllerInterface, cfg co
 		ErrorHandler: helper.JWTErrorHandler,
 	}
 	e.POST(route.ProductPath, ph.Create, echojwt.WithConfig(jwtConfig))
-	e.GET(route.ProductPath, ph.GetAll, echojwt.WithConfig(jwtConfig))
-	e.GET(route.ProductByID, ph.GetById, echojwt.WithConfig(jwtConfig))
-	e.GET(route.CategoryProduct, ph.GetByCategory, echojwt.WithConfig(jwtConfig))
+	e.GET(route.ProductPath, ph.GetAll)
+	e.GET(route.ProductByID, ph.GetById)
+	e.GET(route.CategoryProduct, ph.GetByCategory)
 	e.PUT(route.ProductByID, ph.Update, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.ProductByID, ph.Delete, echojwt.WithConfig(jwtConfig))
 }

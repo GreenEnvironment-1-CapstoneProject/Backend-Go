@@ -1399,12 +1399,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve all products with pagination.
+      description: Retrieve all products with pagination, search, and sort functionality.
       parameters:
       - description: Page number
         in: query
         name: pages
         type: integer
+      - description: Search by product name
+        in: query
+        name: search
+        type: string
+      - description: Sort by name or time (e.g., name_asc, name_desc, time_asc, time_desc)
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
@@ -1418,6 +1426,15 @@ paths:
                   items:
                     $ref: '#/definitions/controller.ProductResponse'
                   type: array
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
               type: object
         "401":
           description: Unauthorized
@@ -1677,7 +1694,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve products by a specific category name with pagination.
+      description: Retrieve products by a specific category name with pagination,
+        search, and sort functionality.
       parameters:
       - description: Category name
         in: path
@@ -1688,6 +1706,14 @@ paths:
         in: query
         name: pages
         type: integer
+      - description: Search by product name
+        in: query
+        name: search
+        type: string
+      - description: Sort by name or time (e.g., name_asc, name_desc, time_asc, time_desc)
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
@@ -1702,8 +1728,26 @@ paths:
                     $ref: '#/definitions/controller.ProductResponse'
                   type: array
               type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
         "401":
           description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Category not found
           schema:
             allOf:
             - $ref: '#/definitions/helper.Response'
