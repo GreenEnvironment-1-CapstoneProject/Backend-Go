@@ -60,6 +60,28 @@ definitions:
       user:
         $ref: '#/definitions/controller.User'
     type: object
+  controller.ChatbotRequest:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+    required:
+    - message
+    type: object
+  controller.ChatbotResponse:
+    properties:
+      chat_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      role:
+        type: string
+    type: object
   controller.CreateCartRequest:
     properties:
       product_id:
@@ -1128,6 +1150,125 @@ paths:
       summary: Delete Cart
       tags:
       - Cart
+  /chatbots:
+    post:
+      consumes:
+      - application/json
+      description: Add a user message and get a response from the chatbot
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Chatbot message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChatbotRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success Create Chatbot
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.ChatbotResponse'
+              type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a chatbot conversation
+      tags:
+      - Chatbot
+  /chatbots/{chatID}:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all messages in a chatbot session using the ChatID
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Chat ID
+        in: path
+        name: chatID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success Get Chatbot
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.ChatbotResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Chatbot not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Retrieve chatbot conversation by ChatID
+      tags:
+      - Chatbot
   /guest/products:
     get:
       consumes:

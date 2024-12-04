@@ -3,6 +3,7 @@ package databases
 import (
 	DataAdmin "greenenvironment/features/admin/repository"
 	DataCart "greenenvironment/features/cart/repository"
+	DataChatbot "greenenvironment/features/chatbot/repository"
 	DataImpact "greenenvironment/features/impacts/repository"
 	DataProduct "greenenvironment/features/products/repository"
 	DataReview "greenenvironment/features/review_products/repository"
@@ -24,6 +25,7 @@ func Migrate(db *gorm.DB) error {
 	db.AutoMigrate(&DataTransaction.Transaction{})
 	db.AutoMigrate(&DataTransaction.TransactionItem{})
 	db.AutoMigrate(&DataReview.ReviewProduct{})
+	db.AutoMigrate(&DataChatbot.Chatbot{})
 
 	return nil
 }
