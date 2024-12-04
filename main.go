@@ -30,6 +30,10 @@ import (
 	WebHookRepository "greenenvironment/features/webhook/repository"
 	WebhookService "greenenvironment/features/webhook/service"
 
+	ReviewController "greenenvironment/features/review_products/controller"
+	ReviewRepository "greenenvironment/features/review_products/repository"
+	ReviewService "greenenvironment/features/review_products/service"
+
 	"greenenvironment/routes"
 	"greenenvironment/utils/databases"
 	"greenenvironment/utils/midtrans"
@@ -111,6 +115,10 @@ func main() {
 	webhookService := WebhookService.NewWebhookService(webhookRepo)
 	webhookController := WebhookController.NewWebhookRequest(webhookService)
 
+	reviewRepo := ReviewRepository.NewReviewProductRepository(db)
+	reviewService := ReviewService.NewReviewProductService(reviewRepo)
+	reviewController := ReviewController.NewReviewProductController(reviewService, jwt)
+
 	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	routes.RoutesProducts(e, productController, *cfg)
@@ -120,6 +128,7 @@ func main() {
 	routes.RouteCart(e, cartController, *cfg)
 	routes.RouteTransaction(e, transactionController, *cfg)
 	routes.PaymentNotification(e, webhookController)
+	routes.RouteReviewProduct(e, reviewController, *cfg)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))

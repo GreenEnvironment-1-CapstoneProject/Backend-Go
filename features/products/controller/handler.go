@@ -117,7 +117,7 @@ func (pc *ProductController) GetAll(c echo.Context) error {
 	search := c.QueryParam("search")
 	sort := c.QueryParam("sort")
 
-	products, totalPages, err := pc.productService.GetAllByPage(page, search, sort)
+	products, totalPages, totalProduct, err := pc.productService.GetAllByPage(page, search, sort)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
@@ -129,8 +129,9 @@ func (pc *ProductController) GetAll(c echo.Context) error {
 	}
 
 	metadata := map[string]interface{}{
-		"TotalPage": totalPages,
-		"Page":      page,
+		"TotalProducts": totalProduct,
+		"TotalPage":     totalPages,
+		"Page":          page,
 	}
 
 	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "get all products successfully", metadata, response))
@@ -191,7 +192,7 @@ func (pc *ProductController) GetByCategory(c echo.Context) error {
 
 	search := c.QueryParam("search")
 	sort := c.QueryParam("sort")
-	products, totalPages, err := pc.productService.GetByCategory(productCategory, page, search, sort)
+	products, totalPages, totalProduct, err := pc.productService.GetByCategory(productCategory, page, search, sort)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
@@ -202,8 +203,9 @@ func (pc *ProductController) GetByCategory(c echo.Context) error {
 		response = append(response, new(ProductResponse).ToResponse(product))
 	}
 	metadata := map[string]interface{}{
-		"TotalPage": totalPages,
-		"Page":      page,
+		"TotalProducts": totalProduct,
+		"TotalPage":     totalPages,
+		"Page":          page,
 	}
 
 	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "get all products by category name successfully", metadata, response))

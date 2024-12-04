@@ -15,6 +15,7 @@ type Cart struct {
 type NewCart struct {
 	UserID    string
 	ProductID string
+	Quantity  int
 }
 
 type CartItem struct {
@@ -27,6 +28,7 @@ type UpdateCart struct {
 	UserID    string
 	ProductID string
 	Type      string
+	Quantity  int
 }
 
 type CartRepositoryInterface interface {
@@ -35,9 +37,10 @@ type CartRepositoryInterface interface {
 	Delete(userId string, productId string) error
 	Get(userId string) (Cart, error)
 	IsCartExist(userId string, productId string) (bool, error)
-	InsertIncrement(userId string, productId string) error
+	InsertIncrement(userId string, productId string, qty int) error
 	InsertDecrement(userId string, productId string) error
 	GetCartQty(userId string, productId string) (int, error)
+	InsertByQuantity(userId string, productId string, quantity int) error
 }
 
 type CartServiceInterface interface {

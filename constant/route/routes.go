@@ -29,3 +29,6 @@ const CartByID = CartPath + "/:id"
 
 const TransactionPath = BasePath + "/transactions"
 const TransactionByID = TransactionPath + "/:id"
+
+const ReviewProduct = BasePath + "/reviews"
+const ReviewProductByID = ReviewProduct + "/products/:id"
