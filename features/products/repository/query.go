@@ -219,3 +219,13 @@ func (pr *ProductRepository) GetByCategory(categoryName string, page int, search
 
 	return products, totalPages, nil
 }
+
+func (gr *ProductRepository) GetTotalProduct() (int, error) {
+	var totalProduct int64
+	err := gr.DB.Table("products").Count(&totalProduct).Error
+	if err != nil {
+		return 0, err
+	}
+	return int(totalProduct), nil
+
+}

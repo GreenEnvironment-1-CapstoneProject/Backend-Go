@@ -8,6 +8,7 @@ import (
 	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
+	reviewproducts "greenenvironment/features/review_products"
 	"greenenvironment/features/transactions"
 	"greenenvironment/features/users"
 	"greenenvironment/features/webhook"
@@ -119,4 +120,14 @@ func RouteTransaction(e *echo.Echo, tc transactions.TransactionControllerInterfa
 
 func PaymentNotification(e *echo.Echo, wh webhook.MidtransNotificationController) {
 	e.POST("/midtrans-notification", wh.HandleNotification)
+}
+
+func RouteReviewProduct(e *echo.Echo, rpc reviewproducts.ReviewProductControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+
+	e.POST(route.ReviewProduct, rpc.Create, echojwt.WithConfig(jwtConfig))
+	e.GET(route.ReviewProductByID, rpc.GetProductReview)
 }

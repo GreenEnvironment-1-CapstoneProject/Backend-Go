@@ -64,6 +64,8 @@ definitions:
     properties:
       product_id:
         type: string
+      quantity:
+        type: integer
     required:
     - product_id
     type: object
@@ -82,6 +84,20 @@ definitions:
     - description
     - impact_point
     - name
+    type: object
+  controller.CreateRequest:
+    properties:
+      product_id:
+        type: string
+      rate:
+        maximum: 5
+        type: integer
+      review:
+        type: string
+    required:
+    - product_id
+    - rate
+    - review
     type: object
   controller.GuestResponse:
     properties:
@@ -188,6 +204,21 @@ definitions:
       updated_at:
         type: string
     type: object
+  controller.ResponseReviewProduct:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      rate:
+        type: integer
+      review:
+        type: string
+      updated_at:
+        type: string
+    type: object
   controller.TransactionAllUserResponses:
     properties:
       created_at:
@@ -198,7 +229,7 @@ definitions:
         type: string
       product_name:
         type: string
-      snap_url:
+      snap_token:
         type: string
       status:
         type: string
@@ -224,7 +255,7 @@ definitions:
         type: integer
       id:
         type: string
-      snap_url:
+      snap_token:
         type: string
     type: object
   controller.TransactionUserResponse:
@@ -246,10 +277,13 @@ definitions:
     properties:
       product_id:
         type: string
+      quantity:
+        type: integer
       type:
         enum:
         - increment
         - decrement
+        - qty
         type: string
     required:
     - product_id
@@ -1767,6 +1801,115 @@ paths:
       summary: Get products by category
       tags:
       - Products
+  /reviews:
+    post:
+      consumes:
+      - application/json
+      description: Add a review for a specific product.
+      parameters:
+      - description: Request payload for creating a review
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Review created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized access
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a new product review
+      tags:
+      - Reviews
+  /reviews/products/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of reviews for a product by its ID.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reviews retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.ResponseReviewProduct'
+                  type: array
+              type: object
+        "400":
+          description: Bad request or invalid ID format
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Product not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Retrieve reviews for a specific product
+      tags:
+      - Reviews
   /transactions:
     get:
       consumes:

@@ -5,6 +5,7 @@ import (
 	DataCart "greenenvironment/features/cart/repository"
 	DataImpact "greenenvironment/features/impacts/repository"
 	DataProduct "greenenvironment/features/products/repository"
+	DataReview "greenenvironment/features/review_products/repository"
 	DataTransaction "greenenvironment/features/transactions/repository"
 	DataUser "greenenvironment/features/users/repository"
 
@@ -22,6 +23,7 @@ func Migrate(db *gorm.DB) error {
 	db.AutoMigrate(&DataCart.Cart{})
 	db.AutoMigrate(&DataTransaction.Transaction{})
 	db.AutoMigrate(&DataTransaction.TransactionItem{})
+	db.AutoMigrate(&DataReview.ReviewProduct{})
 
 	return nil
 }
