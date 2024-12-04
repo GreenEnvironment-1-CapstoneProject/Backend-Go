@@ -16,11 +16,18 @@ func NewCartRepository(db *gorm.DB) cart.CartRepositoryInterface {
 }
 
 func (cr *CartRepository) Create(cart cart.NewCart) error {
+	var dbQty int
+
+	if cart.Quantity >= 0 {
+		dbQty = cart.Quantity
+	} else {
+		dbQty = 1
+	}
 	newCart := &Cart{
 		ID:        uuid.New().String(),
 		UserID:    cart.UserID,
 		ProductID: cart.ProductID,
-		Quantity:  1,
+		Quantity:  dbQty,
 	}
 
 	err := cr.DB.Create(newCart).Error
@@ -91,8 +98,15 @@ func (cr *CartRepository) IsCartExist(userId string, productId string) (bool, er
 	return count > 0, nil
 }
 
-func (cr *CartRepository) InsertIncrement(userId string, productId string) error {
-	return cr.DB.Model(&Cart{}).Where("user_id = ? AND product_id = ?", userId, productId).Update("quantity", gorm.Expr("quantity + 1")).Error
+func (cr *CartRepository) InsertIncrement(userId string, productId string, qty int) error {
+	var dbQty int
+
+	if qty >= 0 {
+		dbQty = qty
+	} else {
+		dbQty = 1
+	}
+	return cr.DB.Model(&Cart{}).Where("user_id = ? AND product_id = ?", userId, productId).Update("quantity", gorm.Expr("quantity + ?", dbQty)).Error
 }
 
 func (cr *CartRepository) InsertDecrement(userId string, productId string) error {
@@ -103,4 +117,8 @@ func (c *CartRepository) GetCartQty(userId string, productId string) (int, error
 	var cart Cart
 	err := c.DB.Where("user_id = ? AND product_id = ?", userId, productId).First(&cart).Error
 	return cart.Quantity, err
+}
+
+func (c *CartRepository) InsertByQuantity(userId string, productId string, quantity int) error {
+	return c.DB.Model(&Cart{}).Where("user_id = ? AND product_id = ?", userId, productId).Update("quantity", quantity).Error
 }

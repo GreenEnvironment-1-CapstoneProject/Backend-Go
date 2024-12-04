@@ -62,6 +62,7 @@ func (cc *CartController) Create(c echo.Context) error {
 	newCart := cart.NewCart{
 		ProductID: cartRequest.ProductID,
 		UserID:    userId.(string),
+		Quantity:  cartRequest.Quantity,
 	}
 
 	err = cc.cartService.Create(newCart)
@@ -113,6 +114,7 @@ func (cc *CartController) Update(c echo.Context) error {
 		ProductID: cartRequest.ProductID,
 		Type:      cartRequest.Type,
 		UserID:    userId.(string),
+		Quantity:  cartRequest.Quantity,
 	}
 
 	err = cc.cartService.Update(newCart)

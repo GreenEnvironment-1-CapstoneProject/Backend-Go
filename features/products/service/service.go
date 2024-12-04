@@ -36,28 +36,37 @@ func (ps *ProductService) Create(product products.Product) error {
 	return ps.productRepo.Create(product)
 }
 
-func (ps *ProductService) GetAllByPage(page int, search string, sort string) ([]products.Product, int, error) {
+func (ps *ProductService) GetAllByPage(page int, search string, sort string) ([]products.Product, int, int, error) {
 	products, total, err := ps.productRepo.GetAllByPage(page, search, sort)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 	if page > total {
-		return nil, 0, constant.ErrPageInvalid
+		return nil, 0, 0, constant.ErrPageInvalid
 	}
 
-	return products, total, nil
+	totalProduct, err := ps.productRepo.GetTotalProduct()
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return products, total, totalProduct, nil
 }
 
-func (ps *ProductService) GetByCategory(category string, page int, search string, sort string) ([]products.Product, int, error) {
+func (ps *ProductService) GetByCategory(category string, page int, search string, sort string) ([]products.Product, int, int, error) {
 	products, total, err := ps.productRepo.GetByCategory(category, page, search, sort)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 	if page > total {
-		return nil, 0, constant.ErrPageInvalid
+		return nil, 0, 0, constant.ErrPageInvalid
+	}
+	totalProduct, err := ps.productRepo.GetTotalProduct()
+	if err != nil {
+		return nil, 0, 0, err
 	}
 
-	return products, total, nil
+	return products, total, totalProduct, nil
 }
 
 func (ps *ProductService) GetById(id string) (products.Product, error) {

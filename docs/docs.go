@@ -2320,6 +2320,207 @@ const docTemplate = `{
                 }
             }
         },
+        "/reviews": {
+            "post": {
+                "description": "Add a review for a specific product.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Create a new product review",
+                "parameters": [
+                    {
+                        "description": "Request payload for creating a review",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.CreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Review created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request or validation error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized access",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/reviews/products/{id}": {
+            "get": {
+                "description": "Get a list of reviews for a product by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Retrieve reviews for a specific product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reviews retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/controller.ResponseReviewProduct"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request or invalid ID format",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/transactions": {
             "get": {
                 "description": "Retrieve all transactions made by the logged-in user.",
@@ -3347,6 +3548,9 @@ const docTemplate = `{
             "properties": {
                 "product_id": {
                     "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
                 }
             }
         },
@@ -3369,6 +3573,26 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "minLength": 1
+                }
+            }
+        },
+        "controller.CreateRequest": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "rate",
+                "review"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "integer",
+                    "maximum": 5
+                },
+                "review": {
+                    "type": "string"
                 }
             }
         },
@@ -3528,6 +3752,29 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.ResponseReviewProduct": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "integer"
+                },
+                "review": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.TransactionAllUserResponses": {
             "type": "object",
             "properties": {
@@ -3543,7 +3790,7 @@ const docTemplate = `{
                 "product_name": {
                     "type": "string"
                 },
-                "snap_url": {
+                "snap_token": {
                     "type": "string"
                 },
                 "status": {
@@ -3583,7 +3830,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "snap_url": {
+                "snap_token": {
                     "type": "string"
                 }
             }
@@ -3621,11 +3868,15 @@ const docTemplate = `{
                 "product_id": {
                     "type": "string"
                 },
+                "quantity": {
+                    "type": "integer"
+                },
                 "type": {
                     "type": "string",
                     "enum": [
                         "increment",
-                        "decrement"
+                        "decrement",
+                        "qty"
                     ]
                 }
             }

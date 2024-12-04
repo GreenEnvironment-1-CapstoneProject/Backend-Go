@@ -19,7 +19,7 @@ func (cs *CartService) Create(cart cart.NewCart) error {
 		return err
 	}
 	if isExist {
-		return cs.cartRepo.InsertIncrement(cart.UserID, cart.ProductID)
+		return cs.cartRepo.InsertIncrement(cart.UserID, cart.ProductID, cart.Quantity)
 	}
 
 	return cs.cartRepo.Create(cart)
@@ -39,10 +39,13 @@ func (cs *CartService) Update(cart cart.UpdateCart) error {
 	}
 
 	if cart.Type == "increment" {
-		return cs.cartRepo.InsertIncrement(cart.UserID, cart.ProductID)
+		return cs.cartRepo.InsertIncrement(cart.UserID, cart.ProductID, 1)
 	} else if cart.Type == "decrement" {
 		return cs.cartRepo.InsertDecrement(cart.UserID, cart.ProductID)
+	} else if cart.Type == "qty" {
+		return cs.cartRepo.InsertByQuantity(cart.UserID, cart.ProductID, cart.Quantity)
 	}
+
 	return constant.ErrFieldType
 }
 
