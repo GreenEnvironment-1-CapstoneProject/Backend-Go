@@ -5,6 +5,7 @@ import (
 	"greenenvironment/constant/route"
 	"greenenvironment/features/admin"
 	"greenenvironment/features/cart"
+	"greenenvironment/features/chatbot"
 	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
@@ -130,4 +131,14 @@ func RouteReviewProduct(e *echo.Echo, rpc reviewproducts.ReviewProductController
 
 	e.POST(route.ReviewProduct, rpc.Create, echojwt.WithConfig(jwtConfig))
 	e.GET(route.ReviewProductByID, rpc.GetProductReview)
+}
+
+func RouteChatbot(e *echo.Echo, ch chatbot.ChatbotControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+
+	e.POST(route.ChatbotPath, ch.Create, echojwt.WithConfig(jwtConfig))
+	e.GET(route.ChatbotPathByID, ch.GetByID, echojwt.WithConfig(jwtConfig))
 }

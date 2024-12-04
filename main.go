@@ -20,6 +20,9 @@ import (
 	ProductController "greenenvironment/features/products/controller"
 	ProductRepository "greenenvironment/features/products/repository"
 	ProductService "greenenvironment/features/products/service"
+	ReviewController "greenenvironment/features/review_products/controller"
+	ReviewRepository "greenenvironment/features/review_products/repository"
+	ReviewService "greenenvironment/features/review_products/service"
 	TransactionController "greenenvironment/features/transactions/controller"
 	TransactionRepository "greenenvironment/features/transactions/repository"
 	TransactionService "greenenvironment/features/transactions/service"
@@ -30,13 +33,14 @@ import (
 	WebHookRepository "greenenvironment/features/webhook/repository"
 	WebhookService "greenenvironment/features/webhook/service"
 
-	ReviewController "greenenvironment/features/review_products/controller"
-	ReviewRepository "greenenvironment/features/review_products/repository"
-	ReviewService "greenenvironment/features/review_products/service"
+	ChatbotController "greenenvironment/features/chatbot/controller"
+	ChatbotRepository "greenenvironment/features/chatbot/repository"
+	ChatbotService "greenenvironment/features/chatbot/service"
 
 	"greenenvironment/routes"
 	"greenenvironment/utils/databases"
 	"greenenvironment/utils/midtrans"
+	OpenAIservice "greenenvironment/utils/openai"
 	"greenenvironment/utils/storages"
 
 	"github.com/go-playground/validator"
@@ -75,6 +79,7 @@ func main() {
 	jwt := helper.NewJWT(cfg.JWT_Secret)
 	storage := storages.NewStorage(cfg.Cloudinary)
 	midtransService := midtrans.NewPaymentGateway(cfg.Midtrans)
+	openAIservice := OpenAIservice.NewOpenAIService(cfg.OpenAi.ApiKey)
 
 	e := echo.New()
 	e.Validator = &helper.CustomValidator{Validator: validator.New()}
@@ -119,6 +124,10 @@ func main() {
 	reviewService := ReviewService.NewReviewProductService(reviewRepo)
 	reviewController := ReviewController.NewReviewProductController(reviewService, jwt)
 
+	chatbotRepo := ChatbotRepository.NewChatbotRepository(db)
+	chatbotService := ChatbotService.NewChatbotService(chatbotRepo, openAIservice)
+	chatbotController := ChatbotController.NewChatbotController(chatbotService, jwt)
+
 	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	routes.RoutesProducts(e, productController, *cfg)
@@ -129,6 +138,7 @@ func main() {
 	routes.RouteTransaction(e, transactionController, *cfg)
 	routes.PaymentNotification(e, webhookController)
 	routes.RouteReviewProduct(e, reviewController, *cfg)
+	routes.RouteChatbot(e, chatbotController, *cfg)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))

@@ -32,3 +32,6 @@ const TransactionByID = TransactionPath + "/:id"
 
 const ReviewProduct = BasePath + "/reviews"
 const ReviewProductByID = ReviewProduct + "/products/:id"
+
+const ChatbotPath = BasePath + "/chatbots"
+const ChatbotPathByID = ChatbotPath + "/:chatID"
