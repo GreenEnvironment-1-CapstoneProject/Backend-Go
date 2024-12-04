@@ -8,7 +8,9 @@ import (
 	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
+	"greenenvironment/features/transactions"
 	"greenenvironment/features/users"
+	"greenenvironment/features/webhook"
 	"greenenvironment/helper"
 	"greenenvironment/utils/storages"
 
@@ -59,9 +61,9 @@ func RoutesProducts(e *echo.Echo, ph products.ProductControllerInterface, cfg co
 		ErrorHandler: helper.JWTErrorHandler,
 	}
 	e.POST(route.ProductPath, ph.Create, echojwt.WithConfig(jwtConfig))
-	e.GET(route.ProductPath, ph.GetAll, echojwt.WithConfig(jwtConfig))
-	e.GET(route.ProductByID, ph.GetById, echojwt.WithConfig(jwtConfig))
-	e.GET(route.CategoryProduct, ph.GetByCategory, echojwt.WithConfig(jwtConfig))
+	e.GET(route.ProductPath, ph.GetAll)
+	e.GET(route.ProductByID, ph.GetById)
+	e.GET(route.CategoryProduct, ph.GetByCategory)
 	e.PUT(route.ProductByID, ph.Update, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.ProductByID, ph.Delete, echojwt.WithConfig(jwtConfig))
 }
@@ -100,4 +102,21 @@ func RouteCart(e *echo.Echo, cc cart.CartControllerInterface, cfg configs.GEConf
 	e.POST(route.CartPath, cc.Create, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.CartPath, cc.Update, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.CartByID, cc.Delete, echojwt.WithConfig(jwtConfig))
+}
+
+func RouteTransaction(e *echo.Echo, tc transactions.TransactionControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+
+	e.POST(route.TransactionPath, tc.CreateTransaction, echojwt.WithConfig(jwtConfig))
+	e.GET(route.TransactionPath, tc.GetUserTransaction, echojwt.WithConfig(jwtConfig))
+	e.DELETE(route.TransactionByID, tc.DeleteTransaction, echojwt.WithConfig(jwtConfig))
+
+	e.GET("/api/v1/admin/transactions", tc.GetAllTransaction, echojwt.WithConfig(jwtConfig))
+}
+
+func PaymentNotification(e *echo.Echo, wh webhook.MidtransNotificationController) {
+	e.POST("/midtrans-notification", wh.HandleNotification)
 }

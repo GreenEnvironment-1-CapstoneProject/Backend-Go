@@ -18,6 +18,7 @@ type NewCart struct {
 }
 
 type CartItem struct {
+	ID       string
 	Quantity int
 	Product  products.Product
 }

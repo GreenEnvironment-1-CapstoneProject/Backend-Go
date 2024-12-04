@@ -36,13 +36,14 @@ type ImpactCategory struct {
 	ID          string
 	Name        string
 	ImpactPoint int
+	Description string
 }
 
 type ProductRepositoryInterface interface {
 	Create(product Product) error
-	GetAllByPage(page int) ([]Product, int, error)
+	GetAllByPage(page int, search string, sort string) ([]Product, int, error)
 	GetById(id string) (Product, error)
-	GetByCategory(categoryName string, page int) ([]Product, int, error)
+	GetByCategory(categoryName string, page int, search string, sort string) ([]Product, int, error)
 	Update(product Product) error
 	Delete(productId string) error
 }
@@ -58,9 +59,9 @@ type ProductControllerInterface interface {
 
 type ProductServiceInterface interface {
 	Create(product Product) error
-	GetAllByPage(page int) ([]Product, int, error)
+	GetAllByPage(page int, search string, sort string) ([]Product, int, error)
 	GetById(id string) (Product, error)
-	GetByCategory(category string, page int) ([]Product, int, error)
+	GetByCategory(category string, page int, search string, sort string) ([]Product, int, error)
 	Update(product Product) error
 	Delete(productId string) error
 }
