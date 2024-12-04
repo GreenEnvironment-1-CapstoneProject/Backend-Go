@@ -7,7 +7,7 @@ import (
 type TransactionResponse struct {
 	ID      string `json:"id"`
 	Amount  int    `json:"amount"`
-	SnapURL string `json:"snap_url"`
+	SnapURL string `json:"snap_token"`
 }
 
 type TransactionUserResponse struct {
@@ -35,7 +35,7 @@ type TransactionAllUserResponses struct {
 	User         string  `json:"username"`
 	Total        float64 `json:"total_transaction"`
 	Status       string  `json:"status"`
-	SnapURL      string  `json:"snap_url"`
+	SnapURL      string  `json:"snap_token"`
 	ProductName  string  `json:"product_name"`
 	ProductImage string  `json:"product_image"`
 	CreatedAt    string  `json:"created_at"`

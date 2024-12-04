@@ -97,7 +97,7 @@ func (ts *TransactionService) CreateTransaction(transaction transactions.CreateT
 		Items:    items,
 	}
 
-	snapUrl := ts.midtransService.CreateUrlTransactionWithGateway(snapReq)
+	snapUrl := ts.midtransService.CreateTransaction(snapReq)
 
 	transactionData.SnapURL = snapUrl
 
