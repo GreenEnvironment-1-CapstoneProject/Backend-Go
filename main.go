@@ -11,6 +11,12 @@ import (
 	CartController "greenenvironment/features/cart/controller"
 	CartRepository "greenenvironment/features/cart/repository"
 	CartService "greenenvironment/features/cart/service"
+	ChatbotController "greenenvironment/features/chatbot/controller"
+	ChatbotRepository "greenenvironment/features/chatbot/repository"
+	ChatbotService "greenenvironment/features/chatbot/service"
+	ForumController "greenenvironment/features/forum/controller"
+	ForumRepository "greenenvironment/features/forum/repository"
+	ForumService "greenenvironment/features/forum/service"
 	GuestController "greenenvironment/features/guest/controller"
 	GuestRepository "greenenvironment/features/guest/repository"
 	guestService "greenenvironment/features/guest/service"
@@ -32,10 +38,6 @@ import (
 	WebhookController "greenenvironment/features/webhook/controller"
 	WebHookRepository "greenenvironment/features/webhook/repository"
 	WebhookService "greenenvironment/features/webhook/service"
-
-	ChatbotController "greenenvironment/features/chatbot/controller"
-	ChatbotRepository "greenenvironment/features/chatbot/repository"
-	ChatbotService "greenenvironment/features/chatbot/service"
 
 	"greenenvironment/routes"
 	"greenenvironment/utils/databases"
@@ -128,6 +130,10 @@ func main() {
 	chatbotService := ChatbotService.NewChatbotService(chatbotRepo, openAIservice)
 	chatbotController := ChatbotController.NewChatbotController(chatbotService, jwt)
 
+	forumRepo := ForumRepository.NewForumRepository(db)
+	forumService := ForumService.NewForumService(forumRepo)
+	forumController := ForumController.NewForumController(forumService, jwt, storage)
+
 	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	routes.RoutesProducts(e, productController, *cfg)
@@ -139,6 +145,7 @@ func main() {
 	routes.PaymentNotification(e, webhookController)
 	routes.RouteReviewProduct(e, reviewController, *cfg)
 	routes.RouteChatbot(e, chatbotController, *cfg)
+	routes.RouteForum(e, forumController, *cfg)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))

@@ -6,6 +6,7 @@ import (
 	"greenenvironment/features/admin"
 	"greenenvironment/features/cart"
 	"greenenvironment/features/chatbot"
+	"greenenvironment/features/forum"
 	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
@@ -141,4 +142,23 @@ func RouteChatbot(e *echo.Echo, ch chatbot.ChatbotControllerInterface, cfg confi
 
 	e.POST(route.ChatbotPath, ch.Create, echojwt.WithConfig(jwtConfig))
 	e.GET(route.ChatbotPathByID, ch.GetByID, echojwt.WithConfig(jwtConfig))
+}
+
+func RouteForum(e *echo.Echo, fh forum.ForumControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+
+	e.GET(route.ForumPath, fh.GetAllForum, echojwt.WithConfig(jwtConfig))
+	e.GET(route.ForumByID, fh.GetForumByID, echojwt.WithConfig(jwtConfig))
+	e.GET(route.GetForumByUserID, fh.GetForumByUserID, echojwt.WithConfig(jwtConfig))
+	e.POST(route.ForumPath, fh.PostForum, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.ForumByID, fh.UpdateForum, echojwt.WithConfig(jwtConfig))
+	e.DELETE(route.ForumByID, fh.DeleteForum, echojwt.WithConfig(jwtConfig))
+
+	e.GET(route.ForumMessageByID, fh.GetMessageForumByID, echojwt.WithConfig(jwtConfig))
+	e.POST(route.ForumMessage, fh.PostMessageForum, echojwt.WithConfig(jwtConfig))
+	e.DELETE(route.ForumMessageByID, fh.DeleteMessageForum, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.ForumMessageByID, fh.UpdateMessageForum, echojwt.WithConfig(jwtConfig))
 }

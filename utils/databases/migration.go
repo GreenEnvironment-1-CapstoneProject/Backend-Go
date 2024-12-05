@@ -4,11 +4,13 @@ import (
 	DataAdmin "greenenvironment/features/admin/repository"
 	DataCart "greenenvironment/features/cart/repository"
 	DataChatbot "greenenvironment/features/chatbot/repository"
+	DataForum "greenenvironment/features/forum/repository"
 	DataImpact "greenenvironment/features/impacts/repository"
 	DataProduct "greenenvironment/features/products/repository"
 	DataReview "greenenvironment/features/review_products/repository"
 	DataTransaction "greenenvironment/features/transactions/repository"
 	DataUser "greenenvironment/features/users/repository"
+	DataWebhook "greenenvironment/features/webhook/repository"
 
 	"gorm.io/gorm"
 )
@@ -26,6 +28,9 @@ func Migrate(db *gorm.DB) error {
 	db.AutoMigrate(&DataTransaction.TransactionItem{})
 	db.AutoMigrate(&DataReview.ReviewProduct{})
 	db.AutoMigrate(&DataChatbot.Chatbot{})
+	db.AutoMigrate(&DataWebhook.PaymentNotification{})
+	db.AutoMigrate(&DataForum.Forum{})
+	db.AutoMigrate(&DataForum.MessageForum{})
 
 	return nil
 }
