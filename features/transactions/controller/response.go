@@ -14,7 +14,7 @@ type TransactionUserResponse struct {
 	ID           string  `json:"id"`
 	Total        float64 `json:"total"`
 	Status       string  `json:"status"`
-	SnapURL      string  `json:"snap_url"`
+	SnapURL      string  `json:"snap_token"`
 	ProductName  string  `json:"product_name"`
 	ProductImage string  `json:"product_image"`
 }

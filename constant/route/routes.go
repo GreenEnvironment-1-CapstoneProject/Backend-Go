@@ -35,3 +35,11 @@ const ReviewProductByID = ReviewProduct + "/products/:id"
 
 const ChatbotPath = BasePath + "/chatbots"
 const ChatbotPathByID = ChatbotPath + "/:chatID"
+
+const ForumPath = BasePath + "/forums"
+const ForumByID = ForumPath + "/:id"
+const GetForumByUserID = ForumPath + "/user"
+
+const ForumMessagePath = BasePath + "/message" + "/:id"
+const ForumMessage = ForumPath + "/message"
+const ForumMessageByID = ForumMessage + "/:id"

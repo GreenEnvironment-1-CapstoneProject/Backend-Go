@@ -42,6 +42,32 @@ definitions:
     - password
     - username
     type: object
+  controller.Author:
+    properties:
+      avatar_url:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  controller.AuthorMessage:
+    properties:
+      avatar_url:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
   controller.CartItems:
     properties:
       id:
@@ -121,6 +147,29 @@ definitions:
     - rate
     - review
     type: object
+  controller.ForumGetDetailResponse:
+    properties:
+      author:
+        $ref: '#/definitions/controller.Author'
+      created_at:
+        type: string
+      description:
+        type: string
+      forum_messages:
+        items:
+          $ref: '#/definitions/controller.MessageResponse'
+        type: array
+      id:
+        type: string
+      title:
+        type: string
+      topic_image:
+        type: string
+      updated_at:
+        type: string
+      views:
+        type: integer
+    type: object
   controller.GuestResponse:
     properties:
       new_products:
@@ -151,6 +200,21 @@ definitions:
         type: integer
       name:
         type: string
+    type: object
+  controller.MessageResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      message_image:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/controller.AuthorMessage'
     type: object
   controller.ProductImage:
     properties:
@@ -288,7 +352,7 @@ definitions:
         type: string
       product_name:
         type: string
-      snap_url:
+      snap_token:
         type: string
       status:
         type: string
@@ -1269,6 +1333,464 @@ paths:
       summary: Retrieve chatbot conversation by ChatID
       tags:
       - Chatbot
+  /forums:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all forums with pagination
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: get all forum successfully
+          schema:
+            $ref: '#/definitions/helper.MetadataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Get All Forums
+      tags:
+      - Forum
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new forum post with title, description, and optional topic
+        image
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Forum Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Forum Description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Forum Topic Image
+        in: formData
+        name: topic_image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: create forum successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Create Forum
+      tags:
+      - Forum
+  /forums/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a forum by its ID. This action is restricted to users with
+        admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Forum ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: delete forum successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "404":
+          description: Forum not found
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Delete Forum
+      tags:
+      - Forum
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information about a forum, including messages
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Forum ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: get forum successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.ForumGetDetailResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "404":
+          description: Forum not found
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Get Forum by ID
+      tags:
+      - Forum
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update the details of an existing forum, including title, description,
+        and topic image.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Forum ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New title of the forum
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: New description of the forum
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: New topic image for the forum
+        in: formData
+        name: topic_image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: update forum successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "404":
+          description: Forum not found
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Update Forum
+      tags:
+      - Forum
+  /forums/message:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Post a message to a specific forum. Optionally includes an image
+        with the message.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID of the forum to post the message to
+        in: formData
+        name: ForumID
+        required: true
+        type: string
+      - description: Content of the message
+        in: formData
+        name: Messages
+        required: true
+        type: string
+      - description: Optional image to include with the message
+        in: formData
+        name: message_image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: create message successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "404":
+          description: Forum not found
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Post Message to Forum
+      tags:
+      - Forum
+  /forums/message/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a specific message in a forum. Only the message owner or
+        an admin can delete it.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID of the forum message to delete
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: delete message successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "404":
+          description: Message not found
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Delete Forum Message
+      tags:
+      - Forum
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information about a specific message in a forum.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID of the forum message to retrieve
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: get message forum id successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.MessageResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "404":
+          description: Message not found
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Get Forum Message by ID
+      tags:
+      - Forum
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update the content or image of a specific message in a forum.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID of the message to update
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated content of the message
+        in: formData
+        name: Messages
+        required: true
+        type: string
+      - description: Optional new image for the message
+        in: formData
+        name: message_image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: update message successfully
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "404":
+          description: Message not found
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Update Forum Message
+      tags:
+      - Forum
+  /forums/user:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of forums created by the authenticated user, with
+        pagination support.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Page number for pagination (default is 1)
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: get forums by user id successfully
+          schema:
+            $ref: '#/definitions/helper.MetadataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Get Forums by User ID
+      tags:
+      - Forum
   /guest/products:
     get:
       consumes:
