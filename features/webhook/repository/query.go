@@ -39,6 +39,12 @@ func (w *WebhookRepository) HandleNotification(notification webhook.PaymentNotif
 		return err
 	}
 
+	err = w.DB.Model(&PaymentNotification{}).Create(&notification).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	return tx.Commit().Error
 }
 
@@ -58,11 +64,11 @@ func (w *WebhookRepository) InsertUserCoin(transactionId string) error {
 	if err != nil {
 		return err
 	}
-	var product []productData.Product
 	var totalCoinxQty int
-	for i, item := range transactionItem {
+	for _, item := range transactionItem {
+		var product productData.Product
 		err = w.DB.Where("id = ?", item.ProductID).First(&product).Error
-		totalCoinxQty += product[i].Coin * item.Quantity
+		totalCoinxQty += product.Coin * item.Quantity
 		if err != nil {
 			return err
 		}
@@ -75,5 +81,22 @@ func (w *WebhookRepository) InsertUserCoin(transactionId string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (w *WebhookRepository) UpdateStockFailedTransaction(transactionId string) error {
+	var transactionsItems []transactionsData.TransactionItem
+	err := w.DB.Where("transaction_id = ?", transactionId).Find(&transactionsItems).Error
+	if err != nil {
+		return err
+	}
+
+	for _, item := range transactionsItems {
+		err := w.DB.Model(productData.Product{}).Where("id = ?", item.ProductID).Update("stock", gorm.Expr("stock + ?", item.Quantity)).Error
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

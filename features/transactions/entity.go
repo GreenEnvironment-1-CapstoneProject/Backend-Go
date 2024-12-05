@@ -64,6 +64,7 @@ type TransactionRepositoryInterface interface {
 	CreateTransactionItems(tansactionItems []TransactionItems) error
 	GetAllTransaction() ([]TransactionData, error)
 	GetDataCartTransaction(cartIds []string, userId string) ([]cart.Cart, error)
+	UpdateStockByProductID(productId string, stock int) error
 }
 
 type TransactionServiceInterface interface {

@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"errors"
 	"greenenvironment/features/cart"
+	productData "greenenvironment/features/products/repository"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -18,10 +20,18 @@ func NewCartRepository(db *gorm.DB) cart.CartRepositoryInterface {
 func (cr *CartRepository) Create(cart cart.NewCart) error {
 	var dbQty int
 
+	stock, err := cr.GetStock(cart.ProductID)
+	if err != nil {
+		return err
+	}
 	if cart.Quantity >= 0 {
 		dbQty = cart.Quantity
 	} else {
 		dbQty = 1
+	}
+
+	if stock < dbQty {
+		return errors.New("error quantity exceeds stock")
 	}
 	newCart := &Cart{
 		ID:        uuid.New().String(),
@@ -30,7 +40,7 @@ func (cr *CartRepository) Create(cart cart.NewCart) error {
 		Quantity:  dbQty,
 	}
 
-	err := cr.DB.Create(newCart).Error
+	err = cr.DB.Create(newCart).Error
 	if err != nil {
 		return err
 	}
@@ -106,6 +116,7 @@ func (cr *CartRepository) InsertIncrement(userId string, productId string, qty i
 	} else {
 		dbQty = 1
 	}
+
 	return cr.DB.Model(&Cart{}).Where("user_id = ? AND product_id = ?", userId, productId).Update("quantity", gorm.Expr("quantity + ?", dbQty)).Error
 }
 
@@ -120,5 +131,20 @@ func (c *CartRepository) GetCartQty(userId string, productId string) (int, error
 }
 
 func (c *CartRepository) InsertByQuantity(userId string, productId string, quantity int) error {
+	stock, err := c.GetStock(productId)
+	if err != nil {
+		return err
+	}
+	if stock < quantity {
+		return errors.New("error quantity exceeds stock")
+	}
+
 	return c.DB.Model(&Cart{}).Where("user_id = ? AND product_id = ?", userId, productId).Update("quantity", quantity).Error
+}
+
+func (c *CartRepository) GetStock(productId string) (int, error) {
+	var product productData.Product
+	err := c.DB.Where("id = ?", productId).First(&product).Error
+
+	return product.Stock, err
 }
