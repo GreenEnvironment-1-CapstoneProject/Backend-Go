@@ -86,6 +86,15 @@ func (ts *TransactionService) CreateTransaction(transaction transactions.CreateT
 		if err != nil {
 			return transactions.Transaction{}, err
 		}
+		item := midtrans.ItemDetails{
+			ID:    uuid.New().String(),
+			Name:  "used-coin",
+			Price: int64(-usedCoin),
+			Qty:   int32(1),
+		}
+
+		items = append(items, item)
+
 		transactionData.Coin = usedCoin
 		transactionData.Total = newTotal
 	}

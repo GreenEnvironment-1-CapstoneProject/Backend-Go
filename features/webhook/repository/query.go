@@ -7,6 +7,7 @@ import (
 	userData "greenenvironment/features/users/repository"
 	"greenenvironment/features/webhook"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -26,6 +27,21 @@ func (w *WebhookRepository) HandleNotification(notification webhook.PaymentNotif
 		Status:        transaction.Status,
 		PaymentMethod: transaction.PaymentMethod,
 	}
+
+	var paymentNotif = PaymentNotification{
+		ID:                uuid.New().String(),
+		OrderID:           notification.OrderID,
+		TransactionTime:   notification.TransactionTime,
+		TransactionStatus: notification.TransactionStatus,
+		TransactionID:     notification.TransactionID,
+		SignatureKey:      notification.SignatureKey,
+		PaymentType:       notification.PaymentType,
+		MerchantID:        notification.MerchantID,
+		GrossAmount:       notification.GrossAmount,
+		FraudStatus:       notification.FraudStatus,
+		Currency:          notification.Currency,
+		SettlementTime:    notification.SettlementTime,
+	}
 	tx := w.DB.Begin()
 
 	err := w.DB.Model(&transactionsData.Transaction{}).Where("id = ?", transaction.ID).Updates(&transactionUpdate).Error
@@ -33,13 +49,12 @@ func (w *WebhookRepository) HandleNotification(notification webhook.PaymentNotif
 		tx.Rollback()
 		return err
 	}
-	err = w.InsertUserCoin(transaction.ID)
+	err = w.DB.Model(&PaymentNotification{}).Create(&paymentNotif).Error
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-
-	err = w.DB.Model(&PaymentNotification{}).Create(&notification).Error
+	err = w.InsertUserCoin(transaction.ID)
 	if err != nil {
 		tx.Rollback()
 		return err
