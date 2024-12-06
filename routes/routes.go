@@ -14,6 +14,7 @@ import (
 	"greenenvironment/features/transactions"
 	"greenenvironment/features/users"
 	"greenenvironment/features/webhook"
+	"greenenvironment/features/challenges"
 	"greenenvironment/helper"
 	"greenenvironment/utils/storages"
 
@@ -129,7 +130,6 @@ func RouteReviewProduct(e *echo.Echo, rpc reviewproducts.ReviewProductController
 		SigningKey:   []byte(cfg.JWT_Secret),
 		ErrorHandler: helper.JWTErrorHandler,
 	}
-
 	e.POST(route.ReviewProduct, rpc.Create, echojwt.WithConfig(jwtConfig))
 	e.GET(route.ReviewProductByID, rpc.GetProductReview)
 }
@@ -161,4 +161,31 @@ func RouteForum(e *echo.Echo, fh forum.ForumControllerInterface, cfg configs.GEC
 	e.POST(route.ForumMessage, fh.PostMessageForum, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.ForumMessageByID, fh.DeleteMessageForum, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.ForumMessageByID, fh.UpdateMessageForum, echojwt.WithConfig(jwtConfig))
+}
+
+func RouteChallenge(e *echo.Echo, cc challenges.ChallengeControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+	e.POST(route.AdminChallengePath, cc.Create, echojwt.WithConfig(jwtConfig))
+	e.GET(route.AdminChallengePath, cc.GetAll, echojwt.WithConfig(jwtConfig))
+	e.GET(route.AdminChallengeByID, cc.GetByID, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.AdminChallengeByID, cc.Update, echojwt.WithConfig(jwtConfig))
+	e.DELETE(route.AdminChallengeByID, cc.Delete, echojwt.WithConfig(jwtConfig))
+
+	// Challenge Task
+	e.POST(route.AdminChallengeTask, cc.CreateTask, echojwt.WithConfig(jwtConfig))
+	e.GET(route.AdminChallengeTaskbyChallengeID, cc.GetAllTasksByChallengeID, echojwt.WithConfig(jwtConfig))
+	e.GET(route.AdminChallengeTaskByID, cc.GetTaskByID, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.AdminChallengeTaskByID, cc.UpdateTask, echojwt.WithConfig(jwtConfig))
+	e.DELETE(route.AdminChallengeTaskByID, cc.DeleteTask, echojwt.WithConfig(jwtConfig))
+
+	// User
+	e.POST(route.TakeChallenge, cc.CreateChallengeLog, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.TaskConfirmationProgress, cc.UpdateChallengeConfirmationProgress, echojwt.WithConfig(jwtConfig))
+	e.POST(route.ClaimRewards, cc.ClaimRewards, echojwt.WithConfig(jwtConfig))
+	e.GET(route.ActiveChallenge, cc.GetActiveChallenges, echojwt.WithConfig(jwtConfig))
+	e.GET(route.UnclaimedChallenge, cc.GetUnclaimedChallenges, echojwt.WithConfig(jwtConfig))
+	e.GET(route.UserChallengeDetails, cc.GetChallengeDetailsWithConfirmations, echojwt.WithConfig(jwtConfig))
 }

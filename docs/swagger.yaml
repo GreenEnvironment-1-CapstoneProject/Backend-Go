@@ -1,5 +1,92 @@
 basePath: /api/v1
 definitions:
+  challenges.Challenge:
+    properties:
+      author:
+        type: string
+      challengeImg:
+        type: string
+      coin:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      description:
+        type: string
+      difficulty:
+        type: string
+      durationDays:
+        type: integer
+      exp:
+        type: integer
+      id:
+        type: string
+      impactCategories:
+        items:
+          $ref: '#/definitions/challenges.ChallengeImpactCategory'
+        type: array
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  challenges.ChallengeConfirmation:
+    properties:
+      challengeImg:
+        type: string
+      challengeTaskID:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      submissionDate:
+        type: string
+      userID:
+        type: string
+    type: object
+  challenges.ChallengeImpactCategory:
+    properties:
+      challengeID:
+        type: string
+      id:
+        type: string
+      impactCategory:
+        $ref: '#/definitions/impacts.ImpactCategory'
+      impactCategoryID:
+        type: string
+    type: object
+  challenges.ChallengeLog:
+    properties:
+      challengeID:
+        type: string
+      createdAt:
+        type: string
+      feed:
+        type: string
+      id:
+        type: string
+      rewardsGiven:
+        type: boolean
+      startDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: string
+    type: object
+  challenges.ChallengeLogDetails:
+    properties:
+      challengeLog:
+        $ref: '#/definitions/challenges.ChallengeLog'
+      confirmations:
+        items:
+          $ref: '#/definitions/challenges.ChallengeConfirmation'
+        type: array
+    type: object
   controller.AdminInfoResponse:
     properties:
       email:
@@ -86,6 +173,86 @@ definitions:
       user:
         $ref: '#/definitions/controller.User'
     type: object
+  controller.ChallengeImpactCategories:
+    properties:
+      impact_category:
+        $ref: '#/definitions/greenenvironment_features_challenges_controller.ImpactCategory'
+    type: object
+  controller.ChallengeLogRequest:
+    properties:
+      challenge_id:
+        type: string
+      feed:
+        type: string
+    required:
+    - challenge_id
+    type: object
+  controller.ChallengeRequest:
+    properties:
+      category_impact:
+        items:
+          type: string
+        type: array
+      coin:
+        type: integer
+      description:
+        type: string
+      difficulty:
+        type: string
+      duration_days:
+        type: integer
+      exp:
+        type: integer
+      title:
+        type: string
+    required:
+    - category_impact
+    - coin
+    - description
+    - difficulty
+    - duration_days
+    - exp
+    - title
+    type: object
+  controller.ChallengeResponse:
+    properties:
+      author:
+        type: string
+      categories:
+        items:
+          $ref: '#/definitions/controller.ChallengeImpactCategories'
+        type: array
+      challenge_img:
+        type: string
+      coin:
+        type: integer
+      description:
+        type: string
+      difficulty:
+        type: string
+      duration_days:
+        type: integer
+      exp:
+        type: integer
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  controller.ChallengeTaskRequest:
+    properties:
+      challenge_id:
+        type: string
+      day_number:
+        minimum: 1
+        type: integer
+      task_description:
+        type: string
+    required:
+    - challenge_id
+    - day_number
+    - task_description
+    type: object
   controller.ChatbotRequest:
     properties:
       id:
@@ -107,6 +274,13 @@ definitions:
         type: string
       role:
         type: string
+    type: object
+  controller.ClaimRewardsRequest:
+    properties:
+      challenge_log_id:
+        type: string
+    required:
+    - challenge_log_id
     type: object
   controller.CreateCartRequest:
     properties:
@@ -181,15 +355,6 @@ definitions:
       total_product:
         type: integer
     type: object
-  controller.ImpactCategory:
-    properties:
-      description:
-        type: string
-      impact_point:
-        type: integer
-      name:
-        type: string
-    type: object
   controller.ImpactCategoryResponse:
     properties:
       description:
@@ -224,7 +389,7 @@ definitions:
   controller.ProductImpactCategory:
     properties:
       impact_category:
-        $ref: '#/definitions/controller.ImpactCategory'
+        $ref: '#/definitions/greenenvironment_features_products_controller.ImpactCategory'
     type: object
   controller.ProductRequest:
     properties:
@@ -555,6 +720,24 @@ definitions:
       username:
         type: string
     type: object
+  greenenvironment_features_challenges_controller.ImpactCategory:
+    properties:
+      description:
+        type: string
+      impact_point:
+        type: integer
+      name:
+        type: string
+    type: object
+  greenenvironment_features_products_controller.ImpactCategory:
+    properties:
+      description:
+        type: string
+      impact_point:
+        type: integer
+      name:
+        type: string
+    type: object
   helper.MetadataResponse:
     properties:
       data: {}
@@ -572,6 +755,17 @@ definitions:
         type: string
       status:
         type: boolean
+    type: object
+  impacts.ImpactCategory:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      impactPoint:
+        type: integer
+      name:
+        type: string
     type: object
   storages.ImageResponse:
     properties:
@@ -728,6 +922,590 @@ paths:
       summary: Update admin profile
       tags:
       - Admin
+  /admin/challenges:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all challenges with pagination.
+      parameters:
+      - description: Page number
+        in: query
+        name: pages
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenges retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.MetadataResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/controller.ChallengeResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get all challenges
+      tags:
+      - Challenges (Admin)
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new challenge. Requires admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Challenge image file
+        in: formData
+        name: challenge_img
+        required: true
+        type: file
+      - description: Title of the challenge
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Difficulty level
+        in: formData
+        name: difficulty
+        required: true
+        type: string
+      - description: Description of the challenge
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Duration of the challenge in days
+        in: formData
+        name: duration_days
+        required: true
+        type: integer
+      - description: Experience points awarded for completing the challenge
+        in: formData
+        name: exp
+        required: true
+        type: integer
+      - description: Coins awarded for completing the challenge
+        in: formData
+        name: coin
+        required: true
+        type: integer
+      - collectionFormat: csv
+        description: List of impact category IDs
+        in: formData
+        items:
+          type: string
+        name: impact_categories
+        required: true
+        type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Challenge created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a new challenge
+      tags:
+      - Challenges (Admin)
+  /admin/challenges/{challenge_id}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all tasks associated with a specific challenge.
+      parameters:
+      - description: Challenge ID
+        in: path
+        name: challenge_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tasks retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "404":
+          description: Challenge not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get all tasks by challenge ID
+      tags:
+      - Challenge Tasks (Admin)
+  /admin/challenges/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a challenge by its ID. Requires admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Challenge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Challenge not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete a challenge
+      tags:
+      - Challenges (Admin)
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific challenge by its unique identifier.
+      parameters:
+      - description: Challenge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.ChallengeResponse'
+              type: object
+        "404":
+          description: Challenge not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get a challenge by ID
+      tags:
+      - Challenges (Admin)
+    put:
+      consumes:
+      - application/json
+      description: Update challenge details, including impact categories. Requires
+        admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Challenge ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated challenge data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChallengeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Challenge not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update a challenge
+      tags:
+      - Challenges (Admin)
+  /admin/challenges/tasks:
+    post:
+      consumes:
+      - application/json
+      description: Create a new task associated with a specific challenge. Requires
+        admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChallengeTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Task created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a new task for a challenge
+      tags:
+      - Challenge Tasks (Admin)
+  /admin/challenges/tasks/{task_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a specific task by its ID. Requires admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Task not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Delete a task
+      tags:
+      - Challenge Tasks
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific task by its ID.
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Task not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get task by ID
+      tags:
+      - Challenge Tasks (Admin)
+    put:
+      consumes:
+      - application/json
+      description: Update the description of a specific task. Requires admin role.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: Updated task data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChallengeTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Task not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update a task
+      tags:
+      - Challenge Tasks
   /admin/login:
     post:
       consumes:
@@ -1214,6 +1992,347 @@ paths:
       summary: Delete Cart
       tags:
       - Cart
+  /challenges/active:
+    get:
+      consumes:
+      - application/json
+      description: Get challenges that are currently in progress for the user
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Active challenges retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/challenges.ChallengeLog'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get active challenges
+      tags:
+      - Challenges (User)
+  /challenges/confirmations/progress:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates the status of a challenge confirmation to "Done" and uploads
+        the confirmation image
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - in: formData
+        name: challenge_confirmation_id
+        required: true
+        type: string
+      - description: Challenge Confirmation Image
+        in: formData
+        name: challenge_confirmation_img
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Confirmation updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update the progress of a challenge confirmation
+      tags:
+      - Challenge Confirmations
+  /challenges/details:
+    get:
+      consumes:
+      - application/json
+      description: Get challenge log and confirmation tasks for a specific challenge
+        log ID
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Challenge Log ID
+        in: query
+        name: challengeLogID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge details retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/challenges.ChallengeLogDetails'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Challenge log not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get challenge details with confirmations
+      tags:
+      - Challenges (User)
+  /challenges/logs:
+    post:
+      consumes:
+      - application/json
+      description: Logs challenge participation with status "Progress"
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Challenge Log Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChallengeLogRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Challenge log created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Log a user's participation in a challenge
+      tags:
+      - Challenge Logs
+  /challenges/rewards:
+    post:
+      consumes:
+      - application/json
+      description: Claims exp and coin rewards from a completed challenge
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Claim Rewards Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ClaimRewardsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rewards claimed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Challenge log not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Claim rewards for a challenge
+      tags:
+      - Challenge Rewards
+  /challenges/unclaimed:
+    get:
+      consumes:
+      - application/json
+      description: Get challenges that the user has not taken yet
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unclaimed challenges retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/challenges.Challenge'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get unclaimed challenges
+      tags:
+      - Challenges (User)
   /chatbots:
     post:
       consumes:
