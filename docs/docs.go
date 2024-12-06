@@ -2756,6 +2756,7 @@ const docTemplate = `{
                 }
             }
         },
+<<<<<<< HEAD
         "/chatbots": {
             "post": {
                 "description": "Add a user message and get a response from the chatbot",
@@ -3654,6 +3655,8 @@ const docTemplate = `{
                 }
             }
         },
+=======
+>>>>>>> 2bbe80f (Swagger Documentation for Challenge)
         "/guest/products": {
             "get": {
                 "description": "Retrieve a list of products available for guest users.",
@@ -6379,6 +6382,7 @@ const docTemplate = `{
                 }
             }
         },
+<<<<<<< HEAD
         "controller.ChatbotRequest": {
             "type": "object",
             "required": [
@@ -6413,6 +6417,8 @@ const docTemplate = `{
                 }
             }
         },
+=======
+>>>>>>> 2bbe80f (Swagger Documentation for Challenge)
         "controller.ClaimRewardsRequest": {
             "type": "object",
             "required": [
