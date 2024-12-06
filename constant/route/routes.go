@@ -32,3 +32,29 @@ const TransactionByID = TransactionPath + "/:id"
 
 const ReviewProduct = BasePath + "/reviews"
 const ReviewProductByID = ReviewProduct + "/products/:id"
+
+const ChatbotPath = BasePath + "/chatbots"
+const ChatbotPathByID = ChatbotPath + "/:chatID"
+
+const ForumPath = BasePath + "/forums"
+const ForumByID = ForumPath + "/:id"
+const GetForumByUserID = ForumPath + "/user"
+
+const ForumMessagePath = BasePath + "/message" + "/:id"
+const ForumMessage = ForumPath + "/message"
+const ForumMessageByID = ForumMessage + "/:id"
+
+const ChallengePath = BasePath + "/challenges"
+const AdminChallengePath = AdminPath + "/challenges"
+const AdminChallengeByID = AdminChallengePath + "/:id"
+const AdminChallengeTask = AdminChallengePath + "/tasks"
+const AdminChallengeTaskbyChallengeID = AdminChallengePath + "/:challenge_id/tasks"
+const AdminChallengeTaskByID = AdminChallengeTask + "/:task_id"
+const TakeChallenge = ChallengePath + "/logs"
+const TaskConfirmation = ChallengePath + "/confirmations"
+const TaskConfirmationProgress = TaskConfirmation + "/progress"
+
+const ClaimRewards = ChallengePath + "/rewards"
+const ActiveChallenge = ChallengePath + "/active"
+const UnclaimedChallenge = ChallengePath + "/unclaimed"
+const UserChallengeDetails = ChallengePath + "/details"

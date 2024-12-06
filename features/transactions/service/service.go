@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"greenenvironment/features/transactions"
 	midtrasService "greenenvironment/utils/midtrans"
 
@@ -66,7 +67,10 @@ func (ts *TransactionService) CreateTransaction(transaction transactions.CreateT
 			ProductID:     cart.ProductID,
 			Qty:           cart.Quantity,
 		}
-
+		err = ts.transactionRepo.UpdateStockByProductID(cart.ProductID, cart.Quantity)
+		if err != nil {
+			return transactions.Transaction{}, err
+		}
 		items = append(items, item)
 		itemsData = append(itemsData, itemData)
 	}
@@ -82,8 +86,21 @@ func (ts *TransactionService) CreateTransaction(transaction transactions.CreateT
 		if err != nil {
 			return transactions.Transaction{}, err
 		}
+		item := midtrans.ItemDetails{
+			ID:    uuid.New().String(),
+			Name:  "used-coin",
+			Price: int64(-usedCoin),
+			Qty:   int32(1),
+		}
+
+		items = append(items, item)
+
 		transactionData.Coin = usedCoin
 		transactionData.Total = newTotal
+	}
+
+	if transactionData.Total <= 0 {
+		return transactions.Transaction{}, errors.New("error gross amount must be greater than 0")
 	}
 
 	ts.midtransService.InitializeClientMidtrans()

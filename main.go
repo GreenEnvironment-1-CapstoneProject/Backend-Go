@@ -4,6 +4,7 @@ import (
 	"greenenvironment/configs"
 	_ "greenenvironment/docs"
 	"greenenvironment/helper"
+	"log"
 
 	AdminContoller "greenenvironment/features/admin/controller"
 	AdminRepository "greenenvironment/features/admin/repository"
@@ -11,6 +12,15 @@ import (
 	CartController "greenenvironment/features/cart/controller"
 	CartRepository "greenenvironment/features/cart/repository"
 	CartService "greenenvironment/features/cart/service"
+	ChatbotController "greenenvironment/features/chatbot/controller"
+	ChatbotRepository "greenenvironment/features/chatbot/repository"
+	ChatbotService "greenenvironment/features/chatbot/service"
+	ForumController "greenenvironment/features/forum/controller"
+	ForumRepository "greenenvironment/features/forum/repository"
+	ForumService "greenenvironment/features/forum/service"
+	ChallengeController "greenenvironment/features/challenges/controller"
+	ChallengeRepository "greenenvironment/features/challenges/repository"
+	ChallengeService "greenenvironment/features/challenges/service"
 	GuestController "greenenvironment/features/guest/controller"
 	GuestRepository "greenenvironment/features/guest/repository"
 	guestService "greenenvironment/features/guest/service"
@@ -20,6 +30,9 @@ import (
 	ProductController "greenenvironment/features/products/controller"
 	ProductRepository "greenenvironment/features/products/repository"
 	ProductService "greenenvironment/features/products/service"
+	ReviewController "greenenvironment/features/review_products/controller"
+	ReviewRepository "greenenvironment/features/review_products/repository"
+	ReviewService "greenenvironment/features/review_products/service"
 	TransactionController "greenenvironment/features/transactions/controller"
 	TransactionRepository "greenenvironment/features/transactions/repository"
 	TransactionService "greenenvironment/features/transactions/service"
@@ -30,18 +43,16 @@ import (
 	WebHookRepository "greenenvironment/features/webhook/repository"
 	WebhookService "greenenvironment/features/webhook/service"
 
-	ReviewController "greenenvironment/features/review_products/controller"
-	ReviewRepository "greenenvironment/features/review_products/repository"
-	ReviewService "greenenvironment/features/review_products/service"
-
 	"greenenvironment/routes"
 	"greenenvironment/utils/databases"
 	"greenenvironment/utils/midtrans"
+	OpenAIservice "greenenvironment/utils/openai"
 	"greenenvironment/utils/storages"
 
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
@@ -75,6 +86,7 @@ func main() {
 	jwt := helper.NewJWT(cfg.JWT_Secret)
 	storage := storages.NewStorage(cfg.Cloudinary)
 	midtransService := midtrans.NewPaymentGateway(cfg.Midtrans)
+	openAIservice := OpenAIservice.NewOpenAIService(cfg.OpenAi.ApiKey)
 
 	e := echo.New()
 	e.Validator = &helper.CustomValidator{Validator: validator.New()}
@@ -119,6 +131,29 @@ func main() {
 	reviewService := ReviewService.NewReviewProductService(reviewRepo)
 	reviewController := ReviewController.NewReviewProductController(reviewService, jwt)
 
+	chatbotRepo := ChatbotRepository.NewChatbotRepository(db)
+	chatbotService := ChatbotService.NewChatbotService(chatbotRepo, openAIservice)
+	chatbotController := ChatbotController.NewChatbotController(chatbotService, jwt)
+
+	forumRepo := ForumRepository.NewForumRepository(db)
+	forumService := ForumService.NewForumService(forumRepo)
+	forumController := ForumController.NewForumController(forumService, jwt, storage)
+
+	challengeRepo := ChallengeRepository.NewChallengeRepository(db)
+	challengeService := ChallengeService.NewChallengeService(challengeRepo, impactRepo)
+	challengeController := ChallengeController.NewChallengeController(challengeService, jwt, storage)
+
+	c := cron.New()
+	c.AddFunc("@daily", func() {
+		log.Println("Updating challenge and task statuses...")
+		err := challengeRepo.UpdateTaskAndChallengeStatus()
+		if err != nil {
+			log.Printf("Error updating statuses: %v", err)
+		}
+	})
+	c.Start()
+	defer c.Stop()
+
 	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	routes.RoutesProducts(e, productController, *cfg)
@@ -129,6 +164,9 @@ func main() {
 	routes.RouteTransaction(e, transactionController, *cfg)
 	routes.PaymentNotification(e, webhookController)
 	routes.RouteReviewProduct(e, reviewController, *cfg)
+	routes.RouteChatbot(e, chatbotController, *cfg)
+	routes.RouteForum(e, forumController, *cfg)
+	routes.RouteChallenge(e, challengeController, *cfg)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))

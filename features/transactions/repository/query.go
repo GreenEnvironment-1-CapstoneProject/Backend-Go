@@ -4,6 +4,7 @@ import (
 	cart "greenenvironment/features/cart/repository"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
+	productRepo "greenenvironment/features/products/repository"
 	"greenenvironment/features/transactions"
 	users "greenenvironment/features/users/repository"
 
@@ -313,4 +314,8 @@ func (tr *TransactionRepository) GetDataCartTransaction(cartIds []string, userId
 	}
 
 	return result, nil
+}
+
+func (tr *TransactionRepository) UpdateStockByProductID(productId string, stock int) error {
+	return tr.DB.Model(productRepo.Product{}).Where("id = ?", productId).Update("stock", gorm.Expr("stock - ?", stock)).Error
 }

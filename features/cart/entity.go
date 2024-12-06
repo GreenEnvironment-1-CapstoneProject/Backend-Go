@@ -41,6 +41,7 @@ type CartRepositoryInterface interface {
 	InsertDecrement(userId string, productId string) error
 	GetCartQty(userId string, productId string) (int, error)
 	InsertByQuantity(userId string, productId string, quantity int) error
+	GetStock(productId string) (int, error)
 }
 
 type CartServiceInterface interface {

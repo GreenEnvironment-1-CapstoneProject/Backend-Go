@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"greenenvironment/constant"
 	"greenenvironment/features/cart"
 )
@@ -19,6 +20,17 @@ func (cs *CartService) Create(cart cart.NewCart) error {
 		return err
 	}
 	if isExist {
+		existQty, err := cs.cartRepo.GetCartQty(cart.UserID, cart.ProductID)
+		if err != nil {
+			return err
+		}
+		stock, err := cs.cartRepo.GetStock(cart.ProductID)
+		if err != nil {
+			return err
+		}
+		if stock < (existQty+1) || stock < (existQty+cart.Quantity) {
+			return errors.New("error quantity exceeds stock")
+		}
 		return cs.cartRepo.InsertIncrement(cart.UserID, cart.ProductID, cart.Quantity)
 	}
 

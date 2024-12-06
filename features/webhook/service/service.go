@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	transactions "greenenvironment/features/transactions/repository"
 	"greenenvironment/features/webhook"
 )
@@ -16,13 +17,14 @@ func NewWebhookService(data webhook.MidtransNotificationRepository) webhook.Midt
 }
 
 func (s *WebhookService) HandleNotification(notification webhook.PaymentNotification) error {
-	// orderId := notification.OrderID
 	transactionStatus := notification.TransactionStatus
 	fraudStatus := notification.FraudStatus
 	transactionData := transactions.Transaction{
 		ID:            notification.OrderID,
 		PaymentMethod: notification.PaymentType,
 	}
+	fmt.Println("orderId", notification.OrderID)
+	fmt.Println("TransactionId", notification.TransactionID)
 	if transactionStatus == "capture" {
 		if fraudStatus == "accept" {
 			transactionData.Status = transactionStatus
@@ -31,6 +33,9 @@ func (s *WebhookService) HandleNotification(notification webhook.PaymentNotifica
 		transactionData.Status = transactionStatus
 	} else if transactionStatus == "cancel" || transactionStatus == "deny" || transactionStatus == "expire" {
 		transactionData.Status = transactionStatus
+		if err := s.d.UpdateStockFailedTransaction(notification.OrderID); err != nil {
+			return err
+		}
 	} else if transactionStatus == "pending" {
 		transactionData.Status = transactionStatus
 	}
