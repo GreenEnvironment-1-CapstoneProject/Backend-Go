@@ -5,6 +5,7 @@ import (
 	DataCart "greenenvironment/features/cart/repository"
 	DataChatbot "greenenvironment/features/chatbot/repository"
 	DataForum "greenenvironment/features/forum/repository"
+	DataChallenge "greenenvironment/features/challenges/repository"
 	DataImpact "greenenvironment/features/impacts/repository"
 	DataProduct "greenenvironment/features/products/repository"
 	DataReview "greenenvironment/features/review_products/repository"
@@ -31,6 +32,11 @@ func Migrate(db *gorm.DB) error {
 	db.AutoMigrate(&DataWebhook.PaymentNotification{})
 	db.AutoMigrate(&DataForum.Forum{})
 	db.AutoMigrate(&DataForum.MessageForum{})
+	db.AutoMigrate(&DataChallenge.Challenge{})
+	db.AutoMigrate(&DataChallenge.ChallengeImpactCategory{})
+	db.AutoMigrate(&DataChallenge.ChallengeTask{})
+	db.AutoMigrate(&DataChallenge.ChallengeLog{})
+	db.AutoMigrate(&DataChallenge.ChallengeConfirmation{})
 
 	return nil
 }

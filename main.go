@@ -4,6 +4,7 @@ import (
 	"greenenvironment/configs"
 	_ "greenenvironment/docs"
 	"greenenvironment/helper"
+	"log"
 
 	AdminContoller "greenenvironment/features/admin/controller"
 	AdminRepository "greenenvironment/features/admin/repository"
@@ -17,6 +18,9 @@ import (
 	ForumController "greenenvironment/features/forum/controller"
 	ForumRepository "greenenvironment/features/forum/repository"
 	ForumService "greenenvironment/features/forum/service"
+	ChallengeController "greenenvironment/features/challenges/controller"
+	ChallengeRepository "greenenvironment/features/challenges/repository"
+	ChallengeService "greenenvironment/features/challenges/service"
 	GuestController "greenenvironment/features/guest/controller"
 	GuestRepository "greenenvironment/features/guest/repository"
 	guestService "greenenvironment/features/guest/service"
@@ -48,6 +52,7 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
@@ -134,6 +139,21 @@ func main() {
 	forumService := ForumService.NewForumService(forumRepo)
 	forumController := ForumController.NewForumController(forumService, jwt, storage)
 
+	challengeRepo := ChallengeRepository.NewChallengeRepository(db)
+	challengeService := ChallengeService.NewChallengeService(challengeRepo, impactRepo)
+	challengeController := ChallengeController.NewChallengeController(challengeService, jwt, storage)
+
+	c := cron.New()
+	c.AddFunc("@daily", func() {
+		log.Println("Updating challenge and task statuses...")
+		err := challengeRepo.UpdateTaskAndChallengeStatus()
+		if err != nil {
+			log.Printf("Error updating statuses: %v", err)
+		}
+	})
+	c.Start()
+	defer c.Stop()
+
 	routes.RouteUser(e, userController, *cfg)
 	routes.RouteAdmin(e, adminController, *cfg)
 	routes.RoutesProducts(e, productController, *cfg)
@@ -146,6 +166,7 @@ func main() {
 	routes.RouteReviewProduct(e, reviewController, *cfg)
 	routes.RouteChatbot(e, chatbotController, *cfg)
 	routes.RouteForum(e, forumController, *cfg)
+	routes.RouteChallenge(e, challengeController, *cfg)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
