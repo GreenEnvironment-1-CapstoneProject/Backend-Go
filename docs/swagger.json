@@ -273,7 +273,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenges"
+                    "Challenges (Admin)"
                 ],
                 "summary": "Get all challenges",
                 "parameters": [
@@ -335,7 +335,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenges"
+                    "Challenges (Admin)"
                 ],
                 "summary": "Create a new challenge",
                 "parameters": [
@@ -493,7 +493,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenge Tasks"
+                    "Challenge Tasks (Admin)"
                 ],
                 "summary": "Create a new task for a challenge",
                 "parameters": [
@@ -600,7 +600,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenge Tasks"
+                    "Challenge Tasks (Admin)"
                 ],
                 "summary": "Get task by ID",
                 "parameters": [
@@ -913,7 +913,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenge Tasks"
+                    "Challenge Tasks (Admin)"
                 ],
                 "summary": "Get all tasks by challenge ID",
                 "parameters": [
@@ -996,7 +996,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenges"
+                    "Challenges (Admin)"
                 ],
                 "summary": "Get a challenge by ID",
                 "parameters": [
@@ -1074,7 +1074,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenges"
+                    "Challenges (Admin)"
                 ],
                 "summary": "Update a challenge",
                 "parameters": [
@@ -1204,7 +1204,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Challenges"
+                    "Challenges (Admin)"
                 ],
                 "summary": "Delete a challenge",
                 "parameters": [
@@ -2131,6 +2131,620 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/active": {
+            "get": {
+                "description": "Get challenges that are currently in progress for the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenges (User)"
+                ],
+                "summary": "Get active challenges",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Active challenges retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/challenges.ChallengeLog"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/confirmations/progress": {
+            "put": {
+                "description": "Updates the status of a challenge confirmation to \"Done\" and uploads the confirmation image",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenge Confirmations"
+                ],
+                "summary": "Update the progress of a challenge confirmation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "challenge_confirmation_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Challenge Confirmation Image",
+                        "name": "challenge_confirmation_img",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Confirmation updated successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/details": {
+            "get": {
+                "description": "Get challenge log and confirmation tasks for a specific challenge log ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenges (User)"
+                ],
+                "summary": "Get challenge details with confirmations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Challenge Log ID",
+                        "name": "challengeLogID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Challenge details retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/challenges.ChallengeLogDetails"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Challenge log not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/logs": {
+            "post": {
+                "description": "Logs challenge participation with status \"Progress\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenge Logs"
+                ],
+                "summary": "Log a user's participation in a challenge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Challenge Log Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ChallengeLogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Challenge log created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/rewards": {
+            "post": {
+                "description": "Claims exp and coin rewards from a completed challenge",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenge Rewards"
+                ],
+                "summary": "Claim rewards for a challenge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Claim Rewards Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ClaimRewardsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rewards claimed successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Challenge log not found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/unclaimed": {
+            "get": {
+                "description": "Get challenges that the user has not taken yet",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenges (User)"
+                ],
+                "summary": "Get unclaimed challenges",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unclaimed challenges retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/challenges.Challenge"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -5377,6 +5991,139 @@
         }
     },
     "definitions": {
+        "challenges.Challenge": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "challengeImg": {
+                    "type": "string"
+                },
+                "coin": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "difficulty": {
+                    "type": "string"
+                },
+                "durationDays": {
+                    "type": "integer"
+                },
+                "exp": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "impactCategories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/challenges.ChallengeImpactCategory"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "challenges.ChallengeConfirmation": {
+            "type": "object",
+            "properties": {
+                "challengeImg": {
+                    "type": "string"
+                },
+                "challengeTaskID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "submissionDate": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "challenges.ChallengeImpactCategory": {
+            "type": "object",
+            "properties": {
+                "challengeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "impactCategory": {
+                    "$ref": "#/definitions/impacts.ImpactCategory"
+                },
+                "impactCategoryID": {
+                    "type": "string"
+                }
+            }
+        },
+        "challenges.ChallengeLog": {
+            "type": "object",
+            "properties": {
+                "challengeID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "feed": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "rewardsGiven": {
+                    "type": "boolean"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "challenges.ChallengeLogDetails": {
+            "type": "object",
+            "properties": {
+                "challengeLog": {
+                    "$ref": "#/definitions/challenges.ChallengeLog"
+                },
+                "confirmations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/challenges.ChallengeConfirmation"
+                    }
+                }
+            }
+        },
         "controller.AdminInfoResponse": {
             "type": "object",
             "properties": {
@@ -5508,6 +6255,124 @@
                 }
             }
         },
+        "controller.ChallengeImpactCategories": {
+            "type": "object",
+            "properties": {
+                "impact_category": {
+                    "$ref": "#/definitions/greenenvironment_features_challenges_controller.ImpactCategory"
+                }
+            }
+        },
+        "controller.ChallengeLogRequest": {
+            "type": "object",
+            "required": [
+                "challenge_id"
+            ],
+            "properties": {
+                "challenge_id": {
+                    "type": "string"
+                },
+                "feed": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ChallengeRequest": {
+            "type": "object",
+            "required": [
+                "category_impact",
+                "coin",
+                "description",
+                "difficulty",
+                "duration_days",
+                "exp",
+                "title"
+            ],
+            "properties": {
+                "category_impact": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "coin": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "difficulty": {
+                    "type": "string"
+                },
+                "duration_days": {
+                    "type": "integer"
+                },
+                "exp": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ChallengeResponse": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.ChallengeImpactCategories"
+                    }
+                },
+                "challenge_img": {
+                    "type": "string"
+                },
+                "coin": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "difficulty": {
+                    "type": "string"
+                },
+                "duration_days": {
+                    "type": "integer"
+                },
+                "exp": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ChallengeTaskRequest": {
+            "type": "object",
+            "required": [
+                "challenge_id",
+                "day_number",
+                "task_description"
+            ],
+            "properties": {
+                "challenge_id": {
+                    "type": "string"
+                },
+                "day_number": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "task_description": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.ChatbotRequest": {
             "type": "object",
             "required": [
@@ -5538,6 +6403,17 @@
                     "type": "string"
                 },
                 "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ClaimRewardsRequest": {
+            "type": "object",
+            "required": [
+                "challenge_log_id"
+            ],
+            "properties": {
+                "challenge_log_id": {
                     "type": "string"
                 }
             }
@@ -6247,6 +7123,23 @@
                 },
                 "status": {
                     "type": "boolean"
+                }
+            }
+        },
+        "impacts.ImpactCategory": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "impactPoint": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
