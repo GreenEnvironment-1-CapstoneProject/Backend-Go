@@ -109,47 +109,35 @@ func (pr *ProductRepository) GetById(id string) (products.Product, error) {
 }
 
 func (pr *ProductRepository) Update(productData products.Product) error {
-	productDataUpdate := Product{
-		ID:          productData.ID,
-		Name:        productData.Name,
-		Coin:        productData.Coin,
-		Price:       productData.Price,
-		Description: productData.Description,
-		Stock:       productData.Stock,
-	}
-
-	for _, image := range productData.Images {
-		productDataUpdate.Images = append(productDataUpdate.Images, ProductImage{
-			ID:        image.ID,
-			ProductID: productDataUpdate.ID,
-			AlbumsURL: image.AlbumsURL,
-		})
-	}
-
-	for _, impactCategory := range productData.ImpactCategories {
-		productDataUpdate.ImpactCategories = append(productDataUpdate.ImpactCategories, ProductImpactCategory{
-			ID:               impactCategory.ID,
-			ProductID:        productDataUpdate.ID,
-			ImpactCategoryID: impactCategory.ImpactCategoryID,
-		})
-	}
-
 	tx := pr.DB.Begin()
-	err := pr.DB.Where("product_id = ?", productDataUpdate.ID).Delete(products.ProductImage{})
+	err := tx.Where("product_id = ?", productData.ID).Delete(products.ProductImage{})
 	if err.Error != nil {
 		tx.Rollback()
 		return err.Error
 	}
-	err = pr.DB.Where("product_id = ?", productDataUpdate.ID).Delete(products.ProductImpactCategory{})
+	err = tx.Where("product_id = ?", productData.ID).Delete(products.ProductImpactCategory{})
 	if err.Error != nil {
 		tx.Rollback()
 		return err.Error
 	}
 
-	err = pr.DB.Model(&productDataUpdate).Where("id = ?", productDataUpdate.ID).Save(&productDataUpdate)
+	err = tx.Model(&Product{}).Where("id = ?", productData.ID).Updates(&productData)
 	if err.Error != nil {
 		tx.Rollback()
 		return constant.ErrUpdateProduct
+	}
+
+	if len(productData.Images) > 0 {
+		if err := tx.Create(&productData.Images).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	if len(productData.ImpactCategories) > 0 {
+		if err := tx.Create(&productData.ImpactCategories).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 	return tx.Commit().Error
 }
@@ -222,7 +210,7 @@ func (pr *ProductRepository) GetByCategory(categoryName string, page int, search
 
 func (gr *ProductRepository) GetTotalProduct() (int, error) {
 	var totalProduct int64
-	err := gr.DB.Table("products").Count(&totalProduct).Error
+	err := gr.DB.Table("products").Where("deleted_at IS NULL").Count(&totalProduct).Error
 	if err != nil {
 		return 0, err
 	}
