@@ -54,10 +54,12 @@ func (w *WebhookRepository) HandleNotification(notification webhook.PaymentNotif
 		tx.Rollback()
 		return err
 	}
-	err = w.InsertUserCoin(transaction.ID)
-	if err != nil {
-		tx.Rollback()
-		return err
+	if notification.TransactionStatus == "settlement" {
+		err = w.InsertUserCoin(transaction.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
 	return tx.Commit().Error
