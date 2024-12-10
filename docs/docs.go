@@ -1305,6 +1305,111 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/dashboard": {
+            "get": {
+                "description": "Retrieve dashboard data filtered by weekly, monthly, or yearly",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard data for admin",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter value (weekly, monthly, yearly)",
+                        "name": "filter",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.DashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid filter value",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/admin/login": {
             "post": {
                 "description": "Authenticate admin and generate JWT token",
@@ -4208,6 +4313,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/leaderboard": {
+            "get": {
+                "description": "Fetch the leaderboard data for users with the role \"User\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Leaderboard"
+                ],
+                "summary": "Retrieve leaderboard data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.LeaderboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/media/upload": {
             "post": {
                 "description": "Upload an image to Cloudinary and return the image URL",
@@ -6466,6 +6651,17 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.ChangeResponse": {
+            "type": "object",
+            "properties": {
+                "absolute": {
+                    "type": "number"
+                },
+                "percentage": {
+                    "type": "number"
+                }
+            }
+        },
         "controller.ChatbotRequest": {
             "type": "object",
             "required": [
@@ -6567,6 +6763,41 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "customer_change": {
+                    "$ref": "#/definitions/controller.ChangeResponse"
+                },
+                "last_transactions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.LastTransactionResponse"
+                    }
+                },
+                "order_change": {
+                    "$ref": "#/definitions/controller.ChangeResponse"
+                },
+                "top_categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.TopCategoryResponse"
+                    }
+                },
+                "total_customers": {
+                    "type": "integer"
+                },
+                "total_orders": {
+                    "type": "integer"
+                },
+                "total_transactions": {
+                    "type": "number"
+                },
+                "transaction_change": {
+                    "$ref": "#/definitions/controller.ChangeResponse"
+                }
+            }
+        },
         "controller.ForumGetDetailResponse": {
             "type": "object",
             "properties": {
@@ -6633,6 +6864,52 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.LastTransactionResponse": {
+            "type": "object",
+            "properties": {
+                "customer_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "products": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "number"
+                },
+                "transaction_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.LeaderboardResponse": {
+            "type": "object",
+            "properties": {
+                "exp": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "integer"
                 }
             }
         },
@@ -6787,6 +7064,20 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.TopCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "category_name": {
+                    "type": "string"
+                },
+                "items_sold": {
+                    "type": "integer"
+                },
+                "total_sales": {
+                    "type": "number"
                 }
             }
         },

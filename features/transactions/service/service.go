@@ -131,6 +131,10 @@ func (ts *TransactionService) CreateTransaction(transaction transactions.CreateT
 	return transactionData, nil
 }
 func (ts *TransactionService) DeleteTransaction(transactionId string) error {
+	_, err := ts.GetTransactionByID(transactionId)
+	if err != nil {
+		return err
+	}
 	return ts.transactionRepo.DeleteTransaction(transactionId)
 }
 func (ts *TransactionService) GetAllTransaction() ([]transactions.TransactionData, error) {

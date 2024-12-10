@@ -10,6 +10,7 @@ require (
 	github.com/labstack/echo-jwt v0.0.0-20221127215225-c84d41a71003
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/midtrans/midtrans-go v1.3.8
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/sashabaranov/go-openai v1.36.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/echo-swagger v1.4.1
@@ -26,7 +27,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
-	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 )

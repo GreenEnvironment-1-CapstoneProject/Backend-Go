@@ -15,6 +15,9 @@ import (
 	ChatbotController "greenenvironment/features/chatbot/controller"
 	ChatbotRepository "greenenvironment/features/chatbot/repository"
 	ChatbotService "greenenvironment/features/chatbot/service"
+	DashboardController "greenenvironment/features/dashboard/controller"
+	DashboardRepository "greenenvironment/features/dashboard/repository"
+	DashboardService "greenenvironment/features/dashboard/service"
 	ForumController "greenenvironment/features/forum/controller"
 	ForumRepository "greenenvironment/features/forum/repository"
 	ForumService "greenenvironment/features/forum/service"
@@ -27,6 +30,9 @@ import (
 	ImpactController "greenenvironment/features/impacts/controller"
 	ImpactRepository "greenenvironment/features/impacts/repository"
 	ImpactService "greenenvironment/features/impacts/service"
+	LeaderboardController "greenenvironment/features/leaderboard/controller"
+	LeaderboardRepository "greenenvironment/features/leaderboard/repository"
+	LeaderboardService "greenenvironment/features/leaderboard/service"
 	ProductController "greenenvironment/features/products/controller"
 	ProductRepository "greenenvironment/features/products/repository"
 	ProductService "greenenvironment/features/products/service"
@@ -143,6 +149,14 @@ func main() {
 	challengeService := ChallengeService.NewChallengeService(challengeRepo, impactRepo)
 	challengeController := ChallengeController.NewChallengeController(challengeService, jwt, storage)
 
+	dashboardRepo := DashboardRepository.NewDashboardRepository(db)
+	dashboardService := DashboardService.NewDashboardService(dashboardRepo)
+	dashboardController := DashboardController.NewDashboardController(dashboardService, jwt)
+
+	leaderboardRepo := LeaderboardRepository.NewLeaderboardRepository(db)
+	leaderboardService := LeaderboardService.NewLeaderboardService(leaderboardRepo)
+	leaderboardController := LeaderboardController.NewLeaderboardController(leaderboardService, jwt)
+
 	c := cron.New()
 	c.AddFunc("@daily", func() {
 		log.Println("Updating challenge and task statuses...")
@@ -167,6 +181,8 @@ func main() {
 	routes.RouteChatbot(e, chatbotController, *cfg)
 	routes.RouteForum(e, forumController, *cfg)
 	routes.RouteChallenge(e, challengeController, *cfg)
+	routes.RouteDashboard(e, dashboardController, *cfg)
+	routes.RouteLeaderboard(e, leaderboardController, *cfg)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
