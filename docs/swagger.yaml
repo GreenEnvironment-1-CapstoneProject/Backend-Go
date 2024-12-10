@@ -415,6 +415,17 @@ definitions:
       transaction_date:
         type: string
     type: object
+  controller.LeaderboardResponse:
+    properties:
+      exp:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      rank:
+        type: integer
+    type: object
   controller.MessageResponse:
     properties:
       created_at:
@@ -3342,6 +3353,50 @@ paths:
       summary: Retrieve impact by ID
       tags:
       - Impact
+  /leaderboard:
+    get:
+      consumes:
+      - application/json
+      description: Fetch the leaderboard data for users with the role "User"
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.LeaderboardResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Retrieve leaderboard data
+      tags:
+      - Leaderboard
   /media/upload:
     post:
       consumes:

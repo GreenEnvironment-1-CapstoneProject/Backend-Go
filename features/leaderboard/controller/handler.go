@@ -21,6 +21,17 @@ func NewLeaderboardController(service leaderboard.LeaderboardServiceInterface, j
 	}
 }
 
+// Get Leaderboard
+// @Summary      Retrieve leaderboard data
+// @Description  Fetch the leaderboard data for users with the role "User"
+// @Tags         Leaderboard
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string                   true  "Bearer token"
+// @Success      200            {object}  helper.Response{data=LeaderboardResponse}
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /leaderboard [get]
 func (lc *LeaderboardController) GetLeaderboard(c echo.Context) error {
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
