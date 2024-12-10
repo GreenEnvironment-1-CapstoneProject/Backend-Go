@@ -42,11 +42,11 @@ type UpdateTransaction struct {
 
 type TransactionData struct {
 	ID               string
-	VoucherID        string
 	Status           string
 	Total            float64
 	Coin             int
 	SnapURL          string
+	PaymentMethod    string
 	User             users.User
 	TransactionItems []TransactionItems
 	CreatedAt        time.Time

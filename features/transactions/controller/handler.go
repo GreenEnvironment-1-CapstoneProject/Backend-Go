@@ -142,7 +142,7 @@ func (tc *TransactionController) DeleteTransaction(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
 
-	return c.JSON(http.StatusCreated, helper.FormatResponse(true, "delete transaction successfully", nil))
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "delete transaction successfully", nil))
 }
 
 // Get All Transactions
