@@ -73,6 +73,7 @@ func (c *Cart) ToEntity() cart.Cart {
 					Price:            c.Product.Price,
 					Coin:             c.Product.Coin,
 					Stock:            c.Product.Stock,
+					Category:         c.Product.Category,
 					CreatedAt:        c.Product.CreatedAt,
 					UpdatedAt:        c.Product.UpdatedAt,
 					Images:           images,

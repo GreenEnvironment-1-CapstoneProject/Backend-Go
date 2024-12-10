@@ -77,11 +77,12 @@ func (tr *TransactionRepository) GetUserTransaction(userId string) ([]transactio
 		}
 
 		result = append(result, transactions.TransactionData{
-			ID:      txn.ID,
-			Status:  txn.Status,
-			Total:   txn.Total,
-			Coin:    txn.Coin,
-			SnapURL: txn.SnapURL,
+			ID:            txn.ID,
+			Status:        txn.Status,
+			Total:         txn.Total,
+			Coin:          txn.Coin,
+			SnapURL:       txn.SnapURL,
+			PaymentMethod: txn.PaymentMethod,
 			User: users.User{
 				ID:        txn.User.ID,
 				Name:      txn.User.Name,
@@ -159,11 +160,13 @@ func (tr *TransactionRepository) GetTransactionByID(transactionId string) (trans
 	}
 
 	result = transactions.TransactionData{
-		ID:      transactionsData.ID,
-		Status:  transactionsData.Status,
-		Total:   transactionsData.Total,
-		Coin:    transactionsData.Coin,
-		SnapURL: transactionsData.SnapURL,
+		ID:            transactionsData.ID,
+		Status:        transactionsData.Status,
+		Total:         transactionsData.Total,
+		Coin:          transactionsData.Coin,
+		SnapURL:       transactionsData.SnapURL,
+		PaymentMethod: transactionsData.PaymentMethod,
+
 		User: users.User{
 			ID:        transactionsData.User.ID,
 			Name:      transactionsData.User.Name,
@@ -340,11 +343,12 @@ func (tr *TransactionRepository) GetAllTransaction() ([]transactions.Transaction
 		}
 
 		result = append(result, transactions.TransactionData{
-			ID:      txn.ID,
-			Status:  txn.Status,
-			Total:   txn.Total,
-			Coin:    txn.Coin,
-			SnapURL: txn.SnapURL,
+			ID:            txn.ID,
+			Status:        txn.Status,
+			Total:         txn.Total,
+			Coin:          txn.Coin,
+			SnapURL:       txn.SnapURL,
+			PaymentMethod: txn.PaymentMethod,
 			User: users.User{
 				ID:        txn.User.ID,
 				Name:      txn.User.Name,
