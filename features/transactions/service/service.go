@@ -54,7 +54,7 @@ func (ts *TransactionService) CreateTransaction(transaction transactions.CreateT
 	itemsData := []transactions.TransactionItems{}
 
 	for _, cart := range cartData {
-		totalPrice += cart.Product.Price * float64(cart.Quantity)
+		totalPrice += float64(int64(cart.Product.Price)) * float64(cart.Quantity)
 		item := midtrans.ItemDetails{
 			ID:    cart.ID,
 			Name:  cart.Product.Name,

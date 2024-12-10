@@ -179,3 +179,43 @@ func (tc *TransactionController) GetAllTransaction(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Get all Transactions", response))
 }
+
+// Get Transaction By ID
+// @Summary      Get transaction by ID
+// @Description  Retrieve a specific transaction by its ID. Only accessible by admin users.
+// @Tags         Transactions
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true   "Bearer Token"
+// @Param        id             path      string  true   "Transaction ID"
+// @Success      200  {object}  helper.Response{data=TransactionAllUserResponses} "Transaction retrieved successfully"
+// @Failure      401  {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      500  {object}  helper.Response{data=string} "Internal server error"
+// @Router       /admin/transactions/{id} [get]
+func (tc *TransactionController) GetTransactionByID(c echo.Context) error {
+	tokenString := c.Request().Header.Get("Authorization")
+	token, err := tc.jwtService.ValidateToken(tokenString)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	adminData := tc.jwtService.ExtractAdminToken(token)
+	role := adminData[constant.JWT_ROLE].(string)
+	if role != constant.RoleAdmin {
+		return helper.UnauthorizedError(c)
+	}
+	paramId := c.Param("id")
+	transactionId, err := uuid.Parse(paramId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	transaction, err := tc.transactionService.GetTransactionByID(transactionId.String())
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	response := new(TransactionAllUserResponses).FromEntity(transaction)
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "get transactions by id successfully", response))
+}
