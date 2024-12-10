@@ -1470,6 +1470,93 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/transactions/{id}": {
+            "get": {
+                "description": "Retrieve a specific transaction by its ID. Only accessible by admin users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Get transaction by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transaction retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.TransactionAllUserResponses"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/admin/users": {
             "get": {
                 "description": "Retrieve a paginated list of all users (admin access only)",
@@ -6709,13 +6796,13 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.TransactionDetails"
+                    }
+                },
                 "id": {
-                    "type": "string"
-                },
-                "product_image": {
-                    "type": "string"
-                },
-                "product_name": {
                     "type": "string"
                 },
                 "snap_token": {
@@ -6732,6 +6819,20 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.TransactionDetails": {
+            "type": "object",
+            "properties": {
+                "product_image": {
+                    "type": "string"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "product_quantity": {
+                    "type": "integer"
                 }
             }
         },
@@ -6766,13 +6867,13 @@ const docTemplate = `{
         "controller.TransactionUserResponse": {
             "type": "object",
             "properties": {
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.TransactionDetails"
+                    }
+                },
                 "id": {
-                    "type": "string"
-                },
-                "product_image": {
-                    "type": "string"
-                },
-                "product_name": {
                     "type": "string"
                 },
                 "snap_token": {

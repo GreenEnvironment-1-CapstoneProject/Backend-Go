@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	transactions "greenenvironment/features/transactions/repository"
 	"greenenvironment/features/webhook"
 )
@@ -23,8 +22,7 @@ func (s *WebhookService) HandleNotification(notification webhook.PaymentNotifica
 		ID:            notification.OrderID,
 		PaymentMethod: notification.PaymentType,
 	}
-	fmt.Println("orderId", notification.OrderID)
-	fmt.Println("TransactionId", notification.TransactionID)
+
 	if transactionStatus == "capture" {
 		if fraudStatus == "accept" {
 			transactionData.Status = transactionStatus

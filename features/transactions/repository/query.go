@@ -104,7 +104,7 @@ func (tr *TransactionRepository) GetUserTransaction(userId string) ([]transactio
 	return result, nil
 }
 func (tr *TransactionRepository) GetTransactionByID(transactionId string) (transactions.TransactionData, error) {
-	var transactionsData transactions.TransactionData
+	var transactionsData Transaction
 	err := tr.DB.Model(&Transaction{}).Preload("User").Preload("TransactionItems").Preload("TransactionItems.Product").
 		Preload("TransactionItems.Product.Images").
 		Preload("TransactionItems.Product.ImpactCategories").
@@ -115,8 +115,75 @@ func (tr *TransactionRepository) GetTransactionByID(transactionId string) (trans
 		return transactions.TransactionData{}, err
 	}
 
-	return transactionsData, nil
+	var result transactions.TransactionData
+	var txnItems []transactions.TransactionItems
+	var images []products.ProductImage
+	var impactCategories []products.ProductImpactCategory
+	for _, item := range transactionsData.TransactionItems {
+		for _, img := range item.Product.Images {
+			images = append(images, products.ProductImage{
+				ID:        img.ID,
+				ProductID: img.ProductID,
+				AlbumsURL: img.AlbumsURL,
+			})
+		}
+		for _, impact := range item.Product.ImpactCategories {
+			impactCategories = append(impactCategories, products.ProductImpactCategory{
+				ID:               impact.ID,
+				ProductID:        impact.ProductID,
+				ImpactCategoryID: impact.ImpactCategoryID,
+				ImpactCategory: impacts.ImpactCategory{
+					ID:          impact.ImpactCategory.ID,
+					Name:        impact.ImpactCategory.Name,
+					ImpactPoint: impact.ImpactCategory.ImpactPoint,
+					Description: impact.ImpactCategory.Description,
+				},
+			})
+		}
+		txnItems = append(txnItems, transactions.TransactionItems{
+			ID:            item.ID,
+			TransactionID: item.TransactionID,
+			ProductID:     item.ProductID,
+			Qty:           item.Quantity,
+			Product: products.Product{
+				ID:               item.Product.ID,
+				Name:             item.Product.Name,
+				Description:      item.Product.Description,
+				Price:            item.Product.Price,
+				Coin:             item.Product.Coin,
+				Stock:            item.Product.Stock,
+				Images:           images,
+				ImpactCategories: impactCategories,
+			},
+		})
+	}
+
+	result = transactions.TransactionData{
+		ID:      transactionsData.ID,
+		Status:  transactionsData.Status,
+		Total:   transactionsData.Total,
+		Coin:    transactionsData.Coin,
+		SnapURL: transactionsData.SnapURL,
+		User: users.User{
+			ID:        transactionsData.User.ID,
+			Name:      transactionsData.User.Name,
+			Email:     transactionsData.User.Email,
+			Username:  transactionsData.User.Username,
+			Password:  transactionsData.User.Password,
+			Address:   transactionsData.User.Address,
+			Gender:    transactionsData.User.Gender,
+			Phone:     transactionsData.User.Phone,
+			Coin:      transactionsData.User.Coin,
+			Exp:       transactionsData.User.Exp,
+			AvatarURL: transactionsData.User.AvatarURL,
+		},
+		TransactionItems: txnItems,
+		CreatedAt:        transactionsData.CreatedAt,
+		UpdatedAt:        transactionsData.UpdatedAt,
+	}
+	return result, nil
 }
+
 func (tr *TransactionRepository) CreateTransactions(transaction transactions.Transaction) error {
 	transactionData := Transaction{
 		ID:            transaction.ID,
