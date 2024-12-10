@@ -5,6 +5,7 @@ import (
 	"greenenvironment/constant/route"
 	"greenenvironment/features/admin"
 	"greenenvironment/features/cart"
+	"greenenvironment/features/challenges"
 	"greenenvironment/features/chatbot"
 	"greenenvironment/features/forum"
 	"greenenvironment/features/guest"
@@ -14,7 +15,6 @@ import (
 	"greenenvironment/features/transactions"
 	"greenenvironment/features/users"
 	"greenenvironment/features/webhook"
-	"greenenvironment/features/challenges"
 	"greenenvironment/helper"
 	"greenenvironment/utils/storages"
 
@@ -119,6 +119,7 @@ func RouteTransaction(e *echo.Echo, tc transactions.TransactionControllerInterfa
 	e.DELETE(route.TransactionByID, tc.DeleteTransaction, echojwt.WithConfig(jwtConfig))
 
 	e.GET("/api/v1/admin/transactions", tc.GetAllTransaction, echojwt.WithConfig(jwtConfig))
+	e.GET("/api/v1/admin/transactions/:id", tc.GetTransactionByID, echojwt.WithConfig(jwtConfig))
 }
 
 func PaymentNotification(e *echo.Echo, wh webhook.MidtransNotificationController) {

@@ -474,11 +474,11 @@ definitions:
     properties:
       created_at:
         type: string
+      details:
+        items:
+          $ref: '#/definitions/controller.TransactionDetails'
+        type: array
       id:
-        type: string
-      product_image:
-        type: string
-      product_name:
         type: string
       snap_token:
         type: string
@@ -490,6 +490,15 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  controller.TransactionDetails:
+    properties:
+      product_image:
+        type: string
+      product_name:
+        type: string
+      product_quantity:
+        type: integer
     type: object
   controller.TransactionRequest:
     properties:
@@ -511,11 +520,11 @@ definitions:
     type: object
   controller.TransactionUserResponse:
     properties:
+      details:
+        items:
+          $ref: '#/definitions/controller.TransactionDetails'
+        type: array
       id:
-        type: string
-      product_image:
-        type: string
-      product_name:
         type: string
       snap_token:
         type: string
@@ -1596,6 +1605,56 @@ paths:
                   type: string
               type: object
       summary: Get all transactions
+      tags:
+      - Transactions
+  /admin/transactions/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific transaction by its ID. Only accessible by admin
+        users.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaction retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.TransactionAllUserResponses'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get transaction by ID
       tags:
       - Transactions
   /admin/users:

@@ -80,4 +80,5 @@ type TransactionControllerInterface interface {
 	CreateTransaction(c echo.Context) error
 	DeleteTransaction(c echo.Context) error
 	GetAllTransaction(c echo.Context) error
+	GetTransactionByID(c echo.Context) error
 }
