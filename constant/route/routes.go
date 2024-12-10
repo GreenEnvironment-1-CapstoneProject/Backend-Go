@@ -60,3 +60,5 @@ const UnclaimedChallenge = ChallengePath + "/unclaimed"
 const UserChallengeDetails = ChallengePath + "/details"
 
 const AdminDashboard = AdminPath + "/dashboard"
+
+const LeaderboardPath = BasePath + "/leaderboard"
