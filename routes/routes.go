@@ -7,6 +7,7 @@ import (
 	"greenenvironment/features/cart"
 	"greenenvironment/features/challenges"
 	"greenenvironment/features/chatbot"
+	"greenenvironment/features/dashboard"
 	"greenenvironment/features/forum"
 	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
@@ -189,4 +190,12 @@ func RouteChallenge(e *echo.Echo, cc challenges.ChallengeControllerInterface, cf
 	e.GET(route.ActiveChallenge, cc.GetActiveChallenges, echojwt.WithConfig(jwtConfig))
 	e.GET(route.UnclaimedChallenge, cc.GetUnclaimedChallenges, echojwt.WithConfig(jwtConfig))
 	e.GET(route.UserChallengeDetails, cc.GetChallengeDetailsWithConfirmations, echojwt.WithConfig(jwtConfig))
+}
+
+func RouteDashboard(e *echo.Echo, dc dashboard.DashboardControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+	e.GET(route.AdminDashboard, dc.GetDashboard, echojwt.WithConfig(jwtConfig))
 }

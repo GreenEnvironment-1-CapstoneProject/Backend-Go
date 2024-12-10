@@ -253,6 +253,13 @@ definitions:
     - day_number
     - task_description
     type: object
+  controller.ChangeResponse:
+    properties:
+      absolute:
+        type: number
+      percentage:
+        type: number
+    type: object
   controller.ChatbotRequest:
     properties:
       id:
@@ -321,6 +328,29 @@ definitions:
     - rate
     - review
     type: object
+  controller.DashboardResponse:
+    properties:
+      customer_change:
+        $ref: '#/definitions/controller.ChangeResponse'
+      last_transactions:
+        items:
+          $ref: '#/definitions/controller.LastTransactionResponse'
+        type: array
+      order_change:
+        $ref: '#/definitions/controller.ChangeResponse'
+      top_categories:
+        items:
+          $ref: '#/definitions/controller.TopCategoryResponse'
+        type: array
+      total_customers:
+        type: integer
+      total_orders:
+        type: integer
+      total_transactions:
+        type: number
+      transaction_change:
+        $ref: '#/definitions/controller.ChangeResponse'
+    type: object
   controller.ForumGetDetailResponse:
     properties:
       author:
@@ -364,6 +394,25 @@ definitions:
       impact_point:
         type: integer
       name:
+        type: string
+    type: object
+  controller.LastTransactionResponse:
+    properties:
+      customer_name:
+        type: string
+      id:
+        type: string
+      payment_method:
+        type: string
+      products:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      total:
+        type: number
+      transaction_date:
         type: string
     type: object
   controller.MessageResponse:
@@ -469,6 +518,15 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  controller.TopCategoryResponse:
+    properties:
+      category_name:
+        type: string
+      items_sold:
+        type: integer
+      total_sales:
+        type: number
     type: object
   controller.TransactionAllUserResponses:
     properties:
@@ -1515,6 +1573,64 @@ paths:
       summary: Update a task
       tags:
       - Challenge Tasks
+  /admin/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve dashboard data filtered by weekly, monthly, or yearly
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Filter value (weekly, monthly, yearly)
+        in: query
+        name: filter
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard data retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.DashboardResponse'
+              type: object
+        "400":
+          description: Invalid filter value
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get dashboard data for admin
+      tags:
+      - Dashboard
   /admin/login:
     post:
       consumes:
