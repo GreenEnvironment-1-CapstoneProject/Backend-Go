@@ -1,0 +1,49 @@
+package controller
+
+import (
+	"greenenvironment/constant"
+	"greenenvironment/features/leaderboard"
+	"greenenvironment/helper"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+)
+
+type LeaderboardController struct {
+	service    leaderboard.LeaderboardServiceInterface
+	jwt helper.JWTInterface
+}
+
+func NewLeaderboardController(service leaderboard.LeaderboardServiceInterface, jwt helper.JWTInterface) leaderboard.LeaderboardControllerInterface {
+	return &LeaderboardController{
+		service:    service,
+		jwt: jwt,
+	}
+}
+
+func (lc *LeaderboardController) GetLeaderboard(c echo.Context) error {
+	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+	if tokenString == "" {
+		return helper.UnauthorizedError(c)
+	}
+
+	token, err := lc.jwt.ValidateToken(tokenString)
+	if err != nil {
+		return helper.UnauthorizedError(c)
+	}
+
+	userData := lc.jwt.ExtractUserToken(token)
+	userRole := userData[constant.JWT_ROLE].(string)
+	if userRole != constant.RoleUser {
+		return helper.UnauthorizedError(c)
+	}
+
+	data, err := lc.service.GetLeaderboard()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "failed to fetch leaderboard", nil))
+	}
+
+	response := LeaderboardResponse{}.FromEntity(data)
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "success fetch leaderboard", response))
+}

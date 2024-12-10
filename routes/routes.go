@@ -11,6 +11,7 @@ import (
 	"greenenvironment/features/forum"
 	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
+	"greenenvironment/features/leaderboard"
 	"greenenvironment/features/products"
 	reviewproducts "greenenvironment/features/review_products"
 	"greenenvironment/features/transactions"
@@ -198,4 +199,12 @@ func RouteDashboard(e *echo.Echo, dc dashboard.DashboardControllerInterface, cfg
 		ErrorHandler: helper.JWTErrorHandler,
 	}
 	e.GET(route.AdminDashboard, dc.GetDashboard, echojwt.WithConfig(jwtConfig))
+}
+
+func RouteLeaderboard(e *echo.Echo, lc leaderboard.LeaderboardControllerInterface, cfg configs.GEConfig) {
+	jwtConfig := echojwt.Config{
+		SigningKey:   []byte(cfg.JWT_Secret),
+		ErrorHandler: helper.JWTErrorHandler,
+	}
+	e.GET(route.LeaderboardPath, lc.GetLeaderboard, echojwt.WithConfig(jwtConfig))
 }

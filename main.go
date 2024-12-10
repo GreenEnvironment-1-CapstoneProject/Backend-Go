@@ -30,6 +30,9 @@ import (
 	ImpactController "greenenvironment/features/impacts/controller"
 	ImpactRepository "greenenvironment/features/impacts/repository"
 	ImpactService "greenenvironment/features/impacts/service"
+	LeaderboardController "greenenvironment/features/leaderboard/controller"
+	LeaderboardRepository "greenenvironment/features/leaderboard/repository"
+	LeaderboardService "greenenvironment/features/leaderboard/service"
 	ProductController "greenenvironment/features/products/controller"
 	ProductRepository "greenenvironment/features/products/repository"
 	ProductService "greenenvironment/features/products/service"
@@ -150,6 +153,10 @@ func main() {
 	dashboardService := DashboardService.NewDashboardService(dashboardRepo)
 	dashboardController := DashboardController.NewDashboardController(dashboardService, jwt)
 
+	leaderboardRepo := LeaderboardRepository.NewLeaderboardRepository(db)
+	leaderboardService := LeaderboardService.NewLeaderboardService(leaderboardRepo)
+	leaderboardController := LeaderboardController.NewLeaderboardController(leaderboardService, jwt)
+
 	c := cron.New()
 	c.AddFunc("@daily", func() {
 		log.Println("Updating challenge and task statuses...")
@@ -175,6 +182,7 @@ func main() {
 	routes.RouteForum(e, forumController, *cfg)
 	routes.RouteChallenge(e, challengeController, *cfg)
 	routes.RouteDashboard(e, dashboardController, *cfg)
+	routes.RouteLeaderboard(e, leaderboardController, *cfg)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.Logger.Fatal(e.Start(cfg.APP_PORT))
