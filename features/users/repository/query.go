@@ -175,8 +175,8 @@ func (u *UserData) GetAllUsersForAdmin() ([]users.User, error) {
 	return users, nil
 }
 
-func (u *UserData) GetAllByPageForAdmin(page int) ([]users.User, int, error) {
-	var forum []users.User
+func (u *UserData) GetAllByPageForAdmin(page int, limit int) ([]users.User, int, error) {
+	var users []users.User
 
 	var total int64
 	count := u.DB.Model(&User{}).Count(&total)
@@ -184,18 +184,14 @@ func (u *UserData) GetAllByPageForAdmin(page int) ([]users.User, int, error) {
 		return nil, 0, constant.ErrUserDataEmpty
 	}
 
-	dataforumPerPage := 20
-	totalPages := int((total + int64(dataforumPerPage) - 1) / int64(dataforumPerPage))
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
 
-	tx := u.DB.Model(&User{}).Offset((page - 1) * dataforumPerPage).
-		Find(&forum)
+	tx := u.DB.Model(&User{}).Offset((page - 1) * limit).Limit(limit).Find(&users)
 	if tx.Error != nil {
 		return nil, 0, constant.ErrGetUser
 	}
-	if tx.RowsAffected == 0 {
-		return nil, 0, constant.ErrUserNotFound
-	}
-	return forum, totalPages, nil
+
+	return users, totalPages, nil
 }
 
 func (u *UserData) UpdateUserForAdmin(user users.UpdateUserByAdmin) error {

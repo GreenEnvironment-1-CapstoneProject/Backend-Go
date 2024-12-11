@@ -143,12 +143,8 @@ func (s *UserService) GetUserByIDForAdmin(id string) (users.User, error) {
 	return s.userRepo.GetUserByIDForAdmin(id)
 }
 
-func (s *UserService) GetAllUsersForAdmin() ([]users.User, error) {
-	return s.userRepo.GetAllUsersForAdmin()
-}
-
-func (s *UserService) GetAllByPageForAdmin(page int) ([]users.User, int, error) {
-	return s.userRepo.GetAllByPageForAdmin(page)
+func (s *UserService) GetAllByPageForAdmin(page int, limit int) ([]users.User, int, error) {
+	return s.userRepo.GetAllByPageForAdmin(page, limit)
 }
 
 func (s *UserService) UpdateUserForAdmin(user users.UpdateUserByAdmin) error {

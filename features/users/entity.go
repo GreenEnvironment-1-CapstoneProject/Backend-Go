@@ -65,7 +65,7 @@ type UserRepoInterface interface {
 	GetAllUsersForAdmin() ([]User, error)
 	UpdateUserForAdmin(UpdateUserByAdmin) error
 	DeleteUserForAdmin(userID string) error
-	GetAllByPageForAdmin(page int) ([]User, int, error)
+	GetAllByPageForAdmin(page int, limit int) ([]User, int, error)
 }
 
 type UserServiceInterface interface {
@@ -79,10 +79,9 @@ type UserServiceInterface interface {
 
 	// Admin
 	GetUserByIDForAdmin(id string) (User, error)
-	GetAllUsersForAdmin() ([]User, error)
 	UpdateUserForAdmin(UpdateUserByAdmin) error
 	DeleteUserForAdmin(userID string) error
-	GetAllByPageForAdmin(page int) ([]User, int, error)
+	GetAllByPageForAdmin(page int, limit int) ([]User, int, error)
 }
 
 type UserControllerInterface interface {
