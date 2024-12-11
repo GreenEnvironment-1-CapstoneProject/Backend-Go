@@ -148,6 +148,7 @@ func (cd *ChallengeData) CreateTask(task challenges.ChallengeTask) error {
 	newTask := ChallengeTask{
 		ID:              task.ID,
 		ChallengeID:     task.ChallengeID,
+		Name:            task.Name,
 		DayNumber:       task.DayNumber,
 		TaskDescription: task.TaskDescription,
 	}
@@ -250,6 +251,17 @@ func (cd *ChallengeData) CreateChallengeConfirmation(confirmation challenges.Cha
 	}
 
 	return nil
+}
+
+func (cd *ChallengeData) IncrementChallengeCounts(challengeID string, actionCount int, participantIncrement bool) error {
+	updateQuery := cd.DB.Model(&Challenge{}).Where("id = ?", challengeID)
+	if participantIncrement {
+		updateQuery = updateQuery.UpdateColumn("participant_count", gorm.Expr("participant_count + ?", 1))
+	}
+	if actionCount > 0 {
+		updateQuery = updateQuery.UpdateColumn("action_count", gorm.Expr("action_count + ?", actionCount))
+	}
+	return updateQuery.Error
 }
 
 func (cd *ChallengeData) IsChallengeTaken(userID, challengeID string) (bool, error) {
@@ -458,57 +470,38 @@ func (cd *ChallengeData) GetChallengeRewards(challengeID string) (int, int, erro
 	return challenge.Exp, challenge.Coin, nil
 }
 
-func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string, page, perPage int) ([]challenges.ChallengeLog, int, error) {
-	var logs []struct {
-		ChallengeLog
-		Title        string
-		Difficulty   string
-		ChallengeImg string
-		Description  string
-		DurationDays int
-		Exp          int
-		Coin         int
-	}
-	var totalLogs int64
+func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
+	var logs []challenges.ChallengeLog
 
-	err := cd.DB.Table("challenge_logs").
-		Select("challenge_logs.*, challenges.title, challenges.difficulty, challenges.challenge_img, challenges.description, challenges.duration_days, challenges.exp, challenges.coin").
-		Joins("JOIN challenges ON challenge_logs.challenge_id = challenges.id").
-		Where("challenge_logs.user_id = ? AND challenge_logs.status = ?", userID, "Progress").
-		Count(&totalLogs).
-		Offset((page - 1) * perPage).
+	query := cd.DB.Preload("Challenge").
+		Where("user_id = ? AND status = ?", userID, "Progress")
+
+	if difficulty != "" {
+		query = query.Where("challenges.difficulty LIKE ?", "%"+difficulty+"%")
+	}
+
+	if title != "" {
+		query = query.Where("challenges.title LIKE ?", "%"+title+"%")
+	}
+
+	err := query.Offset((page - 1) * perPage).
 		Limit(perPage).
 		Find(&logs).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	var result []challenges.ChallengeLog
-	for _, log := range logs {
-		result = append(result, challenges.ChallengeLog{
-			ID:          log.ID,
-			ChallengeID: log.ChallengeID,
-			UserID:      log.UserID,
-			Status:      log.Status,
-			StartDate:   log.StartDate,
-			Feed:        log.Feed,
-			Challenge: challenges.Challenge{
-				Title:        log.Title,
-				Difficulty:   log.Difficulty,
-				ChallengeImg: log.ChallengeImg,
-				Description:  log.Description,
-				DurationDays: log.DurationDays,
-				Exp:          log.Exp,
-				Coin:         log.Coin,
-			},
-		})
+	var totalRecords int64
+	err = query.Count(&totalRecords).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
-	totalPages := int((totalLogs + int64(perPage) - 1) / int64(perPage))
-	return result, totalPages, nil
+	totalPages := int((totalRecords + int64(perPage) - 1) / int64(perPage))
+	return logs, totalPages, nil
 }
 
-func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int) ([]challenges.Challenge, int, error) {
+func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int, difficulty, title string) ([]challenges.Challenge, int, error) {
 	var claimedChallenges []string
 	err := cd.DB.Model(&ChallengeLog{}).
 		Where("user_id = ?", userID).
@@ -517,60 +510,40 @@ func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, pag
 		return nil, 0, err
 	}
 
-	var totalRecords int64
-	query := cd.DB.Table("challenges").
-		Select(`
-			challenges.*, 
-			COUNT(DISTINCT challenge_confirmations.id) AS action_count, 
-			COUNT(DISTINCT challenge_logs.user_id) AS participant_count
-		`).
-		Joins("LEFT JOIN challenge_tasks ON challenge_tasks.challenge_id = challenges.id").
-		Joins("LEFT JOIN challenge_confirmations ON challenge_confirmations.challenge_task_id = challenge_tasks.id").
-		Joins("LEFT JOIN challenge_logs ON challenge_logs.challenge_id = challenges.id").
-		Group("challenges.id").
-		Count(&totalRecords)
+	query := cd.DB.Model(&challenges.Challenge{}).
+		Preload("ImpactCategories.ImpactCategory")
 
 	if !isAdmin {
 		query = query.Where("challenges.deleted_at IS NULL")
 	}
 
 	if len(claimedChallenges) > 0 {
-		query = query.Where("challenges.id NOT IN ?", claimedChallenges)
+		query = query.Where("id NOT IN ?", claimedChallenges)
 	}
 
+	if difficulty != "" {
+		query = query.Where("challenges.difficulty LIKE ?", "%"+difficulty+"%")
+	}
+
+	if title != "" {
+		query = query.Where("title LIKE ?", "%"+title+"%")
+	}
+
+	var challengeEntities []challenges.Challenge
 	offset := (page - 1) * limit
-	query = query.Offset(offset).Limit(limit)
-
-	var challengeEntities []struct {
-		challenges.Challenge
-		ActionCount      int `gorm:"column:action_count"`
-		ParticipantCount int `gorm:"column:participant_count"`
-	}
-
-	err = query.Find(&challengeEntities).Error
+	err = query.Offset(offset).Limit(limit).Find(&challengeEntities).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	var result []challenges.Challenge
-	for _, entity := range challengeEntities {
-		result = append(result, challenges.Challenge{
-			ID:               entity.ID,
-			Author:           entity.Author,
-			Title:            entity.Title,
-			Difficulty:       entity.Difficulty,
-			ChallengeImg:     entity.ChallengeImg,
-			Description:      entity.Description,
-			DurationDays:     entity.DurationDays,
-			Exp:              entity.Exp,
-			Coin:             entity.Coin,
-			ActionCount:      entity.ActionCount,
-			ParticipantCount: entity.ParticipantCount,
-		})
+	var totalRecords int64
+	err = query.Count(&totalRecords).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
 	totalPages := int((totalRecords + int64(limit) - 1) / int64(limit))
-	return result, totalPages, nil
+	return challengeEntities, totalPages, nil
 }
 
 func (cd *ChallengeData) GetChallengeLogByID(challengeLogID string) (challenges.ChallengeLog, error) {

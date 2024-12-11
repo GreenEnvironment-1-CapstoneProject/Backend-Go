@@ -65,7 +65,12 @@ func (cs *ChallengeService) Update(challenge challenges.Challenge) error {
 	if err != nil {
 		return err
 	}
+
 	challenge.Author = existingChallenge.Author
+
+	if challenge.ChallengeImg == "" {
+		challenge.ChallengeImg = existingChallenge.ChallengeImg
+	}
 
 	return cs.challengeRepo.Update(challenge)
 }
@@ -79,32 +84,33 @@ func (cs *ChallengeService) Delete(challengeID string) error {
 	return cs.challengeRepo.Delete(challengeID)
 }
 
-func (cs *ChallengeService) CreateTask(challengeID string, dayNumber int, taskDescription string) error {
+func (cs *ChallengeService) CreateTask(challengeID, name string, dayNumber int, taskDescription string) error {
 	challenge, err := cs.challengeRepo.GetByID(challengeID)
 	if err != nil || challenge.ID == "" {
-		return constant.ErrChallengeNotFound
+			return constant.ErrChallengeNotFound
 	}
 
 	if dayNumber < 1 || dayNumber > challenge.DurationDays {
-		return constant.ErrInvalidDayNumber
+			return constant.ErrInvalidDayNumber
 	}
 
 	tasks, err := cs.challengeRepo.GetTasksByChallengeID(challengeID)
 	if err != nil {
-		return err
+			return err
 	}
 
 	for _, task := range tasks {
-		if task.DayNumber == dayNumber {
-			return constant.ErrTaskAlreadyExists
-		}
+			if task.DayNumber == dayNumber {
+					return constant.ErrTaskAlreadyExists
+			}
 	}
 
 	task := challenges.ChallengeTask{
-		ID:              uuid.New().String(),
-		ChallengeID:     challengeID,
-		DayNumber:       dayNumber,
-		TaskDescription: taskDescription,
+			ID:              uuid.New().String(),
+			ChallengeID:     challengeID,
+			Name:            name,
+			DayNumber:       dayNumber,
+			TaskDescription: taskDescription,
 	}
 
 	return cs.challengeRepo.CreateTask(task)
@@ -163,6 +169,7 @@ func (cs *ChallengeService) CreateChallengeLogWithConfirmation(log challenges.Ch
 		return err
 	}
 
+	actionCount := len(tasks)
 	for _, task := range tasks {
 		confirmation := challenges.ChallengeConfirmation{
 			ID:              uuid.New().String(),
@@ -176,6 +183,12 @@ func (cs *ChallengeService) CreateChallengeLogWithConfirmation(log challenges.Ch
 		if err != nil {
 			return err
 		}
+	}
+
+	// Increment action_count and participant_count
+	err = cs.challengeRepo.IncrementChallengeCounts(log.ChallengeID, actionCount, true)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -276,12 +289,12 @@ func (cs *ChallengeService) ClaimRewards(challengeLogID, userID string) error {
 	return nil
 }
 
-func (cs *ChallengeService) GetActiveChallenges(userID string, page, perPage int) ([]challenges.ChallengeLog, int, error) {
-	return cs.challengeRepo.GetActiveChallengeLogByUserID(userID, page, perPage)
+func (cs *ChallengeService) GetActiveChallenges(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
+	return cs.challengeRepo.GetActiveChallengeLogByUserID(userID, page, perPage, difficulty, title)
 }
 
-func (cs *ChallengeService) GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int) ([]challenges.Challenge, int, error) {
-	return cs.challengeRepo.GetUnclaimedChallenges(userID, isAdmin, page, limit)
+func (cs *ChallengeService) GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int, difficulty, title string) ([]challenges.Challenge, int, error) {
+	return cs.challengeRepo.GetUnclaimedChallenges(userID, isAdmin, page, limit, difficulty, title)
 }
 
 func (cs *ChallengeService) GetChallengeDetailsWithConfirmations(userID, challengeLogID string) (challenges.ChallengeLogDetails, error) {

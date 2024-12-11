@@ -236,21 +236,6 @@ func (h *ChallengeHandler) Update(c echo.Context) error {
 		return helper.UnauthorizedError(c)
 	}
 
-	file, err := c.FormFile("challenge_img")
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Challenge image file is required", nil))
-	}
-
-	src, err := h.storage.ImageValidation(file)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
-	}
-
-	challengeImgURL, err := h.storage.UploadImageToCloudinary(src, "ecomate/challenges/images/")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to upload challenge image", nil))
-	}
-
 	challengeID := c.Param("id")
 	var challengeRequest ChallengeRequest
 
@@ -260,6 +245,20 @@ func (h *ChallengeHandler) Update(c echo.Context) error {
 
 	if err := c.Validate(challengeRequest); err != nil {
 		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	var challengeImgURL string
+	file, err := c.FormFile("challenge_img")
+	if err == nil {
+		src, err := h.storage.ImageValidation(file)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
+		}
+
+		challengeImgURL, err = h.storage.UploadImageToCloudinary(src, "ecomate/challenges/images/")
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to upload challenge image", nil))
+		}
 	}
 
 	challenge := challenges.Challenge{
@@ -366,7 +365,7 @@ func (h *ChallengeHandler) CreateTask(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
 	}
 
-	err = h.challengeService.CreateTask(taskRequest.ChallengeID, taskRequest.DayNumber, taskRequest.TaskDescription)
+	err = h.challengeService.CreateTask(taskRequest.ChallengeID, taskRequest.Name, taskRequest.DayNumber, taskRequest.TaskDescription)
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
@@ -717,7 +716,9 @@ func (h *ChallengeHandler) ClaimRewards(c echo.Context) error {
 // @Produce      json
 // @Param        Authorization header string true "Bearer Token"
 // @Param        page query int false "Page number (default is 1)"
-// @Success      200 {object} helper.MetadataResponse{data=[]string} "Active challenges retrieved successfully"
+// @Param        difficulty query string false "Filter by difficulty name (e.g., 'hard')"
+// @Param        title query string false "Filter by title (e.g., 'save water')"
+// @Success      200 {object} helper.MetadataResponse{data=[]map[string]interface{}} "Active challenges retrieved successfully"
 // @Failure      204 "No content"
 // @Failure      401 {object} helper.Response{data=string} "Unauthorized"
 // @Failure      500 {object} helper.Response{data=string} "Internal server error"
@@ -728,6 +729,9 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 		page = 1
 	}
 	perPage := 20
+
+	difficulty := c.QueryParam("difficulty")
+	title := c.QueryParam("title")
 
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
@@ -742,7 +746,7 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 	userData := h.jwt.ExtractUserToken(token)
 	userID := userData[constant.JWT_ID].(string)
 
-	challenges, totalPages, err := h.challengeService.GetActiveChallenges(userID, page, perPage)
+	challenges, totalPages, err := h.challengeService.GetActiveChallenges(userID, page, perPage, difficulty, title)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
@@ -785,7 +789,9 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 // @Param        Authorization header string true "Bearer Token"
 // @Param        page query int false "Page number (default is 1)"
 // @Param        limit query int false "Limit per page (default is 20)"
-// @Success      200 {object} helper.MetadataResponse{data=[]string} "Unclaimed challenges retrieved successfully"
+// @Param        difficulty query string false "Filter by difficulty name (e.g., 'easy')"
+// @Param        title query string false "Filter by title (e.g., 'recycle')"
+// @Success      200 {object} helper.MetadataResponse{data=[]map[string]interface{}} "Unclaimed challenges retrieved successfully"
 // @Failure      401 {object} helper.Response{data=string} "Unauthorized"
 // @Failure      404 {object} helper.Response{data=string} "No unclaimed challenges available"
 // @Failure      500 {object} helper.Response{data=string} "Internal server error"
@@ -816,7 +822,10 @@ func (h *ChallengeHandler) GetUnclaimedChallenges(c echo.Context) error {
 		limit = 20
 	}
 
-	challenges, totalPages, err := h.challengeService.GetUnclaimedChallenges(userID, isAdmin, page, limit)
+	difficulty := c.QueryParam("difficulty")
+	title := c.QueryParam("title")
+
+	challenges, totalPages, err := h.challengeService.GetUnclaimedChallenges(userID, isAdmin, page, limit, difficulty, title)
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
@@ -881,7 +890,7 @@ func (h *ChallengeHandler) GetChallengeDetailsWithConfirmations(c echo.Context) 
 }
 
 // GetChallengeDetails retrieves challenge details including tasks
-// @Summary      Get challenge details
+// @Summary      Get unclaimed challenge details
 // @Description  Retrieve challenge details for a specific challenge ID, including title, difficulty, image, description, duration, experience points, coins, and tasks
 // @Tags         Challenges (User)
 // @Accept       json
