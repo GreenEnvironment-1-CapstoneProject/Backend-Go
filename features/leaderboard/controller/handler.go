@@ -38,17 +38,6 @@ func (lc *LeaderboardController) GetLeaderboard(c echo.Context) error {
 		return helper.UnauthorizedError(c)
 	}
 
-	token, err := lc.jwt.ValidateToken(tokenString)
-	if err != nil {
-		return helper.UnauthorizedError(c)
-	}
-
-	userData := lc.jwt.ExtractUserToken(token)
-	userRole := userData[constant.JWT_ROLE].(string)
-	if userRole != constant.RoleUser {
-		return helper.UnauthorizedError(c)
-	}
-
 	data, err := lc.service.GetLeaderboard()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "failed to fetch leaderboard", nil))

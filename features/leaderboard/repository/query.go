@@ -17,8 +17,9 @@ func NewLeaderboardRepository(db *gorm.DB) leaderboard.LeaderboardRepositoryInte
 func (ld *LeaderboardData) GetLeaderboard() ([]leaderboard.LeaderboardUser, error) {
 	var leaderboardData []leaderboard.LeaderboardUser
 	query := `
-			SELECT ROW_NUMBER() OVER (ORDER BY exp DESC, name ASC) AS ` + "`rank`" + `, id, name, exp
+			SELECT ROW_NUMBER() OVER (ORDER BY exp DESC, name ASC) AS ` + "`rank`" + `, id, name, avatar_url, exp
 			FROM users
+			LIMIT 10
 	`
 	if err := ld.DB.Raw(query).Scan(&leaderboardData).Error; err != nil {
 		return nil, err
