@@ -36,7 +36,7 @@ func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GECon
 		ErrorHandler: helper.JWTErrorHandler,
 	}
 
-	e.GET(route.UserPath, uh.GetUserData, echojwt.WithConfig(jwtConfig))
+	e.GET(route.UserProfile, uh.GetUserData, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.UserUpdate, uh.UpdateUserInfo, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.UserUpdateAvatar, uh.UpdateAvatar, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.UserPath, uh.Delete, echojwt.WithConfig(jwtConfig))
