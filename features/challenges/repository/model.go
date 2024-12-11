@@ -9,15 +9,17 @@ import (
 
 type Challenge struct {
 	*gorm.Model
-	ID               string                    `gorm:"primaryKey;type:varchar(50);not null;column:id"`
-	Author           string                    `gorm:"type:varchar(255);not null;column:author"`
-	Title            string                    `gorm:"type:varchar(255);not null;column:title"`
-	Difficulty       string                    `gorm:"type:varchar(255);not null;column:difficulty"`
-	ChallengeImg     string                    `gorm:"type:varchar(255);not null;column:challenge_img"`
-	Description      string                    `gorm:"type:varchar(255);not null;column:description"`
-	DurationDays     int                       `gorm:"type:int;not null;column:duration_days"`
-	Exp              int                       `gorm:"type:int;not null;column:exp"`
-	Coin             int                       `gorm:"type:int;not null;column:coin"`
+	ID               string `gorm:"primaryKey;type:varchar(50);not null;column:id"`
+	Author           string `gorm:"type:varchar(255);not null;column:author"`
+	Title            string `gorm:"type:varchar(255);not null;column:title"`
+	Difficulty       string `gorm:"type:varchar(255);not null;column:difficulty"`
+	ChallengeImg     string `gorm:"type:varchar(255);not null;column:challenge_img"`
+	Description      string `gorm:"type:varchar(255);not null;column:description"`
+	DurationDays     int    `gorm:"type:int;not null;column:duration_days"`
+	Exp              int    `gorm:"type:int;not null;column:exp"`
+	Coin             int    `gorm:"type:int;not null;column:coin"`
+	ActionCount      int    `gorm:"type:int;not null;default:0;column:action_count"`
+	ParticipantCount int    `gorm:"type:int;not null;default:0;column:participant_count"`
 	ImpactCategories []ChallengeImpactCategory `gorm:"foreignKey:ChallengeID;references:ID"`
 }
 
@@ -34,6 +36,7 @@ type ChallengeTask struct {
 	*gorm.Model
 	ID              string    `gorm:"primaryKey;type:varchar(50);not null;column:id"`
 	ChallengeID     string    `gorm:"type:varchar(50);not null;column:challenge_id"`
+	Name            string    `gorm:"type:varchar(255);not null;column:name"`
 	DayNumber       int       `gorm:"type:int;not null;column:day_number"`
 	TaskDescription string    `gorm:"type:text;not null;column:task_description"`
 	Challenge       Challenge `gorm:"foreignKey:ChallengeID;references:ID"`

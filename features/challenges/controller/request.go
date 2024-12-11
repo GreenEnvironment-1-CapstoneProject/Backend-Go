@@ -12,6 +12,7 @@ type ChallengeRequest struct {
 
 type ChallengeTaskRequest struct {
 	ChallengeID     string `json:"challenge_id" validate:"required"`
+	Name            string `json:"name" validate:"required"`
 	DayNumber       int    `json:"day_number" validate:"required,min=1"`
 	TaskDescription string `json:"task_description" validate:"required"`
 }

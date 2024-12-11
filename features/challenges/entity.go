@@ -42,6 +42,7 @@ type ImpactCategory struct {
 type ChallengeTask struct {
 	ID              string
 	ChallengeID     string
+	Name            string
 	DayNumber       int
 	TaskDescription string
 	CreatedAt       time.Time
@@ -87,6 +88,12 @@ type ChallengeDetails struct {
 	Tasks        []ChallengeTask
 }
 
+type ChallengeWithCounts struct {
+	Challenge
+	ActionCount      int
+	ParticipantCount int
+}
+
 type ChallengeRepoInterface interface {
 	Create(Challenge) error
 	GetAllByPage(page int) ([]Challenge, int, error)
@@ -104,6 +111,7 @@ type ChallengeRepoInterface interface {
 	CreateChallengeLog(ChallengeLog) error
 	CreateChallengeConfirmation(ChallengeConfirmation) error
 	IsChallengeTaken(userID, challengeID string) (bool, error)
+	IncrementChallengeCounts(challengeID string, actionCount int, participantIncrement bool) error
 	GetChallengeConfirmationByID(confirmationID string) (ChallengeConfirmation, error)
 	UpdateChallengeConfirmation(ChallengeConfirmation) error
 	GetChallengeTaskByID(taskID string) (ChallengeTask, error)
@@ -132,7 +140,7 @@ type ChallengeServiceInterface interface {
 	Update(Challenge) error
 	Delete(challengeID string) error
 
-	CreateTask(challengeID string, dayNumber int, taskDescription string) error
+	CreateTask(challengeID, name string, dayNumber int, taskDescription string) error
 	GetAllTasksByChallengeID(challengeID string) ([]ChallengeTask, error)
 	GetTaskByID(taskID string) (ChallengeTask, error)
 	UpdateTask(taskID string, taskDescription string) error

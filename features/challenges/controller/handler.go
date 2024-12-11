@@ -236,21 +236,6 @@ func (h *ChallengeHandler) Update(c echo.Context) error {
 		return helper.UnauthorizedError(c)
 	}
 
-	file, err := c.FormFile("challenge_img")
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Challenge image file is required", nil))
-	}
-
-	src, err := h.storage.ImageValidation(file)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
-	}
-
-	challengeImgURL, err := h.storage.UploadImageToCloudinary(src, "ecomate/challenges/images/")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to upload challenge image", nil))
-	}
-
 	challengeID := c.Param("id")
 	var challengeRequest ChallengeRequest
 
@@ -260,6 +245,20 @@ func (h *ChallengeHandler) Update(c echo.Context) error {
 
 	if err := c.Validate(challengeRequest); err != nil {
 		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	var challengeImgURL string
+	file, err := c.FormFile("challenge_img")
+	if err == nil {
+		src, err := h.storage.ImageValidation(file)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
+		}
+
+		challengeImgURL, err = h.storage.UploadImageToCloudinary(src, "ecomate/challenges/images/")
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, "Failed to upload challenge image", nil))
+		}
 	}
 
 	challenge := challenges.Challenge{
@@ -366,7 +365,7 @@ func (h *ChallengeHandler) CreateTask(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, err.Error(), nil))
 	}
 
-	err = h.challengeService.CreateTask(taskRequest.ChallengeID, taskRequest.DayNumber, taskRequest.TaskDescription)
+	err = h.challengeService.CreateTask(taskRequest.ChallengeID, taskRequest.Name, taskRequest.DayNumber, taskRequest.TaskDescription)
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
