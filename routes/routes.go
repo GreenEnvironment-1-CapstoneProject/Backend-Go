@@ -25,7 +25,8 @@ import (
 )
 
 func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GEConfig) {
-	e.POST(route.UserRegister, uh.Register)
+	e.POST(route.UserRegisterOTP, uh.RequestRegisterOTP)
+	e.POST(route.UserVerifyRegisterOTP, uh.VerifyRegisterOTP)
 	e.POST(route.UserLogin, uh.Login)
 
 	e.GET(route.UserLoginGoogle, uh.GoogleLogin)

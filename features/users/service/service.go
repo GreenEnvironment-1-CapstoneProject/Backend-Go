@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/exp/rand"
 	"gorm.io/gorm"
 )
@@ -35,6 +36,84 @@ func (s *UserService) Register(user users.User) (users.User, error) {
 	user.Username = "user_" + helper.GenerateRandomString(8)
 
 	createdUser, err := s.userRepo.Register(user)
+	if err != nil {
+		return users.User{}, err
+	}
+
+	return createdUser, nil
+}
+
+func (s *UserService) RequestRegisterOTP(name, email, password string) error {
+	if email == "" || name == "" || password == "" {
+		return constant.ErrInvalidInput
+	}
+
+	hashedPassword, err := helper.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	tempUser := users.TemporaryUser{
+		ID:       uuid.New().String(),
+		Name:     name,
+		Email:    email,
+		Password: hashedPassword,
+	}
+
+	err = s.userRepo.SaveTemporaryUser(tempUser)
+	if err != nil {
+		return err
+	}
+
+	otp := fmt.Sprintf("%06d", rand.Intn(1000000))
+	expiration := time.Now().Add(5 * time.Minute)
+	err = s.userRepo.SaveOTP(email, otp, expiration)
+	if err != nil {
+		return err
+	}
+
+	smtpConfig := configs.InitConfig().SMTP
+	subject := "Your OTP for Registration"
+	body := "Your OTP is: " + otp + ". It expires in 5 minutes."
+	return helper.SendEmail(smtpConfig, email, subject, body)
+}
+
+func (s *UserService) VerifyRegisterOTP(otp string) (users.User, error) {
+	if otp == "" {
+		return users.User{}, constant.ErrInvalidInput
+	}
+
+	verifyData, err := s.userRepo.GetVerifyOTP(otp)
+	if err != nil {
+		return users.User{}, constant.ErrOTPNotValid
+	}
+
+	tempUser, err := s.userRepo.GetTemporaryUserByEmail(verifyData.Email)
+	if err != nil {
+		return users.User{}, err
+	}
+
+	username := "user_" + helper.GenerateRandomString(8)
+
+	newUser := users.User{
+		ID:       tempUser.ID,
+		Username: username,
+		Name:     tempUser.Name,
+		Email:    tempUser.Email,
+		Password: tempUser.Password,
+	}
+
+	createdUser, err := s.userRepo.Register(newUser)
+	if err != nil {
+		return users.User{}, err
+	}
+
+	err = s.userRepo.DeleteTemporaryUserByEmail(tempUser.Email)
+	if err != nil {
+		return users.User{}, err
+	}
+
+	err = s.userRepo.DeleteVerifyOTP(otp)
 	if err != nil {
 		return users.User{}, err
 	}

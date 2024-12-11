@@ -30,55 +30,62 @@ func NewUserController(u users.UserServiceInterface, j helper.JWTInterface, s st
 	}
 }
 
-// Register User
-// @Summary      Register a new user
-// @Description  Create a new user account in the system
+// Request OTP for Registration
+// @Summary      Request OTP for user registration
+// @Description  Sends an OTP to the user's email for registration verification
 // @Tags         Users
 // @Accept       json
 // @Produce      json
 // @Param        request  body      controller.UserRegisterRequest  true  "User registration payload"
-// @Success      201      {object}  helper.Response{data=UserRegisterResponse}
+// @Success      201      {object}  helper.Response{data=string} "OTP sent successfully"
 // @Failure      400      {object}  helper.Response{data=string} "Invalid input or validation error"
 // @Failure      500      {object}  helper.Response{data=string} "Internal server error"
-// @Router       /users/register [post]
-func (h *UserHandler) Register(c echo.Context) error {
-	var UserRegisterRequest UserRegisterRequest
-
-	err := c.Bind(&UserRegisterRequest)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+// @Router       /users/register/request-otp [post]
+func (h *UserHandler) RequestRegisterOTP(c echo.Context) error {
+	var req UserRegisterRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Invalid input", nil))
 	}
 
-	if err := c.Validate(UserRegisterRequest); err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+	if err := c.Validate(req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Validation error", nil))
 	}
 
-	user := users.User{
-		Name:     UserRegisterRequest.Name,
-		Email:    UserRegisterRequest.Email,
-		Password: UserRegisterRequest.Password,
-	}
-
-	createdUser, err := h.userService.Register(user)
+	err := h.userService.RequestRegisterOTP(req.Name, req.Email, req.Password)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
 
-	userResponse := UserRegisterResponse{
-		ID:            createdUser.ID,
-		Username:      createdUser.Username,
-		Name:          createdUser.Name,
-		Email:         createdUser.Email,
-		Address:       createdUser.Address,
-		Gender:        createdUser.Gender,
-		Phone:         createdUser.Phone,
-		Exp:           createdUser.Exp,
-		Coin:          createdUser.Coin,
-		AvatarURL:     createdUser.AvatarURL,
-		Is_Membership: createdUser.Is_Membership,
+	return c.JSON(http.StatusCreated, helper.FormatResponse(true, "OTP sent successfully", nil))
+}
+
+// Verify OTP and Register User
+// @Summary      Verify OTP and register user
+// @Description  Verifies the OTP sent to the user's email and registers the user
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.UserVerifyRegisterRequest  true  "User verification payload"
+// @Success      201      {object}  helper.Response{data=UserRegisterResponse} "User registered successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid OTP or input"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/register/verify-otp [post]
+func (h *UserHandler) VerifyRegisterOTP(c echo.Context) error {
+	var req UserVerifyRegisterRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Invalid input", nil))
 	}
 
-	return c.JSON(http.StatusCreated, helper.FormatResponse(true, constant.UserSuccessRegister, userResponse))
+	if err := c.Validate(req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Validation error", nil))
+	}
+
+	user, err := h.userService.VerifyRegisterOTP(req.OTP)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusCreated, helper.FormatResponse(true, "User registered successfully", user))
 }
 
 // Login User
@@ -545,6 +552,7 @@ func (h *UserHandler) GetAllUsersForAdmin(c echo.Context) error {
 			AvatarURL:     user.AvatarURL,
 			CreatedAt:     user.CreatedAt.Format("02/01/06"),
 			UpdatedAt:     user.UpdatedAt.Format("02/01/06"),
+
 		})
 	}
 	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, constant.AdminSuccessGetAllUser, metadata, response))

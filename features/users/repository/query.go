@@ -55,6 +55,30 @@ func (u *UserData) Register(newUser users.User) (users.User, error) {
 	}, nil
 }
 
+func (r *UserData) SaveTemporaryUser(user users.TemporaryUser) error {
+	return r.DB.Create(&user).Error
+}
+
+func (r *UserData) GetTemporaryUserByEmail(email string) (users.TemporaryUser, error) {
+	var tempUser users.TemporaryUser
+	err := r.DB.Where("email = ?", email).First(&tempUser).Error
+	return tempUser, err
+}
+
+func (r *UserData) DeleteTemporaryUserByEmail(email string) error {
+	return r.DB.Where("email = ?", email).Delete(&TemporaryUser{}).Error
+}
+
+func (r *UserData) GetVerifyOTP(otp string) (users.VerifyOTP, error) {
+	var verifyData users.VerifyOTP
+	err := r.DB.Where("otp = ?", otp).First(&verifyData).Error
+	return verifyData, err
+}
+
+func (r *UserData) DeleteVerifyOTP(otp string) error {
+	return r.DB.Where("otp = ?", otp).Delete(&VerifyOTP{}).Error
+}
+
 func (u *UserData) Login(user users.User) (users.User, error) {
 	var UserLoginData User
 	result := u.DB.Where("email = ?", user.Email).First(&UserLoginData)

@@ -64,8 +64,28 @@ type PasswordUpdate struct {
 	OTP         string
 }
 
+type VerifyRegister struct {
+	Name     string
+	Email    string
+	Password string
+	OTP      string
+}
+
+type TemporaryUser struct {
+	ID        string
+	Name      string
+	Email     string
+	Password  string
+	CreatedAt time.Time
+}
+
 type UserRepoInterface interface {
 	Register(User) (User, error)
+	SaveTemporaryUser(user TemporaryUser) error
+	GetTemporaryUserByEmail(email string) (TemporaryUser, error)
+	DeleteTemporaryUserByEmail(email string) error
+	GetVerifyOTP(otp string) (VerifyOTP, error)
+	DeleteVerifyOTP(otp string) error
 	Login(User) (User, error)
 	UpdateUserInfo(user UserUpdate) (User, error)
 	Delete(User) error
@@ -87,6 +107,8 @@ type UserRepoInterface interface {
 
 type UserServiceInterface interface {
 	Register(User) (User, error)
+	RequestRegisterOTP(name, email, password string) error
+	VerifyRegisterOTP(otp string) (User, error)
 	Login(User) (UserLogin, error)
 	RegisterOrLoginGoogle(User) (User, error)
 	UpdateUserInfo(user UserUpdate) error
@@ -105,7 +127,8 @@ type UserServiceInterface interface {
 }
 
 type UserControllerInterface interface {
-	Register(c echo.Context) error
+	RequestRegisterOTP(c echo.Context) error
+	VerifyRegisterOTP(c echo.Context) error
 	Login(c echo.Context) error
 	GoogleLogin(c echo.Context) error
 	GoogleCallback(c echo.Context) error
