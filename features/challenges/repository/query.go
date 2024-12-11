@@ -146,15 +146,15 @@ func (cd *ChallengeData) Delete(id string) error {
 
 func (cd *ChallengeData) CreateTask(task challenges.ChallengeTask) error {
 	newTask := ChallengeTask{
-			ID:              task.ID,
-			ChallengeID:     task.ChallengeID,
-			Name:            task.Name,
-			DayNumber:       task.DayNumber,
-			TaskDescription: task.TaskDescription,
+		ID:              task.ID,
+		ChallengeID:     task.ChallengeID,
+		Name:            task.Name,
+		DayNumber:       task.DayNumber,
+		TaskDescription: task.TaskDescription,
 	}
 	err := cd.DB.Create(&newTask).Error
 	if err != nil {
-			return constant.ErrCreateTask
+		return constant.ErrCreateTask
 	}
 	return nil
 }
@@ -470,25 +470,38 @@ func (cd *ChallengeData) GetChallengeRewards(challengeID string) (int, int, erro
 	return challenge.Exp, challenge.Coin, nil
 }
 
-func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string, page, perPage int) ([]challenges.ChallengeLog, int, error) {
+func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
 	var logs []challenges.ChallengeLog
 
-	err := cd.DB.Preload("Challenge").
-		Where("user_id = ? AND status = ?", userID, "Progress").
-		Offset((page - 1) * perPage).
+	query := cd.DB.Preload("Challenge").
+		Where("user_id = ? AND status = ?", userID, "Progress")
+
+	if difficulty != "" {
+		query = query.Where("challenges.difficulty LIKE ?", "%"+difficulty+"%")
+	}
+
+	if title != "" {
+		query = query.Where("challenges.title LIKE ?", "%"+title+"%")
+	}
+
+	err := query.Offset((page - 1) * perPage).
 		Limit(perPage).
 		Find(&logs).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	totalLogs := len(logs)
-	totalPages := int((totalLogs + perPage - 1) / perPage)
+	var totalRecords int64
+	err = query.Count(&totalRecords).Error
+	if err != nil {
+		return nil, 0, err
+	}
 
+	totalPages := int((totalRecords + int64(perPage) - 1) / int64(perPage))
 	return logs, totalPages, nil
 }
 
-func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int) ([]challenges.Challenge, int, error) {
+func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int, difficulty, title string) ([]challenges.Challenge, int, error) {
 	var claimedChallenges []string
 	err := cd.DB.Model(&ChallengeLog{}).
 		Where("user_id = ?", userID).
@@ -497,22 +510,34 @@ func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, pag
 		return nil, 0, err
 	}
 
-	var totalRecords int64
-	query := cd.DB.Model(&challenges.Challenge{})
+	query := cd.DB.Model(&challenges.Challenge{}).
+		Preload("ImpactCategories.ImpactCategory")
 
 	if !isAdmin {
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("challenges.deleted_at IS NULL")
 	}
 
 	if len(claimedChallenges) > 0 {
 		query = query.Where("id NOT IN ?", claimedChallenges)
 	}
 
-	offset := (page - 1) * limit
-	query = query.Offset(offset).Limit(limit).Count(&totalRecords)
+	if difficulty != "" {
+		query = query.Where("challenges.difficulty LIKE ?", "%"+difficulty+"%")
+	}
+
+	if title != "" {
+		query = query.Where("title LIKE ?", "%"+title+"%")
+	}
 
 	var challengeEntities []challenges.Challenge
-	err = query.Find(&challengeEntities).Error
+	offset := (page - 1) * limit
+	err = query.Offset(offset).Limit(limit).Find(&challengeEntities).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var totalRecords int64
+	err = query.Count(&totalRecords).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -520,7 +545,6 @@ func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, pag
 	totalPages := int((totalRecords + int64(limit) - 1) / int64(limit))
 	return challengeEntities, totalPages, nil
 }
-
 
 func (cd *ChallengeData) GetChallengeLogByID(challengeLogID string) (challenges.ChallengeLog, error) {
 	var log ChallengeLog

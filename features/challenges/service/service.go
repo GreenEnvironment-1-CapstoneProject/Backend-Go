@@ -289,12 +289,12 @@ func (cs *ChallengeService) ClaimRewards(challengeLogID, userID string) error {
 	return nil
 }
 
-func (cs *ChallengeService) GetActiveChallenges(userID string, page, perPage int) ([]challenges.ChallengeLog, int, error) {
-	return cs.challengeRepo.GetActiveChallengeLogByUserID(userID, page, perPage)
+func (cs *ChallengeService) GetActiveChallenges(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
+	return cs.challengeRepo.GetActiveChallengeLogByUserID(userID, page, perPage, difficulty, title)
 }
 
-func (cs *ChallengeService) GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int) ([]challenges.Challenge, int, error) {
-	return cs.challengeRepo.GetUnclaimedChallenges(userID, isAdmin, page, limit)
+func (cs *ChallengeService) GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int, difficulty, title string) ([]challenges.Challenge, int, error) {
+	return cs.challengeRepo.GetUnclaimedChallenges(userID, isAdmin, page, limit, difficulty, title)
 }
 
 func (cs *ChallengeService) GetChallengeDetailsWithConfirmations(userID, challengeLogID string) (challenges.ChallengeLogDetails, error) {

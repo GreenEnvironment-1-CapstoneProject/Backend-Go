@@ -126,8 +126,8 @@ type ChallengeRepoInterface interface {
 	GetChallengeIDByLogID(challengeLogID string) (string, error)
 	GetChallengeRewards(challengeID string) (int, int, error)
 
-	GetActiveChallengeLogByUserID(userID string, page, perPage int) ([]ChallengeLog, int, error)
-	GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int) ([]Challenge, int, error)
+	GetActiveChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]ChallengeLog, int, error)
+	GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int, difficulty, title string) ([]Challenge, int, error)
 	GetChallengeLogByID(challengeLogID string) (ChallengeLog, error)
 	GetChallengeByID(challengeID string) (Challenge, error)
 	GetTasksByChallengeIDforUser(challengeID string) ([]ChallengeTask, error)
@@ -152,8 +152,8 @@ type ChallengeServiceInterface interface {
 	CheckAndUpdateChallengeLogStatusByConfirmation(confirmationID, userID string) error
 	ClaimRewards(challengeLogID, userID string) error
 
-	GetActiveChallenges(userID string, page, perPage int) ([]ChallengeLog, int, error)
-	GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int) ([]Challenge, int, error)
+	GetActiveChallenges(userID string, page, perPage int, difficulty, title string) ([]ChallengeLog, int, error)
+	GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int, difficulty, title string) ([]Challenge, int, error)
 	GetChallengeDetailsWithConfirmations(userID, challengeLogID string) (ChallengeLogDetails, error)
 	GetChallengeDetails(challengeID string) (ChallengeDetails, error)
 }
