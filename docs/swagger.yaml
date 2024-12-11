@@ -1,55 +1,5 @@
 basePath: /api/v1
 definitions:
-  challenges.Challenge:
-    properties:
-      actionCount:
-        type: integer
-      author:
-        type: string
-      challengeImg:
-        type: string
-      coin:
-        type: integer
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      description:
-        type: string
-      difficulty:
-        type: string
-      durationDays:
-        type: integer
-      exp:
-        type: integer
-      id:
-        type: string
-      impactCategories:
-        items:
-          $ref: '#/definitions/challenges.ChallengeImpactCategory'
-        type: array
-      participantCount:
-        type: integer
-      title:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  challenges.ChallengeConfirmation:
-    properties:
-      challengeImg:
-        type: string
-      challengeTaskID:
-        type: string
-      id:
-        type: string
-      status:
-        type: string
-      submissionDate:
-        type: string
-      userID:
-        type: string
-    type: object
   challenges.ChallengeDetails:
     properties:
       challengeImg:
@@ -72,49 +22,6 @@ definitions:
         type: array
       title:
         type: string
-    type: object
-  challenges.ChallengeImpactCategory:
-    properties:
-      challengeID:
-        type: string
-      id:
-        type: string
-      impactCategory:
-        $ref: '#/definitions/impacts.ImpactCategory'
-      impactCategoryID:
-        type: string
-    type: object
-  challenges.ChallengeLog:
-    properties:
-      challenge:
-        $ref: '#/definitions/challenges.Challenge'
-      challengeID:
-        type: string
-      createdAt:
-        type: string
-      feed:
-        type: string
-      id:
-        type: string
-      rewardsGiven:
-        type: boolean
-      startDate:
-        type: string
-      status:
-        type: string
-      updatedAt:
-        type: string
-      userID:
-        type: string
-    type: object
-  challenges.ChallengeLogDetails:
-    properties:
-      challengeLog:
-        $ref: '#/definitions/challenges.ChallengeLog'
-      confirmations:
-        items:
-          $ref: '#/definitions/challenges.ChallengeConfirmation'
-        type: array
     type: object
   challenges.ChallengeTask:
     properties:
@@ -219,6 +126,19 @@ definitions:
       user:
         $ref: '#/definitions/controller.User'
     type: object
+  controller.ChallengeConfirmationResponse:
+    properties:
+      challenge_task:
+        $ref: '#/definitions/controller.ChallengeTaskResponse'
+      id:
+        type: string
+      status:
+        type: string
+      submission_date:
+        type: string
+      user_id:
+        type: string
+    type: object
   controller.ChallengeImpactCategories:
     properties:
       impact_category:
@@ -232,6 +152,25 @@ definitions:
         type: string
     required:
     - challenge_id
+    type: object
+  controller.ChallengeLogResponse:
+    properties:
+      challenge:
+        $ref: '#/definitions/controller.ChallengeResponse'
+      challenge_confirmation:
+        $ref: '#/definitions/controller.ChallengeConfirmationResponse'
+      feed:
+        type: string
+      id:
+        type: string
+      rewards_given:
+        type: boolean
+      start_date:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: string
     type: object
   controller.ChallengeRequest:
     properties:
@@ -905,17 +844,6 @@ definitions:
         type: string
       status:
         type: boolean
-    type: object
-  impacts.ImpactCategory:
-    properties:
-      description:
-        type: string
-      id:
-        type: string
-      impactPoint:
-        type: integer
-      name:
-        type: string
     type: object
   storages.ImageResponse:
     properties:
@@ -1873,6 +1801,10 @@ paths:
         in: query
         name: page
         type: integer
+      - description: Number of items per page (default is 20)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -2458,7 +2390,7 @@ paths:
             - $ref: '#/definitions/helper.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/challenges.ChallengeLogDetails'
+                  $ref: '#/definitions/controller.ChallengeLogResponse'
               type: object
         "401":
           description: Unauthorized

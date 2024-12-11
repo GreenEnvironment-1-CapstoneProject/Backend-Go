@@ -1691,6 +1691,12 @@ const docTemplate = `{
                         "description": "Page number (default is 1)",
                         "name": "page",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page (default is 20)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2594,7 +2600,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/challenges.ChallengeLogDetails"
+                                            "$ref": "#/definitions/controller.ChallengeLogResponse"
                                         }
                                     }
                                 }
@@ -6435,82 +6441,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "challenges.Challenge": {
-            "type": "object",
-            "properties": {
-                "actionCount": {
-                    "type": "integer"
-                },
-                "author": {
-                    "type": "string"
-                },
-                "challengeImg": {
-                    "type": "string"
-                },
-                "coin": {
-                    "type": "integer"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "difficulty": {
-                    "type": "string"
-                },
-                "durationDays": {
-                    "type": "integer"
-                },
-                "exp": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "impactCategories": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/challenges.ChallengeImpactCategory"
-                    }
-                },
-                "participantCount": {
-                    "type": "integer"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "challenges.ChallengeConfirmation": {
-            "type": "object",
-            "properties": {
-                "challengeImg": {
-                    "type": "string"
-                },
-                "challengeTaskID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "submissionDate": {
-                    "type": "string"
-                },
-                "userID": {
-                    "type": "string"
-                }
-            }
-        },
         "challenges.ChallengeDetails": {
             "type": "object",
             "properties": {
@@ -6543,72 +6473,6 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
-                }
-            }
-        },
-        "challenges.ChallengeImpactCategory": {
-            "type": "object",
-            "properties": {
-                "challengeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "impactCategory": {
-                    "$ref": "#/definitions/impacts.ImpactCategory"
-                },
-                "impactCategoryID": {
-                    "type": "string"
-                }
-            }
-        },
-        "challenges.ChallengeLog": {
-            "type": "object",
-            "properties": {
-                "challenge": {
-                    "$ref": "#/definitions/challenges.Challenge"
-                },
-                "challengeID": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "feed": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "rewardsGiven": {
-                    "type": "boolean"
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "userID": {
-                    "type": "string"
-                }
-            }
-        },
-        "challenges.ChallengeLogDetails": {
-            "type": "object",
-            "properties": {
-                "challengeLog": {
-                    "$ref": "#/definitions/challenges.ChallengeLog"
-                },
-                "confirmations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/challenges.ChallengeConfirmation"
-                    }
                 }
             }
         },
@@ -6769,6 +6633,26 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.ChallengeConfirmationResponse": {
+            "type": "object",
+            "properties": {
+                "challenge_task": {
+                    "$ref": "#/definitions/controller.ChallengeTaskResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "submission_date": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.ChallengeImpactCategories": {
             "type": "object",
             "properties": {
@@ -6787,6 +6671,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "feed": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ChallengeLogResponse": {
+            "type": "object",
+            "properties": {
+                "challenge": {
+                    "$ref": "#/definitions/controller.ChallengeResponse"
+                },
+                "challenge_confirmation": {
+                    "$ref": "#/definitions/controller.ChallengeConfirmationResponse"
+                },
+                "feed": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "rewards_given": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -7797,23 +7710,6 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "boolean"
-                }
-            }
-        },
-        "impacts.ImpactCategory": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "impactPoint": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },

@@ -350,32 +350,36 @@ func (cd *ChallengeData) GetChallengeLogByChallengeIDAndUserID(challengeID, user
 	}, nil
 }
 
-func (cd *ChallengeData) GetConfirmationsByChallengeID(challengeID, userID string) ([]challenges.ChallengeConfirmation, error) {
-	var confirmations []ChallengeConfirmation
+func (cd *ChallengeData) GetConfirmationsByChallengeID(challengeID, userID string) (challenges.ChallengeConfirmation, error) {
+	var confirmation ChallengeConfirmation
 
-	err := cd.DB.Table("challenge_confirmations").
-		Select("challenge_confirmations.*, challenge_tasks.challenge_id").
-		Joins("JOIN challenge_tasks ON challenge_tasks.id = challenge_confirmations.challenge_task_id").
+	err := cd.DB.Preload("ChallengeTask").
 		Where("challenge_tasks.challenge_id = ? AND challenge_confirmations.user_id = ?", challengeID, userID).
-		Find(&confirmations).Error
+		Joins("JOIN challenge_tasks ON challenge_tasks.id = challenge_confirmations.challenge_task_id").
+		First(&confirmation).Error
 
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return challenges.ChallengeConfirmation{}, constant.ErrChallengeConfirmationNotFound
+		}
+		return challenges.ChallengeConfirmation{}, err
 	}
 
-	var result []challenges.ChallengeConfirmation
-	for _, confirmation := range confirmations {
-		result = append(result, challenges.ChallengeConfirmation{
-			ID:              confirmation.ID,
-			ChallengeTaskID: confirmation.ChallengeTaskID,
-			UserID:          confirmation.UserID,
-			Status:          confirmation.Status,
-			ChallengeImg:    confirmation.ChallengeImg,
-			SubmissionDate:  confirmation.SubmissionDate,
-		})
-	}
-
-	return result, nil
+	return challenges.ChallengeConfirmation{
+		ID:              confirmation.ID,
+		ChallengeTaskID: confirmation.ChallengeTaskID,
+		UserID:          confirmation.UserID,
+		Status:          confirmation.Status,
+		ChallengeImg:    confirmation.ChallengeImg,
+		SubmissionDate:  confirmation.SubmissionDate,
+		ChallengeTask: challenges.ChallengeTask{
+			ID:              confirmation.ChallengeTask.ID,
+			ChallengeID:     confirmation.ChallengeTask.ChallengeID,
+			Name:            confirmation.ChallengeTask.Name,
+			DayNumber:       confirmation.ChallengeTask.DayNumber,
+			TaskDescription: confirmation.ChallengeTask.TaskDescription,
+		},
+	}, nil
 }
 
 func (cd *ChallengeData) UpdateChallengeLog(log challenges.ChallengeLog) error {
@@ -549,7 +553,7 @@ func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, pag
 
 func (cd *ChallengeData) GetChallengeLogByID(challengeLogID string) (challenges.ChallengeLog, error) {
 	var log ChallengeLog
-	err := cd.DB.Where("id = ?", challengeLogID).First(&log).Error
+	err := cd.DB.Preload("Challenge").Where("id = ?", challengeLogID).First(&log).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return challenges.ChallengeLog{}, constant.ErrChallengeLogNotFound
 	}
@@ -565,6 +569,16 @@ func (cd *ChallengeData) GetChallengeLogByID(challengeLogID string) (challenges.
 		Status:       log.Status,
 		StartDate:    log.StartDate,
 		Feed:         log.Feed,
+		Challenge: challenges.Challenge{
+			ID:           log.Challenge.ID,
+			Title:        log.Challenge.Title,
+			Difficulty:   log.Challenge.Difficulty,
+			ChallengeImg: log.Challenge.ChallengeImg,
+			Description:  log.Challenge.Description,
+			DurationDays: log.Challenge.DurationDays,
+			Exp:          log.Challenge.Exp,
+			Coin:         log.Challenge.Coin,
+		},
 	}, nil
 }
 
