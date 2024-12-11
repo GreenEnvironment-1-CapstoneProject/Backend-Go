@@ -42,7 +42,7 @@ func (cr ChallengeResponse) ToResponse(challenge challenges.Challenge) Challenge
 			},
 		}
 	}
-	
+
 	var deletedAt *string
 	if challenge.DeletedAt != nil {
 		formatted := challenge.DeletedAt.Format("2006-01-02 15:04:05")
@@ -67,6 +67,7 @@ func (cr ChallengeResponse) ToResponse(challenge challenges.Challenge) Challenge
 type ChallengeTaskResponse struct {
 	ID              string `json:"id"`
 	ChallengeID     string `json:"challenge_id"`
+	Name            string `json:"name"`
 	DayNumber       int    `json:"day_number"`
 	TaskDescription string `json:"task_description"`
 	CreatedAt       string `json:"created_at"`
@@ -77,6 +78,7 @@ func (ctr ChallengeTaskResponse) FromEntity(task challenges.ChallengeTask) Chall
 	return ChallengeTaskResponse{
 		ID:              task.ID,
 		ChallengeID:     task.ChallengeID,
+		Name:            task.Name,
 		DayNumber:       task.DayNumber,
 		TaskDescription: task.TaskDescription,
 		CreatedAt:       task.CreatedAt.Format("2006-01-02 15:04:05"),
