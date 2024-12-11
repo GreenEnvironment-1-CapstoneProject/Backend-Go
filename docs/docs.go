@@ -2363,6 +2363,18 @@ const docTemplate = `{
                         "description": "Page number (default is 1)",
                         "name": "page",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by difficulty name (e.g., 'hard')",
+                        "name": "difficulty",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by title (e.g., 'save water')",
+                        "name": "title",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2379,7 +2391,8 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "object",
+                                                "additionalProperties": true
                                             }
                                         }
                                     }
@@ -2909,6 +2922,18 @@ const docTemplate = `{
                         "description": "Limit per page (default is 20)",
                         "name": "limit",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by difficulty name (e.g., 'easy')",
+                        "name": "difficulty",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by title (e.g., 'recycle')",
+                        "name": "title",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2925,7 +2950,8 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "object",
+                                                "additionalProperties": true
                                             }
                                         }
                                     }
@@ -3002,7 +3028,7 @@ const docTemplate = `{
                 "tags": [
                     "Challenges (User)"
                 ],
-                "summary": "Get challenge details",
+                "summary": "Get unclaimed challenge details",
                 "parameters": [
                     {
                         "type": "string",
@@ -6601,6 +6627,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "taskDescription": {
                     "type": "string"
                 },
@@ -6846,6 +6875,7 @@ const docTemplate = `{
             "required": [
                 "challenge_id",
                 "day_number",
+                "name",
                 "task_description"
             ],
             "properties": {
@@ -6855,6 +6885,9 @@ const docTemplate = `{
                 "day_number": {
                     "type": "integer",
                     "minimum": 1
+                },
+                "name": {
+                    "type": "string"
                 },
                 "task_description": {
                     "type": "string"

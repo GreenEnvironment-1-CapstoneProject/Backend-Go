@@ -13,7 +13,7 @@ type ChallengeResponse struct {
 	Exp              int                         `json:"exp"`
 	Coin             int                         `json:"coin"`
 	ImpactCategories []ChallengeImpactCategories `json:"categories"`
-	DeletedAt        *string                     `json:"deleted_at,omitempty"`
+	DeletedAt        *string                     `json:"deleted_at"`
 }
 
 type ChallengeImpactCategories struct {

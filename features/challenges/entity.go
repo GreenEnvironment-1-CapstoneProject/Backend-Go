@@ -42,6 +42,7 @@ type ImpactCategory struct {
 type ChallengeTask struct {
 	ID              string
 	ChallengeID     string
+	Name            string
 	DayNumber       int
 	TaskDescription string
 	CreatedAt       time.Time
@@ -87,6 +88,12 @@ type ChallengeDetails struct {
 	Tasks        []ChallengeTask
 }
 
+type ChallengeWithCounts struct {
+	Challenge
+	ActionCount      int
+	ParticipantCount int
+}
+
 type ChallengeRepoInterface interface {
 	Create(Challenge) error
 	GetAllByPage(page int) ([]Challenge, int, error)
@@ -104,6 +111,7 @@ type ChallengeRepoInterface interface {
 	CreateChallengeLog(ChallengeLog) error
 	CreateChallengeConfirmation(ChallengeConfirmation) error
 	IsChallengeTaken(userID, challengeID string) (bool, error)
+	IncrementChallengeCounts(challengeID string, actionCount int, participantIncrement bool) error
 	GetChallengeConfirmationByID(confirmationID string) (ChallengeConfirmation, error)
 	UpdateChallengeConfirmation(ChallengeConfirmation) error
 	GetChallengeTaskByID(taskID string) (ChallengeTask, error)
@@ -118,8 +126,8 @@ type ChallengeRepoInterface interface {
 	GetChallengeIDByLogID(challengeLogID string) (string, error)
 	GetChallengeRewards(challengeID string) (int, int, error)
 
-	GetActiveChallengeLogByUserID(userID string, page, perPage int) ([]ChallengeLog, int, error)
-	GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int) ([]Challenge, int, error)
+	GetActiveChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]ChallengeLog, int, error)
+	GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int, difficulty, title string) ([]Challenge, int, error)
 	GetChallengeLogByID(challengeLogID string) (ChallengeLog, error)
 	GetChallengeByID(challengeID string) (Challenge, error)
 	GetTasksByChallengeIDforUser(challengeID string) ([]ChallengeTask, error)
@@ -132,7 +140,7 @@ type ChallengeServiceInterface interface {
 	Update(Challenge) error
 	Delete(challengeID string) error
 
-	CreateTask(challengeID string, dayNumber int, taskDescription string) error
+	CreateTask(challengeID, name string, dayNumber int, taskDescription string) error
 	GetAllTasksByChallengeID(challengeID string) ([]ChallengeTask, error)
 	GetTaskByID(taskID string) (ChallengeTask, error)
 	UpdateTask(taskID string, taskDescription string) error
@@ -144,8 +152,8 @@ type ChallengeServiceInterface interface {
 	CheckAndUpdateChallengeLogStatusByConfirmation(confirmationID, userID string) error
 	ClaimRewards(challengeLogID, userID string) error
 
-	GetActiveChallenges(userID string, page, perPage int) ([]ChallengeLog, int, error)
-	GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int) ([]Challenge, int, error)
+	GetActiveChallenges(userID string, page, perPage int, difficulty, title string) ([]ChallengeLog, int, error)
+	GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int, difficulty, title string) ([]Challenge, int, error)
 	GetChallengeDetailsWithConfirmations(userID, challengeLogID string) (ChallengeLogDetails, error)
 	GetChallengeDetails(challengeID string) (ChallengeDetails, error)
 }
