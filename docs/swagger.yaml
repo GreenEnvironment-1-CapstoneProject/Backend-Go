@@ -126,6 +126,8 @@ definitions:
         type: integer
       id:
         type: string
+      name:
+        type: string
       taskDescription:
         type: string
       updatedAt:
@@ -292,11 +294,14 @@ definitions:
       day_number:
         minimum: 1
         type: integer
+      name:
+        type: string
       task_description:
         type: string
     required:
     - challenge_id
     - day_number
+    - name
     - task_description
     type: object
   controller.ChallengeTaskResponse:
@@ -2297,7 +2302,7 @@ paths:
                 data:
                   type: string
               type: object
-      summary: Get challenge details
+      summary: Get unclaimed challenge details
       tags:
       - Challenges (User)
   /challenges/active:
@@ -2315,6 +2320,14 @@ paths:
         in: query
         name: page
         type: integer
+      - description: Filter by difficulty name (e.g., 'hard')
+        in: query
+        name: difficulty
+        type: string
+      - description: Filter by title (e.g., 'save water')
+        in: query
+        name: title
+        type: string
       produces:
       - application/json
       responses:
@@ -2326,7 +2339,8 @@ paths:
             - properties:
                 data:
                   items:
-                    type: string
+                    additionalProperties: true
+                    type: object
                   type: array
               type: object
         "204":
@@ -2620,6 +2634,14 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Filter by difficulty name (e.g., 'easy')
+        in: query
+        name: difficulty
+        type: string
+      - description: Filter by title (e.g., 'recycle')
+        in: query
+        name: title
+        type: string
       produces:
       - application/json
       responses:
@@ -2631,7 +2653,8 @@ paths:
             - properties:
                 data:
                   items:
-                    type: string
+                    additionalProperties: true
+                    type: object
                   type: array
               type: object
         "401":
