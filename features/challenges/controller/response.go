@@ -13,6 +13,7 @@ type ChallengeResponse struct {
 	Exp              int                         `json:"exp"`
 	Coin             int                         `json:"coin"`
 	ImpactCategories []ChallengeImpactCategories `json:"categories"`
+	DeletedAt        *string                     `json:"deleted_at,omitempty"`
 }
 
 type ChallengeImpactCategories struct {
@@ -41,6 +42,12 @@ func (cr ChallengeResponse) ToResponse(challenge challenges.Challenge) Challenge
 			},
 		}
 	}
+	
+	var deletedAt *string
+	if challenge.DeletedAt != nil {
+		formatted := challenge.DeletedAt.Format("2006-01-02 15:04:05")
+		deletedAt = &formatted
+	}
 
 	return ChallengeResponse{
 		ID:               challenge.ID,
@@ -53,5 +60,26 @@ func (cr ChallengeResponse) ToResponse(challenge challenges.Challenge) Challenge
 		Exp:              challenge.Exp,
 		Coin:             challenge.Coin,
 		ImpactCategories: impactCategories,
+		DeletedAt:        deletedAt,
+	}
+}
+
+type ChallengeTaskResponse struct {
+	ID              string `json:"id"`
+	ChallengeID     string `json:"challenge_id"`
+	DayNumber       int    `json:"day_number"`
+	TaskDescription string `json:"task_description"`
+	CreatedAt       string `json:"created_at"`
+	UpdatedAt       string `json:"updated_at"`
+}
+
+func (ctr ChallengeTaskResponse) FromEntity(task challenges.ChallengeTask) ChallengeTaskResponse {
+	return ChallengeTaskResponse{
+		ID:              task.ID,
+		ChallengeID:     task.ChallengeID,
+		DayNumber:       task.DayNumber,
+		TaskDescription: task.TaskDescription,
+		CreatedAt:       task.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:       task.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 }

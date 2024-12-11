@@ -5,10 +5,11 @@ import (
 )
 
 type LeaderboardUser struct {
-	Rank int
-	ID   string
-	Name string
-	Exp  int
+	Rank      int
+	ID        string
+	Name      string
+	AvatarURL string
+	Exp       int
 }
 
 type LeaderboardRepositoryInterface interface {

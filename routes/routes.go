@@ -36,8 +36,8 @@ func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GECon
 		ErrorHandler: helper.JWTErrorHandler,
 	}
 
-	e.GET(route.UserPath, uh.GetUserData, echojwt.WithConfig(jwtConfig))
-	e.PUT(route.UserPath, uh.Update, echojwt.WithConfig(jwtConfig))
+	e.GET(route.UserData, uh.GetUserData, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.UserUpdate, uh.Update, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.UserUpdateAvatar, uh.UpdateAvatar, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.UserPath, uh.Delete, echojwt.WithConfig(jwtConfig))
 
@@ -191,6 +191,7 @@ func RouteChallenge(e *echo.Echo, cc challenges.ChallengeControllerInterface, cf
 	e.GET(route.ActiveChallenge, cc.GetActiveChallenges, echojwt.WithConfig(jwtConfig))
 	e.GET(route.UnclaimedChallenge, cc.GetUnclaimedChallenges, echojwt.WithConfig(jwtConfig))
 	e.GET(route.UserChallengeDetails, cc.GetChallengeDetailsWithConfirmations, echojwt.WithConfig(jwtConfig))
+	e.GET(route.UserUnclaimedChallengeDetails, cc.GetChallengeDetails, echojwt.WithConfig(jwtConfig))
 }
 
 func RouteDashboard(e *echo.Echo, dc dashboard.DashboardControllerInterface, cfg configs.GEConfig) {
