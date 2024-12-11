@@ -6909,6 +6909,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "task_description": {
                     "type": "string"
                 },

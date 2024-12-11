@@ -314,6 +314,8 @@ definitions:
         type: integer
       id:
         type: string
+      name:
+        type: string
       task_description:
         type: string
       updated_at:
