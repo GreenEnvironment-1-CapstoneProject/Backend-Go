@@ -1691,6 +1691,12 @@ const docTemplate = `{
                         "description": "Page number (default is 1)",
                         "name": "page",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page (default is 20)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {

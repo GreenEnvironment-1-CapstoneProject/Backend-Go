@@ -1873,6 +1873,10 @@ paths:
         in: query
         name: page
         type: integer
+      - description: Number of items per page (default is 20)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
