@@ -7588,18 +7588,13 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "address",
-                "email",
                 "gender",
                 "name",
                 "password",
-                "phone",
-                "username"
+                "phone"
             ],
             "properties": {
                 "address": {
-                    "type": "string"
-                },
-                "email": {
                     "type": "string"
                 },
                 "gender": {
@@ -7612,9 +7607,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }

@@ -3,6 +3,8 @@ package route
 const BasePath = "/api/v1"
 
 const UserPath = BasePath + "/users"
+const UserData = UserPath + "/profile"
+const UserUpdate = UserPath + "/update"
 const UserLogin = UserPath + "/login"
 const UserLoginGoogle = UserPath + "/login-google"
 const UserGoogleCallback = UserPath + "/google-callback"

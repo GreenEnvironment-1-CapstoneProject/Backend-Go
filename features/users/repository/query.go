@@ -83,23 +83,13 @@ func (u *UserData) Update(user users.UserUpdate) (users.User, error) {
 		return users.User{}, err
 	}
 
-	if user.Email != "" && user.Email != existingUser.Email {
-		var count int64
-		u.DB.Table("users").Where("email = ?", user.Email).Count(&count)
-		if count > 0 {
-			return users.User{}, constant.ErrEmailAlreadyExist
-		}
-	}
-
-	if user.Username != "" && user.Username != existingUser.Username {
-		var count int64
-		u.DB.Table("users").Where("username = ?", user.Username).Count(&count)
-		if count > 0 {
-			return users.User{}, constant.ErrUsernameAlreadyExist
-		}
-	}
-
-	if err := u.DB.Model(&User{}).Where("id = ?", user.ID).Updates(user).Error; err != nil {
+	if err := u.DB.Model(&users.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
+		"name":     user.Name,
+		"address":  user.Address,
+		"gender":   user.Gender,
+		"phone":    user.Phone,
+		"password": user.Password,
+	}).Error; err != nil {
 		return users.User{}, constant.ErrUpdateUser
 	}
 

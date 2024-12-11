@@ -135,12 +135,12 @@ func (h *UserHandler) Login(c echo.Context) error {
 func (h *UserHandler) Update(c echo.Context) error {
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
-		helper.UnauthorizedError(c)
+			helper.UnauthorizedError(c)
 	}
 
 	token, err := h.jwt.ValidateToken(tokenString)
 	if err != nil {
-		helper.UnauthorizedError(c)
+			helper.UnauthorizedError(c)
 	}
 
 	userData := h.jwt.ExtractUserToken(token)
@@ -149,44 +149,28 @@ func (h *UserHandler) Update(c echo.Context) error {
 	var UserUpdateRequest UserUpdateRequest
 	err = c.Bind(&UserUpdateRequest)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrUpdateUser.Error(), nil))
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrUpdateUser.Error(), nil))
 	}
 
 	if err := c.Validate(&UserUpdateRequest); err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
-	}
-
-	currentUser, err := h.userService.GetUserByIDForAdmin(userId.(string))
-	if err != nil {
-		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
-	}
-
-	if UserUpdateRequest.Email == "" {
-		UserUpdateRequest.Email = currentUser.Email
-	}
-	if UserUpdateRequest.Username == "" {
-		UserUpdateRequest.Username = currentUser.Username
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
 	}
 
 	user := users.UserUpdate{
-		ID:        userId.(string),
-		Username:  UserUpdateRequest.Username,
-		Password:  UserUpdateRequest.Password,
-		Name:      UserUpdateRequest.Name,
-		Email:     UserUpdateRequest.Email,
-		Address:   UserUpdateRequest.Address,
-		Gender:    UserUpdateRequest.Gender,
-		Phone:     UserUpdateRequest.Phone,
+			ID:       userId.(string),
+			Name:     UserUpdateRequest.Name,
+			Address:  UserUpdateRequest.Address,
+			Gender:   UserUpdateRequest.Gender,
+			Phone:    UserUpdateRequest.Phone,
+			Password: UserUpdateRequest.Password,
 	}
 
-	FromUserService, err := h.userService.Update(user)
+	err = h.userService.Update(user)
 	if err != nil {
-		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+			return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
 
-	var UserToken UserLoginResponse
-	UserToken.Token = FromUserService.Token
-	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessUpdate, UserToken))
+	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessUpdate, nil))
 }
 
 
