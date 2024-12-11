@@ -782,8 +782,6 @@ definitions:
     properties:
       address:
         type: string
-      email:
-        type: string
       gender:
         type: string
       name:
@@ -792,16 +790,12 @@ definitions:
         type: string
       phone:
         type: string
-      username:
-        type: string
     required:
     - address
-    - email
     - gender
     - name
     - password
     - phone
-    - username
     type: object
   controller.UserbyAdminRequest:
     properties:
