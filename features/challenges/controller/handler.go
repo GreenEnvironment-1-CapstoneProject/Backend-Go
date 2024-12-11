@@ -717,7 +717,7 @@ func (h *ChallengeHandler) ClaimRewards(c echo.Context) error {
 // @Produce      json
 // @Param        Authorization header string true "Bearer Token"
 // @Param        page query int false "Page number (default is 1)"
-// @Success      200 {object} helper.MetadataResponse{data=[]map[string]interface{}} "Active challenges retrieved successfully"
+// @Success      200 {object} helper.MetadataResponse{data=[]string} "Active challenges retrieved successfully"
 // @Failure      204 "No content"
 // @Failure      401 {object} helper.Response{data=string} "Unauthorized"
 // @Failure      500 {object} helper.Response{data=string} "Internal server error"
@@ -785,7 +785,7 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 // @Param        Authorization header string true "Bearer Token"
 // @Param        page query int false "Page number (default is 1)"
 // @Param        limit query int false "Limit per page (default is 20)"
-// @Success      200 {object} helper.MetadataResponse{data=map[string]interface{challenges=[]challenges.Challenge, currentPage=int, totalPages=int}} "Unclaimed challenges retrieved successfully"
+// @Success      200 {object} helper.MetadataResponse{data=[]string} "Unclaimed challenges retrieved successfully"
 // @Failure      401 {object} helper.Response{data=string} "Unauthorized"
 // @Failure      404 {object} helper.Response{data=string} "No unclaimed challenges available"
 // @Failure      500 {object} helper.Response{data=string} "Internal server error"
@@ -883,7 +883,7 @@ func (h *ChallengeHandler) GetChallengeDetailsWithConfirmations(c echo.Context) 
 // GetChallengeDetails retrieves challenge details including tasks
 // @Summary      Get challenge details
 // @Description  Retrieve challenge details for a specific challenge ID, including title, difficulty, image, description, duration, experience points, coins, and tasks
-// @Tags         Challenges
+// @Tags         Challenges (User)
 // @Accept       json
 // @Produce      json
 // @Param        challengeID path string true "Challenge ID"

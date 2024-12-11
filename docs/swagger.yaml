@@ -2,6 +2,8 @@ basePath: /api/v1
 definitions:
   challenges.Challenge:
     properties:
+      actionCount:
+        type: integer
       author:
         type: string
       challengeImg:
@@ -26,6 +28,8 @@ definitions:
         items:
           $ref: '#/definitions/challenges.ChallengeImpactCategory'
         type: array
+      participantCount:
+        type: integer
       title:
         type: string
       updatedAt:
@@ -46,6 +50,29 @@ definitions:
       userID:
         type: string
     type: object
+  challenges.ChallengeDetails:
+    properties:
+      challengeImg:
+        type: string
+      coin:
+        type: integer
+      description:
+        type: string
+      difficulty:
+        type: string
+      durationDays:
+        type: integer
+      exp:
+        type: integer
+      id:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/challenges.ChallengeTask'
+        type: array
+      title:
+        type: string
+    type: object
   challenges.ChallengeImpactCategory:
     properties:
       challengeID:
@@ -59,6 +86,8 @@ definitions:
     type: object
   challenges.ChallengeLog:
     properties:
+      challenge:
+        $ref: '#/definitions/challenges.Challenge'
       challengeID:
         type: string
       createdAt:
@@ -86,6 +115,21 @@ definitions:
         items:
           $ref: '#/definitions/challenges.ChallengeConfirmation'
         type: array
+    type: object
+  challenges.ChallengeTask:
+    properties:
+      challengeID:
+        type: string
+      createdAt:
+        type: string
+      dayNumber:
+        type: integer
+      id:
+        type: string
+      taskDescription:
+        type: string
+      updatedAt:
+        type: string
     type: object
   controller.AdminInfoResponse:
     properties:
@@ -226,6 +270,8 @@ definitions:
         type: string
       coin:
         type: integer
+      deleted_at:
+        type: string
       description:
         type: string
       difficulty:
@@ -252,6 +298,21 @@ definitions:
     - challenge_id
     - day_number
     - task_description
+    type: object
+  controller.ChallengeTaskResponse:
+    properties:
+      challenge_id:
+        type: string
+      created_at:
+        type: string
+      day_number:
+        type: integer
+      id:
+        type: string
+      task_description:
+        type: string
+      updated_at:
+        type: string
     type: object
   controller.ChangeResponse:
     properties:
@@ -547,7 +608,13 @@ definitions:
         items:
           $ref: '#/definitions/controller.TransactionDetails'
         type: array
+      email:
+        type: string
       id:
+        type: string
+      name:
+        type: string
+      payment_method:
         type: string
       snap_token:
         type: string
@@ -557,11 +624,11 @@ definitions:
         type: number
       updated_at:
         type: string
-      username:
-        type: string
     type: object
   controller.TransactionDetails:
     properties:
+      price:
+        type: integer
       product_image:
         type: string
       product_name:
@@ -594,6 +661,8 @@ definitions:
           $ref: '#/definitions/controller.TransactionDetails'
         type: array
       id:
+        type: string
+      payment_method:
         type: string
       snap_token:
         type: string
@@ -1153,7 +1222,7 @@ paths:
             - properties:
                 data:
                   items:
-                    type: string
+                    $ref: '#/definitions/controller.ChallengeTaskResponse'
                   type: array
               type: object
         "404":
@@ -1489,7 +1558,9 @@ paths:
             - $ref: '#/definitions/helper.Response'
             - properties:
                 data:
-                  type: string
+                  items:
+                    $ref: '#/definitions/controller.ChallengeTaskResponse'
+                  type: array
               type: object
         "404":
           description: Task not found
@@ -2178,6 +2249,61 @@ paths:
       summary: Delete Cart
       tags:
       - Cart
+  /challenges/{challengeID}/details:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve challenge details for a specific challenge ID, including
+        title, difficulty, image, description, duration, experience points, coins,
+        and tasks
+      parameters:
+      - description: Challenge ID
+        in: path
+        name: challengeID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge details retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/challenges.ChallengeDetails'
+              type: object
+        "400":
+          description: Bad request (e.g., Challenge ID is required)
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Challenge not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Get challenge details
+      tags:
+      - Challenges (User)
   /challenges/active:
     get:
       consumes:
@@ -2189,6 +2315,10 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: Page number (default is 1)
+        in: query
+        name: page
+        type: integer
       produces:
       - application/json
       responses:
@@ -2196,13 +2326,15 @@ paths:
           description: Active challenges retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/helper.Response'
+            - $ref: '#/definitions/helper.MetadataResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/challenges.ChallengeLog'
+                    type: string
                   type: array
               type: object
+        "204":
+          description: No content
         "401":
           description: Unauthorized
           schema:
@@ -2484,6 +2616,14 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: Page number (default is 1)
+        in: query
+        name: page
+        type: integer
+      - description: Limit per page (default is 20)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -2491,15 +2631,24 @@ paths:
           description: Unclaimed challenges retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/helper.Response'
+            - $ref: '#/definitions/helper.MetadataResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/challenges.Challenge'
+                    type: string
                   type: array
               type: object
         "401":
           description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: No unclaimed challenges available
           schema:
             allOf:
             - $ref: '#/definitions/helper.Response'

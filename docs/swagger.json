@@ -624,7 +624,10 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/controller.ChallengeTaskResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -939,7 +942,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "$ref": "#/definitions/controller.ChallengeTaskResponse"
                                             }
                                         }
                                     }
@@ -2348,6 +2351,12 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default is 1)",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2356,7 +2365,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/helper.Response"
+                                    "$ref": "#/definitions/helper.MetadataResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2364,13 +2373,16 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/challenges.ChallengeLog"
+                                                "type": "string"
                                             }
                                         }
                                     }
                                 }
                             ]
                         }
+                    },
+                    "204": {
+                        "description": "No content"
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -2879,6 +2891,18 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default is 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit per page (default is 20)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2887,7 +2911,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/helper.Response"
+                                    "$ref": "#/definitions/helper.MetadataResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2895,7 +2919,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/challenges.Challenge"
+                                                "type": "string"
                                             }
                                         }
                                     }
@@ -2905,6 +2929,122 @@
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "No unclaimed challenges available",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/{challengeID}/details": {
+            "get": {
+                "description": "Retrieve challenge details for a specific challenge ID, including title, difficulty, image, description, duration, experience points, coins, and tasks",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenges (User)"
+                ],
+                "summary": "Get challenge details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Challenge ID",
+                        "name": "challengeID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Challenge details retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/challenges.ChallengeDetails"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (e.g., Challenge ID is required)",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Challenge not found",
                         "schema": {
                             "allOf": [
                                 {
@@ -6266,6 +6406,9 @@
         "challenges.Challenge": {
             "type": "object",
             "properties": {
+                "actionCount": {
+                    "type": "integer"
+                },
                 "author": {
                     "type": "string"
                 },
@@ -6302,6 +6445,9 @@
                         "$ref": "#/definitions/challenges.ChallengeImpactCategory"
                     }
                 },
+                "participantCount": {
+                    "type": "integer"
+                },
                 "title": {
                     "type": "string"
                 },
@@ -6333,6 +6479,41 @@
                 }
             }
         },
+        "challenges.ChallengeDetails": {
+            "type": "object",
+            "properties": {
+                "challengeImg": {
+                    "type": "string"
+                },
+                "coin": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "difficulty": {
+                    "type": "string"
+                },
+                "durationDays": {
+                    "type": "integer"
+                },
+                "exp": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/challenges.ChallengeTask"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "challenges.ChallengeImpactCategory": {
             "type": "object",
             "properties": {
@@ -6353,6 +6534,9 @@
         "challenges.ChallengeLog": {
             "type": "object",
             "properties": {
+                "challenge": {
+                    "$ref": "#/definitions/challenges.Challenge"
+                },
                 "challengeID": {
                     "type": "string"
                 },
@@ -6393,6 +6577,29 @@
                     "items": {
                         "$ref": "#/definitions/challenges.ChallengeConfirmation"
                     }
+                }
+            }
+        },
+        "challenges.ChallengeTask": {
+            "type": "object",
+            "properties": {
+                "challengeID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "dayNumber": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "taskDescription": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -6605,6 +6812,9 @@
                 "coin": {
                     "type": "integer"
                 },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -6641,6 +6851,29 @@
                     "minimum": 1
                 },
                 "task_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ChallengeTaskResponse": {
+            "type": "object",
+            "properties": {
+                "challenge_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "day_number": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "task_description": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -7087,7 +7320,16 @@
                         "$ref": "#/definitions/controller.TransactionDetails"
                     }
                 },
+                "email": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "payment_method": {
                     "type": "string"
                 },
                 "snap_token": {
@@ -7101,15 +7343,15 @@
                 },
                 "updated_at": {
                     "type": "string"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },
         "controller.TransactionDetails": {
             "type": "object",
             "properties": {
+                "price": {
+                    "type": "integer"
+                },
                 "product_image": {
                     "type": "string"
                 },
@@ -7159,6 +7401,9 @@
                     }
                 },
                 "id": {
+                    "type": "string"
+                },
+                "payment_method": {
                     "type": "string"
                 },
                 "snap_token": {
