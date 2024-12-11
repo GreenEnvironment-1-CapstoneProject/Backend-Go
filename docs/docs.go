@@ -7132,6 +7132,9 @@ const docTemplate = `{
         "controller.LeaderboardResponse": {
             "type": "object",
             "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
                 "exp": {
                     "type": "integer"
                 },
