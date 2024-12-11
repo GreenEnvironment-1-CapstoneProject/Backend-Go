@@ -26,23 +26,6 @@ func NewUserService(data users.UserRepoInterface, jwt helper.JWTInterface) users
 	}
 }
 
-func (s *UserService) Register(user users.User) (users.User, error) {
-	hashedPassword, err := helper.HashPassword(user.Password)
-	if err != nil {
-		return users.User{}, err
-	}
-	user.Password = hashedPassword
-
-	user.Username = "user_" + helper.GenerateRandomString(8)
-
-	createdUser, err := s.userRepo.Register(user)
-	if err != nil {
-		return users.User{}, err
-	}
-
-	return createdUser, nil
-}
-
 func (s *UserService) RequestRegisterOTP(name, email, password string) error {
 	if email == "" || name == "" || password == "" {
 		return constant.ErrInvalidInput

@@ -106,7 +106,6 @@ type UserRepoInterface interface {
 }
 
 type UserServiceInterface interface {
-	Register(User) (User, error)
 	RequestRegisterOTP(name, email, password string) error
 	VerifyRegisterOTP(otp string) (User, error)
 	Login(User) (UserLogin, error)
