@@ -142,10 +142,18 @@ func (cs *ChallengeService) DeleteTask(taskID string) error {
 
 // User
 func (cs *ChallengeService) CreateChallengeLogWithConfirmation(log challenges.ChallengeLog) error {
+	taken, err := cs.challengeRepo.IsChallengeTaken(log.UserID, log.ChallengeID)
+	if err != nil {
+		return err
+	}
+	if taken {
+		return constant.ErrChallengeAlreadyTaken
+	}
+
 	log.ID = uuid.New().String()
 	log.RewardsGiven = false
 
-	err := cs.challengeRepo.CreateChallengeLog(log)
+	err = cs.challengeRepo.CreateChallengeLog(log)
 	if err != nil {
 		return err
 	}
@@ -268,16 +276,12 @@ func (cs *ChallengeService) ClaimRewards(challengeLogID, userID string) error {
 	return nil
 }
 
-func (cs *ChallengeService) GetActiveChallenges(userID string) ([]challenges.ChallengeLog, error) {
-	return cs.challengeRepo.GetActiveChallengeLogByUserID(userID)
+func (cs *ChallengeService) GetActiveChallenges(userID string, page, perPage int) ([]challenges.ChallengeLog, int, error) {
+	return cs.challengeRepo.GetActiveChallengeLogByUserID(userID, page, perPage)
 }
 
-func (cs *ChallengeService) GetUnclaimedChallenges(userID string, isAdmin bool) ([]challenges.Challenge, error) {
-	challenges, err := cs.challengeRepo.GetUnclaimedChallenges(userID, isAdmin)
-	if err != nil {
-		return nil, err
-	}
-	return challenges, nil
+func (cs *ChallengeService) GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int) ([]challenges.Challenge, int, error) {
+	return cs.challengeRepo.GetUnclaimedChallenges(userID, isAdmin, page, limit)
 }
 
 func (cs *ChallengeService) GetChallengeDetailsWithConfirmations(userID, challengeLogID string) (challenges.ChallengeLogDetails, error) {
@@ -301,4 +305,30 @@ func (cs *ChallengeService) GetChallengeDetailsWithConfirmations(userID, challen
 	}
 
 	return result, nil
+}
+
+func (cs *ChallengeService) GetChallengeDetails(challengeID string) (challenges.ChallengeDetails, error) {
+	challenge, err := cs.challengeRepo.GetChallengeByID(challengeID)
+	if err != nil {
+		return challenges.ChallengeDetails{}, err
+	}
+
+	tasks, err := cs.challengeRepo.GetTasksByChallengeIDforUser(challengeID)
+	if err != nil {
+		return challenges.ChallengeDetails{}, err
+	}
+
+	details := challenges.ChallengeDetails{
+		ID:           challenge.ID,
+		Title:        challenge.Title,
+		Difficulty:   challenge.Difficulty,
+		ChallengeImg: challenge.ChallengeImg,
+		Description:  challenge.Description,
+		DurationDays: challenge.DurationDays,
+		Exp:          challenge.Exp,
+		Coin:         challenge.Coin,
+		Tasks:        tasks,
+	}
+
+	return details, nil
 }

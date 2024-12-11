@@ -380,7 +380,7 @@ func (h *ChallengeHandler) CreateTask(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        challenge_id   path      string  true   "Challenge ID"
-// @Success      200  {object}  helper.Response{data=[]string} "Tasks retrieved successfully"
+// @Success      200  {object}  helper.Response{data=[]ChallengeTaskResponse} "Tasks retrieved successfully"
 // @Failure      404  {object}  helper.Response{data=string} "Challenge not found"
 // @Failure      500  {object}  helper.Response{data=string} "Internal server error"
 // @Router       /admin/challenges/{challenge_id}/tasks [get]
@@ -406,7 +406,13 @@ func (h *ChallengeHandler) GetAllTasksByChallengeID(c echo.Context) error {
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Success", tasks))
+
+	var taskResponses []ChallengeTaskResponse
+	for _, task := range tasks {
+		taskResponses = append(taskResponses, ChallengeTaskResponse{}.FromEntity(task))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Success", taskResponses))
 }
 
 // @Summary      Get task by ID
@@ -415,7 +421,7 @@ func (h *ChallengeHandler) GetAllTasksByChallengeID(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        task_id        path      string  true   "Task ID"
-// @Success      200  {object}  helper.Response{data=string} "Task retrieved successfully"
+// @Success      200  {object}  helper.Response{data=[]ChallengeTaskResponse} "Task retrieved successfully"
 // @Failure      404  {object}  helper.Response{data=string} "Task not found"
 // @Failure      500  {object}  helper.Response{data=string} "Internal server error"
 // @Router       /admin/challenges/tasks/{task_id} [get]
@@ -441,7 +447,10 @@ func (h *ChallengeHandler) GetTaskByID(c echo.Context) error {
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Success", task))
+
+	taskResponse := ChallengeTaskResponse{}.FromEntity(task)
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Success", taskResponse))
 }
 
 // @Summary      Update a task
@@ -578,6 +587,9 @@ func (h *ChallengeHandler) CreateChallengeLog(c echo.Context) error {
 
 	err = h.challengeService.CreateChallengeLogWithConfirmation(log)
 	if err != nil {
+		if errors.Is(err, constant.ErrChallengeAlreadyTaken) {
+			return c.JSON(http.StatusConflict, helper.FormatResponse(false, "User has already taken this challenge", nil))
+		}
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
 
@@ -704,11 +716,19 @@ func (h *ChallengeHandler) ClaimRewards(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        Authorization header string true "Bearer Token"
-// @Success      200 {object} helper.Response{data=[]challenges.ChallengeLog} "Active challenges retrieved successfully"
+// @Param        page query int false "Page number (default is 1)"
+// @Success      200 {object} helper.MetadataResponse{data=[]map[string]interface{}} "Active challenges retrieved successfully"
+// @Failure      204 "No content"
 // @Failure      401 {object} helper.Response{data=string} "Unauthorized"
 // @Failure      500 {object} helper.Response{data=string} "Internal server error"
 // @Router       /challenges/active [get]
 func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	perPage := 20
+
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
 		return helper.UnauthorizedError(c)
@@ -722,7 +742,7 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 	userData := h.jwt.ExtractUserToken(token)
 	userID := userData[constant.JWT_ID].(string)
 
-	challenges, err := h.challengeService.GetActiveChallenges(userID)
+	challenges, totalPages, err := h.challengeService.GetActiveChallenges(userID, page, perPage)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
@@ -731,7 +751,29 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 		return c.NoContent(http.StatusNoContent)
 	}
 
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Active challenges retrieved successfully", challenges))
+	var response []map[string]interface{}
+	for _, challenge := range challenges {
+		response = append(response, map[string]interface{}{
+			"id":            challenge.ID,
+			"challenge_id":  challenge.ChallengeID,
+			"title":         challenge.Challenge.Title,
+			"difficulty":    challenge.Challenge.Difficulty,
+			"challenge_img": challenge.Challenge.ChallengeImg,
+			"description":   challenge.Challenge.Description,
+			"duration_days": challenge.Challenge.DurationDays,
+			"exp":           challenge.Challenge.Exp,
+			"coin":          challenge.Challenge.Coin,
+			"status":        challenge.Status,
+			"start_date":    challenge.StartDate,
+			"feed":          challenge.Feed,
+		})
+	}
+	metadata := map[string]interface{}{
+		"TotalPage": totalPages,
+		"Page":      page,
+	}
+
+	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "Active challenges retrieved successfully", metadata, response))
 }
 
 // GetUnclaimedChallenges retrieves challenges not yet taken by the user
@@ -741,8 +783,11 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        Authorization header string true "Bearer Token"
-// @Success      200 {object} helper.Response{data=[]challenges.Challenge} "Unclaimed challenges retrieved successfully"
+// @Param        page query int false "Page number (default is 1)"
+// @Param        limit query int false "Limit per page (default is 20)"
+// @Success      200 {object} helper.MetadataResponse{data=map[string]interface{challenges=[]challenges.Challenge, currentPage=int, totalPages=int}} "Unclaimed challenges retrieved successfully"
 // @Failure      401 {object} helper.Response{data=string} "Unauthorized"
+// @Failure      404 {object} helper.Response{data=string} "No unclaimed challenges available"
 // @Failure      500 {object} helper.Response{data=string} "Internal server error"
 // @Router       /challenges/unclaimed [get]
 func (h *ChallengeHandler) GetUnclaimedChallenges(c echo.Context) error {
@@ -759,10 +804,19 @@ func (h *ChallengeHandler) GetUnclaimedChallenges(c echo.Context) error {
 	userData := h.jwt.ExtractUserToken(token)
 	userID := userData[constant.JWT_ID].(string)
 	role := userData[constant.JWT_ROLE].(string)
-
 	isAdmin := role == "admin"
 
-	challenges, err := h.challengeService.GetUnclaimedChallenges(userID, isAdmin)
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit < 1 {
+		limit = 20
+	}
+
+	challenges, totalPages, err := h.challengeService.GetUnclaimedChallenges(userID, isAdmin, page, limit)
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
@@ -771,7 +825,13 @@ func (h *ChallengeHandler) GetUnclaimedChallenges(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, helper.FormatResponse(false, "No unclaimed challenges available", nil))
 	}
 
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Unclaimed challenges retrieved successfully", challenges))
+	response := map[string]interface{}{
+		"challenges":  challenges,
+		"currentPage": page,
+		"totalPages":  totalPages,
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Unclaimed challenges retrieved successfully", response))
 }
 
 // GetChallengeDetailsWithConfirmations retrieves challenge log and its confirmations
@@ -813,6 +873,35 @@ func (h *ChallengeHandler) GetChallengeDetailsWithConfirmations(c echo.Context) 
 		}
 		if errors.Is(err, constant.ErrChallengeLogNotFound) {
 			return c.JSON(http.StatusNotFound, helper.FormatResponse(false, err.Error(), nil))
+		}
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Challenge details retrieved successfully", details))
+}
+
+// GetChallengeDetails retrieves challenge details including tasks
+// @Summary      Get challenge details
+// @Description  Retrieve challenge details for a specific challenge ID, including title, difficulty, image, description, duration, experience points, coins, and tasks
+// @Tags         Challenges
+// @Accept       json
+// @Produce      json
+// @Param        challengeID path string true "Challenge ID"
+// @Success      200 {object} helper.Response{data=challenges.ChallengeDetails} "Challenge details retrieved successfully"
+// @Failure      400 {object} helper.Response{data=string} "Bad request (e.g., Challenge ID is required)"
+// @Failure      404 {object} helper.Response{data=string} "Challenge not found"
+// @Failure      500 {object} helper.Response{data=string} "Internal server error"
+// @Router       /challenges/{challengeID}/details [get]
+func (h *ChallengeHandler) GetChallengeDetails(c echo.Context) error {
+	challengeID := c.Param("challengeID")
+	if challengeID == "" {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Challenge ID is required", nil))
+	}
+
+	details, err := h.challengeService.GetChallengeDetails(challengeID)
+	if err != nil {
+		if errors.Is(err, constant.ErrChallengeNotFound) {
+			return c.JSON(http.StatusNotFound, helper.FormatResponse(false, "Challenge not found", nil))
 		}
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
