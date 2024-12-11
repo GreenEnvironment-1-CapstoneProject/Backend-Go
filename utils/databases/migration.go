@@ -18,6 +18,7 @@ import (
 
 func Migrate(db *gorm.DB) error {
 	db.AutoMigrate(&DataUser.User{})
+	db.AutoMigrate(&DataUser.VerifyOTP{})
 	db.AutoMigrate(&DataAdmin.Admin{})
 	db.AutoMigrate(&DataImpact.ImpactCategory{})
 	db.AutoMigrate(&DataProduct.Product{})

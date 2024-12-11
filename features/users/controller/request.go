@@ -12,11 +12,16 @@ type UserLoginRequest struct {
 }
 
 type UserUpdateRequest struct {
-	Name     string `json:"name" validate:"required"`
-	Address  string `json:"address" validate:"required"`
-	Gender   string `json:"gender" validate:"required"`
-	Phone    string `json:"phone" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Name    string `json:"name" validate:"required"`
+	Address string `json:"address" validate:"required"`
+	Gender  string `json:"gender" validate:"required"`
+	Phone   string `json:"phone" validate:"required"`
+}
+
+type UserPasswordUpdateRequest struct {
+	OldPassword string `json:"old_password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+	OTP         string `json:"otp" validate:"required"`
 }
 
 // Admin

@@ -10,6 +10,8 @@ const UserLoginGoogle = UserPath + "/login-google"
 const UserGoogleCallback = UserPath + "/google-callback"
 const UserRegister = UserPath + "/register"
 const UserUpdateAvatar = UserPath + "/avatar"
+const UserRequestOTP = UserPath + "/request-otp"
+const UserUpdatePassword = UserPath + "/update-password"
 
 const AdminPath = BasePath + "/admin"
 const AdminLogin = AdminPath + "/login"

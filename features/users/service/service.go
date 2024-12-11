@@ -1,11 +1,15 @@
 package service
 
 import (
+	"fmt"
+	"greenenvironment/configs"
 	"greenenvironment/constant"
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
 	"strings"
+	"time"
 
+	"golang.org/x/exp/rand"
 	"gorm.io/gorm"
 )
 
@@ -65,7 +69,8 @@ func (s *UserService) Login(user users.User) (users.UserLogin, error) {
 	return UserLoginData, nil
 }
 
-func (s *UserService) Update(user users.UserUpdate) error {
+
+func (s *UserService) UpdateUserInfo(user users.UserUpdate) error {
 	if user.ID == "" {
 		return constant.ErrUpdateUser
 	}
@@ -79,15 +84,60 @@ func (s *UserService) Update(user users.UserUpdate) error {
 		user.Phone = trimmedPhone
 	}
 
-	if user.Password != "" {
-		hashedPassword, err := helper.HashPassword(user.Password)
-		if err != nil {
-			return err
-		}
-		user.Password = hashedPassword
+	_, err := s.userRepo.UpdateUserInfo(user)
+	if err != nil {
+		return err
 	}
 
-	_, err := s.userRepo.Update(user)
+	return nil
+}
+
+func (s *UserService) RequestPasswordUpdateOTP(email string) error {
+	if email == "" {
+		return constant.ErrEmptyEmail
+	}
+
+	otp := fmt.Sprintf("%06d", rand.Intn(1000000))
+	expiration := time.Now().Add(5 * time.Minute)
+
+	err := s.userRepo.SaveOTP(email, otp, expiration)
+	if err != nil {
+		return err
+	}
+
+	smtpConfig := configs.InitConfig().SMTP
+	subject := "Your OTP for Password Update"
+	body := "Your OTP is: " + otp + ". It expires in 5 minutes."
+
+	return helper.SendEmail(smtpConfig, email, subject, body)
+}
+
+func (s *UserService) UpdatePassword(update users.PasswordUpdate) error {
+	if update.Email == "" || update.OTP == "" || update.OldPassword == "" || update.NewPassword == "" {
+		return constant.ErrInvalidInput
+	}
+
+	isValidOTP := s.userRepo.ValidateOTP(update.Email, update.OTP)
+	if !isValidOTP {
+		return constant.ErrOTPNotValid
+	}
+
+	existingUser, err := s.userRepo.GetUserByEmail(update.Email)
+	if err != nil {
+		return err
+	}
+
+	isOldPasswordValid := helper.CheckPasswordHash(update.OldPassword, existingUser.Password)
+	if !isOldPasswordValid {
+		return constant.ErrOldPasswordMismatch
+	}
+
+	hashedPassword, err := helper.HashPassword(update.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.UpdatePassword(update.Email, hashedPassword)
 	if err != nil {
 		return err
 	}

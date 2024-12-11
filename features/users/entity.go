@@ -51,14 +51,31 @@ type UpdateUserByAdmin struct {
 	UpdateAt time.Time
 }
 
+type VerifyOTP struct {
+	Email     string
+	OTP       string
+	ExpiredAt time.Time
+}
+
+type PasswordUpdate struct {
+	Email       string
+	OldPassword string
+	NewPassword string
+	OTP         string
+}
+
 type UserRepoInterface interface {
 	Register(User) (User, error)
 	Login(User) (User, error)
-	Update(user UserUpdate) (User, error)
+	UpdateUserInfo(user UserUpdate) (User, error)
 	Delete(User) error
 	GetUserByID(id string) (User, error)
 	GetUserByEmail(email string) (User, error)
 	UpdateAvatar(userID, avatarURL string) error
+
+	SaveOTP(email, otp string, expiration time.Time) error
+	ValidateOTP(email, otp string) bool
+	UpdatePassword(email, hashedPassword string) error
 
 	// Admin
 	GetUserByIDForAdmin(id string) (User, error)
@@ -72,10 +89,13 @@ type UserServiceInterface interface {
 	Register(User) (User, error)
 	Login(User) (UserLogin, error)
 	RegisterOrLoginGoogle(User) (User, error)
-	Update(user UserUpdate) error
+	UpdateUserInfo(user UserUpdate) error
 	GetUserData(User) (User, error)
 	Delete(User) error
 	UpdateAvatar(userID, avatarURL string) error
+
+	RequestPasswordUpdateOTP(email string) error
+	UpdatePassword(update PasswordUpdate) error
 
 	// Admin
 	GetUserByIDForAdmin(id string) (User, error)
@@ -89,10 +109,13 @@ type UserControllerInterface interface {
 	Login(c echo.Context) error
 	GoogleLogin(c echo.Context) error
 	GoogleCallback(c echo.Context) error
-	Update(c echo.Context) error
+	UpdateUserInfo(c echo.Context) error
 	GetUserData(c echo.Context) error
 	Delete(c echo.Context) error
 	UpdateAvatar(c echo.Context) error
+
+	RequestPasswordUpdateOTP(c echo.Context) error
+	UpdateUserPassword(c echo.Context) error
 
 	// Admin
 	GetAllUsersForAdmin(c echo.Context) error

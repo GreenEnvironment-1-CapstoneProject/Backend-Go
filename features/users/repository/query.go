@@ -4,6 +4,7 @@ import (
 	"greenenvironment/constant"
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -76,29 +77,18 @@ func (u *UserData) Login(user users.User) (users.User, error) {
 	return userLogin, nil
 }
 
-func (u *UserData) Update(user users.UserUpdate) (users.User, error) {
-	var existingUser users.User
-	err := u.DB.Where("id = ?", user.ID).First(&existingUser).Error
+func (u *UserData) UpdateUserInfo(user users.UserUpdate) (users.User, error) {
+	err := u.DB.Model(&users.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
+		"name":    user.Name,
+		"address": user.Address,
+		"gender":  user.Gender,
+		"phone":   user.Phone,
+	}).Error
 	if err != nil {
-		return users.User{}, err
-	}
-
-	if err := u.DB.Model(&users.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
-		"name":     user.Name,
-		"address":  user.Address,
-		"gender":   user.Gender,
-		"phone":    user.Phone,
-		"password": user.Password,
-	}).Error; err != nil {
 		return users.User{}, constant.ErrUpdateUser
 	}
 
-	var updatedUser users.User
-	updatedUser, err = u.GetUserByID(user.ID)
-	if err != nil {
-		return users.User{}, err
-	}
-	return updatedUser, nil
+	return u.GetUserByID(user.ID)
 }
 
 func (u *UserData) Delete(user users.User) error {
@@ -153,6 +143,26 @@ func (u *UserData) UpdateAvatar(userID, avatarURL string) error {
 		return constant.ErrUpdateAvatar
 	}
 	return nil
+}
+
+func (u *UserData) SaveOTP(email, otp string, expiration time.Time) error {
+	otpData := VerifyOTP{
+		ID:        uuid.New().String(),
+		Email:     email,
+		OTP:       otp,
+		ExpiredAt: expiration,
+	}
+	return u.DB.Create(&otpData).Error
+}
+
+func (u *UserData) ValidateOTP(email, otp string) bool {
+	var count int64
+	u.DB.Model(&VerifyOTP{}).Where("email = ? AND otp = ? AND expired_at > ?", email, otp, time.Now()).Count(&count)
+	return count > 0
+}
+
+func (u *UserData) UpdatePassword(email, hashedPassword string) error {
+	return u.DB.Model(&users.User{}).Where("email = ?", email).Update("password", hashedPassword).Error
 }
 
 // Admin

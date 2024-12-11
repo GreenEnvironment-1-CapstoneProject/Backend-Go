@@ -5,6 +5,10 @@ import (
 	"net/smtp"
 )
 
+type MailerInterface interface {
+	SendEmail(smtpConfig configs.SMTPConfig, to string, subject string, body string) error
+}
+
 func SendEmail(smtpConfig configs.SMTPConfig, to string, subject string, body string) error {
 	auth := smtp.PlainAuth("", smtpConfig.Username, smtpConfig.Password, smtpConfig.Host)
 
