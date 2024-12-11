@@ -171,6 +171,7 @@ func (cd *ChallengeData) GetTasksByChallengeID(challengeID string) ([]challenges
 		result = append(result, challenges.ChallengeTask{
 			ID:              task.ID,
 			ChallengeID:     task.ChallengeID,
+			Name:            task.Name,
 			DayNumber:       task.DayNumber,
 			TaskDescription: task.TaskDescription,
 			CreatedAt:       task.CreatedAt,
