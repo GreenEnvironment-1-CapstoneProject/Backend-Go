@@ -54,7 +54,7 @@ type UpdateUserByAdmin struct {
 type UserRepoInterface interface {
 	Register(User) (User, error)
 	Login(User) (User, error)
-	Update(UserUpdate) (User, error)
+	Update(user UserUpdate) (User, error)
 	Delete(User) error
 	GetUserByID(id string) (User, error)
 	GetUserByEmail(email string) (User, error)
@@ -72,7 +72,7 @@ type UserServiceInterface interface {
 	Register(User) (User, error)
 	Login(User) (UserLogin, error)
 	RegisterOrLoginGoogle(User) (User, error)
-	Update(UserUpdate) (UserUpdate, error)
+	Update(user UserUpdate) error
 	GetUserData(User) (User, error)
 	Delete(User) error
 	UpdateAvatar(userID, avatarURL string) error

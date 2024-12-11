@@ -65,33 +65,16 @@ func (s *UserService) Login(user users.User) (users.UserLogin, error) {
 	return UserLoginData, nil
 }
 
-func (s *UserService) Update(user users.UserUpdate) (users.UserUpdate, error) {
+func (s *UserService) Update(user users.UserUpdate) error {
 	if user.ID == "" {
-		return users.UserUpdate{}, constant.ErrUpdateUser
-	}
-
-	if user.Email != "" {
-		isEmailValid := helper.ValidateEmail(user.Email)
-		if !isEmailValid {
-			return users.UserUpdate{}, constant.ErrInvalidEmail
-		}
-		user.Email = strings.ToLower(user.Email)
-	}
-
-	if user.Username != "" {
-		trimmedUsername := strings.TrimSpace(user.Username)
-		isUsernameValid := helper.ValidateUsername(trimmedUsername)
-		if !isUsernameValid {
-			return users.UserUpdate{}, constant.ErrInvalidUsername
-		}
-		user.Username = trimmedUsername
+		return constant.ErrUpdateUser
 	}
 
 	if user.Phone != "" {
 		trimmedPhone := strings.TrimSpace(user.Phone)
 		isPhoneValid := helper.ValidatePhone(trimmedPhone)
 		if !isPhoneValid {
-			return users.UserUpdate{}, constant.ErrInvalidPhone
+			return constant.ErrInvalidPhone
 		}
 		user.Phone = trimmedPhone
 	}
@@ -99,32 +82,17 @@ func (s *UserService) Update(user users.UserUpdate) (users.UserUpdate, error) {
 	if user.Password != "" {
 		hashedPassword, err := helper.HashPassword(user.Password)
 		if err != nil {
-			return users.UserUpdate{}, err
+			return err
 		}
 		user.Password = hashedPassword
 	}
 
-	userData, err := s.userRepo.Update(user)
+	_, err := s.userRepo.Update(user)
 	if err != nil {
-		return users.UserUpdate{}, err
+		return err
 	}
 
-	var UserToken helper.UserJWT
-	UserToken.ID = userData.ID
-	UserToken.Name = userData.Name
-	UserToken.Email = userData.Email
-	UserToken.Username = userData.Username
-	UserToken.Address = userData.Address
-	UserToken.Role = constant.RoleUser
-
-	token, err := s.jwt.GenerateUserJWT(UserToken)
-	if err != nil {
-		return users.UserUpdate{}, err
-	}
-
-	user.Token = token
-
-	return user, nil
+	return nil
 }
 
 func (s *UserService) GetUserData(user users.User) (users.User, error) {
@@ -166,7 +134,6 @@ func (s *UserService) UpdateAvatar(userID, avatarURL string) error {
 	}
 	return nil
 }
-
 
 // Admin
 func (s *UserService) GetUserByIDForAdmin(id string) (users.User, error) {
