@@ -52,7 +52,7 @@ func (cd *ChallengeData) GetAllByPage(page int) ([]challenges.Challenge, int, er
 	var challengeData []challenges.Challenge
 	var totalChallenges int64
 
-	err := cd.DB.Model(&Challenge{}).Count(&totalChallenges).Error
+	err := cd.DB.Unscoped().Model(&Challenge{}).Count(&totalChallenges).Error
 	if err != nil {
 		return nil, 0, constant.ErrChallengeNotFound
 	}
@@ -60,7 +60,7 @@ func (cd *ChallengeData) GetAllByPage(page int) ([]challenges.Challenge, int, er
 	challengesPerPage := 20
 	totalPages := int((totalChallenges + int64(challengesPerPage) - 1) / int64(challengesPerPage))
 
-	response := cd.DB.Preload("ImpactCategories.ImpactCategory").
+	response := cd.DB.Unscoped().Preload("ImpactCategories.ImpactCategory").
 		Select("challenges.*, challenges.author as author").
 		Offset((page - 1) * challengesPerPage).
 		Limit(challengesPerPage).
@@ -250,6 +250,17 @@ func (cd *ChallengeData) CreateChallengeConfirmation(confirmation challenges.Cha
 	}
 
 	return nil
+}
+
+func (cd *ChallengeData) IsChallengeTaken(userID, challengeID string) (bool, error) {
+	var count int64
+	err := cd.DB.Model(&ChallengeLog{}).
+		Where("user_id = ? AND challenge_id = ?", userID, challengeID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (cd *ChallengeData) GetChallengeConfirmationByID(confirmationID string) (challenges.ChallengeConfirmation, error) {
@@ -447,11 +458,29 @@ func (cd *ChallengeData) GetChallengeRewards(challengeID string) (int, int, erro
 	return challenge.Exp, challenge.Coin, nil
 }
 
-func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string) ([]challenges.ChallengeLog, error) {
-	var logs []ChallengeLog
-	err := cd.DB.Where("user_id = ? AND status = ?", userID, "Progress").Find(&logs).Error
+func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string, page, perPage int) ([]challenges.ChallengeLog, int, error) {
+	var logs []struct {
+		ChallengeLog
+		Title        string
+		Difficulty   string
+		ChallengeImg string
+		Description  string
+		DurationDays int
+		Exp          int
+		Coin         int
+	}
+	var totalLogs int64
+
+	err := cd.DB.Table("challenge_logs").
+		Select("challenge_logs.*, challenges.title, challenges.difficulty, challenges.challenge_img, challenges.description, challenges.duration_days, challenges.exp, challenges.coin").
+		Joins("JOIN challenges ON challenge_logs.challenge_id = challenges.id").
+		Where("challenge_logs.user_id = ? AND challenge_logs.status = ?", userID, "Progress").
+		Count(&totalLogs).
+		Offset((page - 1) * perPage).
+		Limit(perPage).
+		Find(&logs).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	var result []challenges.ChallengeLog
@@ -463,51 +492,85 @@ func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string) ([]challen
 			Status:      log.Status,
 			StartDate:   log.StartDate,
 			Feed:        log.Feed,
+			Challenge: challenges.Challenge{
+				Title:        log.Title,
+				Difficulty:   log.Difficulty,
+				ChallengeImg: log.ChallengeImg,
+				Description:  log.Description,
+				DurationDays: log.DurationDays,
+				Exp:          log.Exp,
+				Coin:         log.Coin,
+			},
 		})
 	}
 
-	return result, nil
+	totalPages := int((totalLogs + int64(perPage) - 1) / int64(perPage))
+	return result, totalPages, nil
 }
 
-func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool) ([]challenges.Challenge, error) {
+func (cd *ChallengeData) GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int) ([]challenges.Challenge, int, error) {
 	var claimedChallenges []string
-	err := cd.DB.Model(&ChallengeLog{}).Where("user_id = ?", userID).Pluck("challenge_id", &claimedChallenges).Error
+	err := cd.DB.Model(&ChallengeLog{}).
+		Where("user_id = ?", userID).
+		Pluck("challenge_id", &claimedChallenges).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	var challengeEntities []Challenge
-	query := cd.DB
+	var totalRecords int64
+	query := cd.DB.Table("challenges").
+		Select(`
+			challenges.*, 
+			COUNT(DISTINCT challenge_confirmations.id) AS action_count, 
+			COUNT(DISTINCT challenge_logs.user_id) AS participant_count
+		`).
+		Joins("LEFT JOIN challenge_tasks ON challenge_tasks.challenge_id = challenges.id").
+		Joins("LEFT JOIN challenge_confirmations ON challenge_confirmations.challenge_task_id = challenge_tasks.id").
+		Joins("LEFT JOIN challenge_logs ON challenge_logs.challenge_id = challenges.id").
+		Group("challenges.id").
+		Count(&totalRecords)
 
 	if !isAdmin {
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("challenges.deleted_at IS NULL")
 	}
 
 	if len(claimedChallenges) > 0 {
-		query = query.Where("id NOT IN ?", claimedChallenges)
+		query = query.Where("challenges.id NOT IN ?", claimedChallenges)
+	}
+
+	offset := (page - 1) * limit
+	query = query.Offset(offset).Limit(limit)
+
+	var challengeEntities []struct {
+		challenges.Challenge
+		ActionCount      int `gorm:"column:action_count"`
+		ParticipantCount int `gorm:"column:participant_count"`
 	}
 
 	err = query.Find(&challengeEntities).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	var result []challenges.Challenge
 	for _, entity := range challengeEntities {
 		result = append(result, challenges.Challenge{
-			ID:           entity.ID,
-			Author:       entity.Author,
-			Title:        entity.Title,
-			Difficulty:   entity.Difficulty,
-			ChallengeImg: entity.ChallengeImg,
-			Description:  entity.Description,
-			DurationDays: entity.DurationDays,
-			Exp:          entity.Exp,
-			Coin:         entity.Coin,
+			ID:               entity.ID,
+			Author:           entity.Author,
+			Title:            entity.Title,
+			Difficulty:       entity.Difficulty,
+			ChallengeImg:     entity.ChallengeImg,
+			Description:      entity.Description,
+			DurationDays:     entity.DurationDays,
+			Exp:              entity.Exp,
+			Coin:             entity.Coin,
+			ActionCount:      entity.ActionCount,
+			ParticipantCount: entity.ParticipantCount,
 		})
 	}
 
-	return result, nil
+	totalPages := int((totalRecords + int64(limit) - 1) / int64(limit))
+	return result, totalPages, nil
 }
 
 func (cd *ChallengeData) GetChallengeLogByID(challengeLogID string) (challenges.ChallengeLog, error) {
@@ -529,4 +592,46 @@ func (cd *ChallengeData) GetChallengeLogByID(challengeLogID string) (challenges.
 		StartDate:    log.StartDate,
 		Feed:         log.Feed,
 	}, nil
+}
+
+func (cd *ChallengeData) GetChallengeByID(challengeID string) (challenges.Challenge, error) {
+	var challenge Challenge
+	err := cd.DB.Where("id = ?", challengeID).First(&challenge).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return challenges.Challenge{}, constant.ErrChallengeNotFound
+	}
+	if err != nil {
+		return challenges.Challenge{}, err
+	}
+
+	return challenges.Challenge{
+		ID:           challenge.ID,
+		Title:        challenge.Title,
+		Difficulty:   challenge.Difficulty,
+		ChallengeImg: challenge.ChallengeImg,
+		Description:  challenge.Description,
+		DurationDays: challenge.DurationDays,
+		Exp:          challenge.Exp,
+		Coin:         challenge.Coin,
+	}, nil
+}
+
+func (cd *ChallengeData) GetTasksByChallengeIDforUser(challengeID string) ([]challenges.ChallengeTask, error) {
+	var tasks []ChallengeTask
+	err := cd.DB.Where("challenge_id = ?", challengeID).Order("day_number").Find(&tasks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var result []challenges.ChallengeTask
+	for _, task := range tasks {
+		result = append(result, challenges.ChallengeTask{
+			ID:              task.ID,
+			ChallengeID:     task.ChallengeID,
+			DayNumber:       task.DayNumber,
+			TaskDescription: task.TaskDescription,
+		})
+	}
+
+	return result, nil
 }

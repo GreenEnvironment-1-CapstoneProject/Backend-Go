@@ -41,23 +41,25 @@ type ChallengeTask struct {
 
 type ChallengeLog struct {
 	*gorm.Model
-	ID          string    `gorm:"primaryKey;type:varchar(50);not null;column:id"`
-	ChallengeID string    `gorm:"type:varchar(50);not null;column:challenge_id"`
-	UserID      string    `gorm:"type:varchar(100);not null;column:user_id"`
-	Status      string    `gorm:"type:enum('Progress','Done','Failed');not null;column:status"`
-	StartDate   time.Time `gorm:"type:datetime;not null;column:start_date"`
-	Feed        string    `gorm:"type:text;column:feed"`
+	ID           string    `gorm:"primaryKey;type:varchar(50);not null;column:id"`
+	ChallengeID  string    `gorm:"type:varchar(50);not null;column:challenge_id"`
+	UserID       string    `gorm:"type:varchar(100);not null;column:user_id"`
+	Status       string    `gorm:"type:enum('Progress','Done','Failed');not null;column:status"`
+	StartDate    time.Time `gorm:"type:datetime;not null;column:start_date"`
+	Feed         string    `gorm:"type:text;column:feed"`
 	RewardsGiven bool      `gorm:"type:boolean;default:false;column:rewards_given"`
+	Challenge    Challenge `gorm:"foreignKey:ChallengeID;references:ID"`
 }
 
 type ChallengeConfirmation struct {
 	*gorm.Model
-	ID              string    `gorm:"primaryKey;type:varchar(50);not null;column:id"`
-	ChallengeTaskID string    `gorm:"type:varchar(50);not null;column:challenge_task_id"`
-	UserID          string    `gorm:"type:varchar(50);not null;column:user_id"`
-	Status          string    `gorm:"type:enum('Progress', 'Done', 'Failed');not null;column:status"`
-	ChallengeImg    string    `gorm:"type:varchar(255);not null;column:challenge_img"`
-	SubmissionDate  time.Time `gorm:"type:datetime;not null;column:submission_date"`
+	ID              string        `gorm:"primaryKey;type:varchar(50);not null;column:id"`
+	ChallengeTaskID string        `gorm:"type:varchar(50);not null;column:challenge_task_id"`
+	UserID          string        `gorm:"type:varchar(50);not null;column:user_id"`
+	Status          string        `gorm:"type:enum('Progress', 'Done', 'Failed');not null;column:status"`
+	ChallengeImg    string        `gorm:"type:varchar(255);not null;column:challenge_img"`
+	SubmissionDate  time.Time     `gorm:"type:datetime;not null;column:submission_date"`
+	ChallengeTask   ChallengeTask `gorm:"foreignKey:ChallengeTaskID;references:ID"`
 }
 
 func (Challenge) TableName() string {

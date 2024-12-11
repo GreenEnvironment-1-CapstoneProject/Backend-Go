@@ -58,6 +58,8 @@ const ClaimRewards = ChallengePath + "/rewards"
 const ActiveChallenge = ChallengePath + "/active"
 const UnclaimedChallenge = ChallengePath + "/unclaimed"
 const UserChallengeDetails = ChallengePath + "/details"
+const UserUnclaimedChallengeDetails = ChallengePath + "/:challengeID/details"
+
 
 const AdminDashboard = AdminPath + "/dashboard"
 

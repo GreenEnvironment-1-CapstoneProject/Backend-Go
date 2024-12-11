@@ -17,6 +17,8 @@ type Challenge struct {
 	DurationDays     int
 	Exp              int
 	Coin             int
+	ActionCount      int
+	ParticipantCount int
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	ImpactCategories []ChallengeImpactCategory
@@ -56,6 +58,7 @@ type ChallengeLog struct {
 	RewardsGiven bool
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+	Challenge    Challenge
 }
 
 type ChallengeConfirmation struct {
@@ -70,6 +73,18 @@ type ChallengeConfirmation struct {
 type ChallengeLogDetails struct {
 	ChallengeLog  ChallengeLog
 	Confirmations []ChallengeConfirmation
+}
+
+type ChallengeDetails struct {
+	ID           string
+	Title        string
+	Difficulty   string
+	ChallengeImg string
+	Description  string
+	DurationDays int
+	Exp          int
+	Coin         int
+	Tasks        []ChallengeTask
 }
 
 type ChallengeRepoInterface interface {
@@ -88,6 +103,7 @@ type ChallengeRepoInterface interface {
 	// User
 	CreateChallengeLog(ChallengeLog) error
 	CreateChallengeConfirmation(ChallengeConfirmation) error
+	IsChallengeTaken(userID, challengeID string) (bool, error)
 	GetChallengeConfirmationByID(confirmationID string) (ChallengeConfirmation, error)
 	UpdateChallengeConfirmation(ChallengeConfirmation) error
 	GetChallengeTaskByID(taskID string) (ChallengeTask, error)
@@ -102,9 +118,11 @@ type ChallengeRepoInterface interface {
 	GetChallengeIDByLogID(challengeLogID string) (string, error)
 	GetChallengeRewards(challengeID string) (int, int, error)
 
-	GetActiveChallengeLogByUserID(userID string) ([]ChallengeLog, error)
-	GetUnclaimedChallenges(userID string, isAdmin bool) ([]Challenge, error)
+	GetActiveChallengeLogByUserID(userID string, page, perPage int) ([]ChallengeLog, int, error)
+	GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int) ([]Challenge, int, error)
 	GetChallengeLogByID(challengeLogID string) (ChallengeLog, error)
+	GetChallengeByID(challengeID string) (Challenge, error)
+	GetTasksByChallengeIDforUser(challengeID string) ([]ChallengeTask, error)
 }
 
 type ChallengeServiceInterface interface {
@@ -126,9 +144,10 @@ type ChallengeServiceInterface interface {
 	CheckAndUpdateChallengeLogStatusByConfirmation(confirmationID, userID string) error
 	ClaimRewards(challengeLogID, userID string) error
 
-	GetActiveChallenges(userID string) ([]ChallengeLog, error)
-	GetUnclaimedChallenges(userID string, isAdmin bool) ([]Challenge, error)
+	GetActiveChallenges(userID string, page, perPage int) ([]ChallengeLog, int, error)
+	GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int) ([]Challenge, int, error)
 	GetChallengeDetailsWithConfirmations(userID, challengeLogID string) (ChallengeLogDetails, error)
+	GetChallengeDetails(challengeID string) (ChallengeDetails, error)
 }
 
 type ChallengeControllerInterface interface {
@@ -152,4 +171,5 @@ type ChallengeControllerInterface interface {
 	GetActiveChallenges(c echo.Context) error
 	GetUnclaimedChallenges(c echo.Context) error
 	GetChallengeDetailsWithConfirmations(c echo.Context) error
+	GetChallengeDetails(c echo.Context) error
 }
