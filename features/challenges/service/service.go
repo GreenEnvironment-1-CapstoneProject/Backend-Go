@@ -232,20 +232,7 @@ func (cs *ChallengeService) CheckAndUpdateChallengeLogStatusByConfirmation(confi
 		return err
 	}
 
-	confirmations, err := cs.challengeRepo.GetConfirmationsByChallengeID(task.ChallengeID, userID)
-	if err != nil {
-		return err
-	}
-
-	allDone := true
-	for _, c := range confirmations {
-		if c.Status != "Done" {
-			allDone = false
-			break
-		}
-	}
-
-	if allDone {
+	if confirmation.Status == "Done" {
 		challengeLog.Status = "Done"
 		err := cs.challengeRepo.UpdateChallengeLog(challengeLog)
 		if err != nil {

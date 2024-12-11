@@ -834,13 +834,12 @@ func (h *ChallengeHandler) GetUnclaimedChallenges(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, helper.FormatResponse(false, "No unclaimed challenges available", nil))
 	}
 
-	response := map[string]interface{}{
-		"challenges":  challenges,
-		"currentPage": page,
-		"totalPages":  totalPages,
+	metadata := map[string]interface{}{
+		"TotalPage": totalPages,
+		"Page":      page,
 	}
 
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Unclaimed challenges retrieved successfully", response))
+	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "Unclaimed challenges retrieved successfully", metadata, challenges))
 }
 
 // GetChallengeDetailsWithConfirmations retrieves challenge log and its confirmations
@@ -851,7 +850,7 @@ func (h *ChallengeHandler) GetUnclaimedChallenges(c echo.Context) error {
 // @Produce      json
 // @Param        Authorization header string true "Bearer Token"
 // @Param        challengeLogID query string true "Challenge Log ID"
-// @Success      200 {object} helper.Response{data=challenges.ChallengeLogDetails} "Challenge details retrieved successfully"
+// @Success      200 {object} helper.Response{data=ChallengeLogResponse} "Challenge details retrieved successfully"
 // @Failure      401 {object} helper.Response{data=string} "Unauthorized"
 // @Failure      404 {object} helper.Response{data=string} "Challenge log not found"
 // @Failure      500 {object} helper.Response{data=string} "Internal server error"
@@ -886,7 +885,39 @@ func (h *ChallengeHandler) GetChallengeDetailsWithConfirmations(c echo.Context) 
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
 
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Challenge details retrieved successfully", details))
+	response := ChallengeLogResponse{
+		ID:           details.ChallengeLog.ID,
+		UserID:       details.ChallengeLog.UserID,
+		RewardsGiven: details.ChallengeLog.RewardsGiven,
+		Status:       details.ChallengeLog.Status,
+		StartDate:    details.ChallengeLog.StartDate,
+		Feed:         details.ChallengeLog.Feed,
+		Challenge: ChallengeResponse{
+			ID:           details.ChallengeLog.Challenge.ID,
+			Title:        details.ChallengeLog.Challenge.Title,
+			Difficulty:   details.ChallengeLog.Challenge.Difficulty,
+			ChallengeImg: details.ChallengeLog.Challenge.ChallengeImg,
+			Description:  details.ChallengeLog.Challenge.Description,
+			DurationDays: details.ChallengeLog.Challenge.DurationDays,
+			Exp:          details.ChallengeLog.Challenge.Exp,
+			Coin:         details.ChallengeLog.Challenge.Coin,
+		},
+		ChallengeConfirmation: ChallengeConfirmationResponse{
+			ID:     details.Confirmations.ID,
+			UserID: details.Confirmations.UserID,
+			Status: details.Confirmations.Status,
+			ChallengeTask: ChallengeTaskResponse{
+				ID:              details.Confirmations.ChallengeTask.ID,
+				ChallengeID:     details.Confirmations.ChallengeTask.ChallengeID,
+				Name:            details.Confirmations.ChallengeTask.Name,
+				DayNumber:       details.Confirmations.ChallengeTask.DayNumber,
+				TaskDescription: details.Confirmations.ChallengeTask.TaskDescription,
+			},
+			SubmissionDate: details.Confirmations.SubmissionDate,
+		},
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Challenge details retrieved successfully", response))
 }
 
 // GetChallengeDetails retrieves challenge details including tasks
