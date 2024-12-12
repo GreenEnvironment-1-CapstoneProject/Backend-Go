@@ -23,6 +23,7 @@ type GEConfig struct {
 	Midtrans   MidtransConfig
 	OpenAi     OpenAi
 	Google     Google
+	SMTP       SMTPConfig
 }
 
 type CloudinaryConfig struct {
@@ -44,6 +45,13 @@ type Google struct {
 
 type OpenAi struct {
 	ApiKey string
+}
+
+type SMTPConfig struct {
+	Host     string
+	Port     string
+	Username string
+	Password string
 }
 
 func InitConfig() *GEConfig {
@@ -77,6 +85,11 @@ func InitConfig() *GEConfig {
 	res.Google.ClientID = os.Getenv("GOOGLE_CLIENT_ID")
 	res.Google.ClientKey = os.Getenv("GOOGLE_CLIENT_SECRET")
 	res.Google.CallbackURL = os.Getenv("GOOGLE_CALLBACK_URL")
+
+	res.SMTP.Host = os.Getenv("MAIL_HOST")
+	res.SMTP.Port = os.Getenv("MAIL_PORT")
+	res.SMTP.Username = os.Getenv("MAIL_USER")
+	res.SMTP.Password = os.Getenv("MAIL_PASSWORD")
 
 	return res
 }

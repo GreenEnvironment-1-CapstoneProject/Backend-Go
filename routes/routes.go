@@ -25,8 +25,13 @@ import (
 )
 
 func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GEConfig) {
-	e.POST(route.UserRegister, uh.Register)
+	e.POST(route.UserRegisterOTP, uh.RequestRegisterOTP)
+	e.POST(route.UserVerifyRegisterOTP, uh.VerifyRegisterOTP)
 	e.POST(route.UserLogin, uh.Login)
+
+	e.POST(route.UserForgotPassword, uh.ForgotPasswordRequest)
+	e.POST(route.UserVerifyForgotOTP, uh.VerifyForgotPasswordOTP)
+	e.PUT(route.UserResetPassword, uh.ResetPassword)
 
 	e.GET(route.UserLoginGoogle, uh.GoogleLogin)
 	e.GET(route.UserGoogleCallback, uh.GoogleCallback)
@@ -36,10 +41,13 @@ func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GECon
 		ErrorHandler: helper.JWTErrorHandler,
 	}
 
-	e.GET(route.UserData, uh.GetUserData, echojwt.WithConfig(jwtConfig))
-	e.PUT(route.UserUpdate, uh.Update, echojwt.WithConfig(jwtConfig))
+	e.GET(route.UserProfile, uh.GetUserData, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.UserUpdate, uh.UpdateUserInfo, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.UserUpdateAvatar, uh.UpdateAvatar, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.UserPath, uh.Delete, echojwt.WithConfig(jwtConfig))
+
+	e.POST(route.UserRequestUpdateOTP, uh.RequestPasswordUpdateOTP, echojwt.WithConfig(jwtConfig))
+	e.PUT(route.UserUpdatePassword, uh.UpdateUserPassword, echojwt.WithConfig(jwtConfig))
 
 	// Admin
 	e.GET(route.AdminManageUserPath, uh.GetAllUsersForAdmin, echojwt.WithConfig(jwtConfig))

@@ -4,6 +4,7 @@ package constant
 const UserSuccessLogin = "Login Success"
 const UserSuccessRegister = "Register Success"
 const UserSuccessUpdate = "Update Account Success"
+const UserSuccessUpdatePassword = "Update Password Success"
 const UserSuccessGetUser = "Get User Success"
 const UserSuccessForgotPassword = "Code has been sent to your email"
 const UserSuccessOTPValidation = "OTP Validation Success"

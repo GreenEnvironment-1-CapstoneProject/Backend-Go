@@ -4,6 +4,7 @@ import (
 	"greenenvironment/constant"
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -54,6 +55,52 @@ func (u *UserData) Register(newUser users.User) (users.User, error) {
 	}, nil
 }
 
+func (r *UserData) SaveTemporaryUser(user users.TemporaryUser) error {
+	return r.DB.Create(&user).Error
+}
+
+func (r *UserData) GetTemporaryUserByEmail(email string) (users.TemporaryUser, error) {
+	var tempUser users.TemporaryUser
+	err := r.DB.Where("email = ?", email).First(&tempUser).Error
+	return tempUser, err
+}
+
+func (r *UserData) DeleteTemporaryUserByEmail(email string) error {
+	return r.DB.Where("email = ?", email).Delete(&TemporaryUser{}).Error
+}
+
+func (r *UserData) GetVerifyOTP(otp string) (users.VerifyOTP, error) {
+	var verifyData users.VerifyOTP
+	err := r.DB.Where("otp = ?", otp).First(&verifyData).Error
+	return verifyData, err
+}
+
+func (r *UserData) DeleteVerifyOTP(otp string) error {
+	return r.DB.Where("otp = ?", otp).Delete(&VerifyOTP{}).Error
+}
+
+func (u *UserData) ValidateOTPByOTP(otp string) bool {
+	var count int64
+	u.DB.Model(&VerifyOTP{}).Where("otp = ? AND expired_at > ?", otp, time.Now()).Count(&count)
+	return count > 0
+}
+
+func (u *UserData) GetEmailByLatestOTP() (string, error) {
+	var otpData VerifyOTP
+	err := u.DB.Order("created_at DESC").First(&otpData).Error
+	if err != nil {
+			return "", err
+	}
+	return otpData.Email, nil
+}
+
+func (u *UserData) DeleteVerifyOTPByEmail(email string) error {
+	if err := u.DB.Where("email = ?", email).Delete(&VerifyOTP{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *UserData) Login(user users.User) (users.User, error) {
 	var UserLoginData User
 	result := u.DB.Where("email = ?", user.Email).First(&UserLoginData)
@@ -76,29 +123,18 @@ func (u *UserData) Login(user users.User) (users.User, error) {
 	return userLogin, nil
 }
 
-func (u *UserData) Update(user users.UserUpdate) (users.User, error) {
-	var existingUser users.User
-	err := u.DB.Where("id = ?", user.ID).First(&existingUser).Error
+func (u *UserData) UpdateUserInfo(user users.UserUpdate) (users.User, error) {
+	err := u.DB.Model(&users.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
+		"name":    user.Name,
+		"address": user.Address,
+		"gender":  user.Gender,
+		"phone":   user.Phone,
+	}).Error
 	if err != nil {
-		return users.User{}, err
-	}
-
-	if err := u.DB.Model(&users.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
-		"name":     user.Name,
-		"address":  user.Address,
-		"gender":   user.Gender,
-		"phone":    user.Phone,
-		"password": user.Password,
-	}).Error; err != nil {
 		return users.User{}, constant.ErrUpdateUser
 	}
 
-	var updatedUser users.User
-	updatedUser, err = u.GetUserByID(user.ID)
-	if err != nil {
-		return users.User{}, err
-	}
-	return updatedUser, nil
+	return u.GetUserByID(user.ID)
 }
 
 func (u *UserData) Delete(user users.User) error {
@@ -153,6 +189,26 @@ func (u *UserData) UpdateAvatar(userID, avatarURL string) error {
 		return constant.ErrUpdateAvatar
 	}
 	return nil
+}
+
+func (u *UserData) SaveOTP(email, otp string, expiration time.Time) error {
+	otpData := VerifyOTP{
+		ID:        uuid.New().String(),
+		Email:     email,
+		OTP:       otp,
+		ExpiredAt: expiration,
+	}
+	return u.DB.Create(&otpData).Error
+}
+
+func (u *UserData) ValidateOTP(email, otp string) bool {
+	var count int64
+	u.DB.Model(&VerifyOTP{}).Where("email = ? AND otp = ? AND expired_at > ?", email, otp, time.Now()).Count(&count)
+	return count > 0
+}
+
+func (u *UserData) UpdatePassword(email, hashedPassword string) error {
+	return u.DB.Model(&users.User{}).Where("email = ?", email).Update("password", hashedPassword).Error
 }
 
 // Admin

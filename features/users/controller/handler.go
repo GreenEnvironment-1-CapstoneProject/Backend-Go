@@ -30,55 +30,142 @@ func NewUserController(u users.UserServiceInterface, j helper.JWTInterface, s st
 	}
 }
 
-// Register User
-// @Summary      Register a new user
-// @Description  Create a new user account in the system
+// Request OTP for Registration
+// @Summary      Request OTP for user registration
+// @Description  Sends an OTP to the user's email for registration verification
 // @Tags         Users
 // @Accept       json
 // @Produce      json
 // @Param        request  body      controller.UserRegisterRequest  true  "User registration payload"
-// @Success      201      {object}  helper.Response{data=UserRegisterResponse}
+// @Success      201      {object}  helper.Response{data=string} "OTP sent successfully"
 // @Failure      400      {object}  helper.Response{data=string} "Invalid input or validation error"
 // @Failure      500      {object}  helper.Response{data=string} "Internal server error"
-// @Router       /users/register [post]
-func (h *UserHandler) Register(c echo.Context) error {
-	var UserRegisterRequest UserRegisterRequest
-
-	err := c.Bind(&UserRegisterRequest)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+// @Router       /users/register/request-otp [post]
+func (h *UserHandler) RequestRegisterOTP(c echo.Context) error {
+	var req UserRegisterRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Invalid input", nil))
 	}
 
-	if err := c.Validate(UserRegisterRequest); err != nil {
-		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "error bad request", nil))
+	if err := c.Validate(req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Validation error", nil))
 	}
 
-	user := users.User{
-		Name:     UserRegisterRequest.Name,
-		Email:    UserRegisterRequest.Email,
-		Password: UserRegisterRequest.Password,
-	}
-
-	createdUser, err := h.userService.Register(user)
+	err := h.userService.RequestRegisterOTP(req.Name, req.Email, req.Password)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
 	}
 
-	userResponse := UserRegisterResponse{
-		ID:            createdUser.ID,
-		Username:      createdUser.Username,
-		Name:          createdUser.Name,
-		Email:         createdUser.Email,
-		Address:       createdUser.Address,
-		Gender:        createdUser.Gender,
-		Phone:         createdUser.Phone,
-		Exp:           createdUser.Exp,
-		Coin:          createdUser.Coin,
-		AvatarURL:     createdUser.AvatarURL,
-		Is_Membership: createdUser.Is_Membership,
+	return c.JSON(http.StatusCreated, helper.FormatResponse(true, "OTP sent successfully", nil))
+}
+
+// Verify OTP and Register User
+// @Summary      Verify OTP and register user
+// @Description  Verifies the OTP sent to the user's email and registers the user
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.UserVerifyRegisterRequest  true  "User verification payload"
+// @Success      201      {object}  helper.Response{data=UserRegisterResponse} "User registered successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid OTP or input"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/register/verify-otp [post]
+func (h *UserHandler) VerifyRegisterOTP(c echo.Context) error {
+	var req UserVerifyRegisterRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Invalid input", nil))
 	}
 
-	return c.JSON(http.StatusCreated, helper.FormatResponse(true, constant.UserSuccessRegister, userResponse))
+	if err := c.Validate(req); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, "Validation error", nil))
+	}
+
+	user, err := h.userService.VerifyRegisterOTP(req.OTP)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusCreated, helper.FormatResponse(true, "User registered successfully", user))
+}
+
+// Forgot Password Request
+// @Summary      Request OTP for password reset
+// @Description  Sends an OTP to the user's email for password reset verification
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.ForgotPasswordRequest  true  "Forgot password request payload"
+// @Success      200      {object}  helper.Response{data=string} "OTP sent successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      404      {object}  helper.Response{data=string} "Email not found"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/forgot-password [post]
+func (h *UserHandler) ForgotPasswordRequest(c echo.Context) error {
+	var request ForgotPasswordRequest
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrInvalidInput.Error(), nil))
+	}
+
+	if !h.userService.IsEmailExist(request.Email) {
+		return c.JSON(http.StatusNotFound, helper.FormatResponse(false, constant.ErrEmailNotFound.Error(), nil))
+	}
+
+	err := h.userService.RequestPasswordResetOTP(request.Email)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessForgotPassword, nil))
+}
+
+// Verify Forgot Password OTP
+// @Summary      Verify OTP for password reset
+// @Description  Verifies the OTP sent to the user's email for password reset
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.VerifyOTPRequest  true  "Verify OTP request payload"
+// @Success      200      {object}  helper.Response{data=string} "OTP verified successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid OTP"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/forgot-password/verify-otp [post]
+func (h *UserHandler) VerifyForgotPasswordOTP(c echo.Context) error {
+	var request VerifyOTPRequest
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrInvalidInput.Error(), nil))
+	}
+
+	err := h.userService.VerifyPasswordResetOTP(request.OTP)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessOTPValidation, nil))
+}
+
+// Reset Password
+// @Summary      Reset user password
+// @Description  Resets the user's password after verifying OTP
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.ResetPasswordRequest  true  "Reset password request payload"
+// @Success      200      {object}  helper.Response{data=string} "Password reset successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/reset-password [put]
+func (h *UserHandler) ResetPassword(c echo.Context) error {
+	var request ResetPasswordRequest
+	if err := c.Bind(&request); err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrInvalidInput.Error(), nil))
+	}
+
+	err := h.userService.ResetPassword(request.NewPassword)
+	if err != nil {
+			return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessResetPassword, nil))
 }
 
 // Login User
@@ -132,15 +219,16 @@ func (h *UserHandler) Login(c echo.Context) error {
 // @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
 // @Failure      500            {object}  helper.Response{data=string} "Internal server error"
 // @Router       /users/update [put]
-func (h *UserHandler) Update(c echo.Context) error {
+// Update User Data
+func (h *UserHandler) UpdateUserInfo(c echo.Context) error {
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
-		helper.UnauthorizedError(c)
+		return helper.UnauthorizedError(c)
 	}
 
 	token, err := h.jwt.ValidateToken(tokenString)
 	if err != nil {
-		helper.UnauthorizedError(c)
+		return helper.UnauthorizedError(c)
 	}
 
 	userData := h.jwt.ExtractUserToken(token)
@@ -157,20 +245,101 @@ func (h *UserHandler) Update(c echo.Context) error {
 	}
 
 	user := users.UserUpdate{
-		ID:       userId.(string),
-		Name:     UserUpdateRequest.Name,
-		Address:  UserUpdateRequest.Address,
-		Gender:   UserUpdateRequest.Gender,
-		Phone:    UserUpdateRequest.Phone,
-		Password: UserUpdateRequest.Password,
+		ID:      userId.(string),
+		Name:    UserUpdateRequest.Name,
+		Address: UserUpdateRequest.Address,
+		Gender:  UserUpdateRequest.Gender,
+		Phone:   UserUpdateRequest.Phone,
 	}
 
-	err = h.userService.Update(user)
+	err = h.userService.UpdateUserInfo(user)
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
 
 	return c.JSON(http.StatusOK, helper.ObjectFormatResponse(true, constant.UserSuccessUpdate, nil))
+}
+
+// Request Password Update OTP
+// @Summary      Request OTP for password update
+// @Description  Sends an OTP to the authenticated user's email for password update verification
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true  "Bearer token"
+// @Success      201            {object}  helper.Response{data=string} "OTP sent successfully"
+// @Failure      400            {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/update/request-otp [post]
+func (h *UserHandler) RequestPasswordUpdateOTP(c echo.Context) error {
+	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+	if tokenString == "" {
+		return helper.UnauthorizedError(c)
+	}
+
+	token, err := h.jwt.ValidateToken(tokenString)
+	if err != nil {
+		return helper.UnauthorizedError(c)
+	}
+
+	userData := h.jwt.ExtractUserToken(token)
+	email := userData[constant.JWT_EMAIL]
+
+	err = h.userService.RequestPasswordUpdateOTP(email.(string))
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusCreated, helper.FormatResponse(true, constant.UserSuccessForgotPassword, nil))
+}
+
+// Update User Password
+// @Summary      Update user password
+// @Description  Updates the authenticated user's password using OTP and old password verification
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string                          true  "Bearer token"
+// @Param        request        body      controller.UserPasswordUpdateRequest  true  "Password update payload"
+// @Success      200            {object}  helper.Response{data=string} "Password updated successfully"
+// @Failure      400            {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      500            {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/update/password [put]
+func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
+	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
+	if tokenString == "" {
+		return helper.UnauthorizedError(c)
+	}
+
+	token, err := h.jwt.ValidateToken(tokenString)
+	if err != nil {
+		return helper.UnauthorizedError(c)
+	}
+
+	userData := h.jwt.ExtractUserToken(token)
+	email := userData[constant.JWT_EMAIL]
+
+	var UserPasswordUpdateRequest UserPasswordUpdateRequest
+	err = c.Bind(&UserPasswordUpdateRequest)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrUpdateUser.Error(), nil))
+	}
+
+	updateData := users.PasswordUpdate{
+		Email:       email.(string),
+		OldPassword: UserPasswordUpdateRequest.OldPassword,
+		NewPassword: UserPasswordUpdateRequest.NewPassword,
+		OTP:         UserPasswordUpdateRequest.OTP,
+	}
+
+	err = h.userService.UpdatePassword(updateData)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessUpdatePassword, nil))
 }
 
 // Get User Data
@@ -463,6 +632,7 @@ func (h *UserHandler) GetAllUsersForAdmin(c echo.Context) error {
 			AvatarURL:     user.AvatarURL,
 			CreatedAt:     user.CreatedAt.Format("02/01/06"),
 			UpdatedAt:     user.UpdatedAt.Format("02/01/06"),
+
 		})
 	}
 	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, constant.AdminSuccessGetAllUser, metadata, response))
