@@ -46,7 +46,7 @@ func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GECon
 	e.PUT(route.UserUpdateAvatar, uh.UpdateAvatar, echojwt.WithConfig(jwtConfig))
 	e.DELETE(route.UserPath, uh.Delete, echojwt.WithConfig(jwtConfig))
 
-	e.POST(route.UserRequestOTP, uh.RequestPasswordUpdateOTP, echojwt.WithConfig(jwtConfig))
+	e.POST(route.UserRequestUpdateOTP, uh.RequestPasswordUpdateOTP, echojwt.WithConfig(jwtConfig))
 	e.PUT(route.UserUpdatePassword, uh.UpdateUserPassword, echojwt.WithConfig(jwtConfig))
 
 	// Admin

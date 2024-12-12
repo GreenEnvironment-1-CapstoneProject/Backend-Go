@@ -358,6 +358,13 @@ definitions:
       transaction_change:
         $ref: '#/definitions/controller.ChangeResponse'
     type: object
+  controller.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   controller.ForumGetDetailResponse:
     properties:
       author:
@@ -481,7 +488,7 @@ definitions:
         type: string
       price:
         minimum: 0
-        type: number
+        type: integer
       stock:
         minimum: 0
         type: integer
@@ -523,6 +530,13 @@ definitions:
         type: integer
       updated_at:
         type: string
+    type: object
+  controller.ResetPasswordRequest:
+    properties:
+      new_password:
+        type: string
+    required:
+    - new_password
     type: object
   controller.ResponseReviewProduct:
     properties:
@@ -686,6 +700,19 @@ definitions:
       token:
         type: string
     type: object
+  controller.UserPasswordUpdateRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+      otp:
+        type: string
+    required:
+    - new_password
+    - old_password
+    - otp
+    type: object
   controller.UserRegisterRequest:
     properties:
       email:
@@ -732,16 +759,20 @@ definitions:
         type: string
       name:
         type: string
-      password:
-        type: string
       phone:
         type: string
     required:
     - address
     - gender
     - name
-    - password
     - phone
+    type: object
+  controller.UserVerifyRegisterRequest:
+    properties:
+      otp:
+        type: string
+    required:
+    - otp
     type: object
   controller.UserbyAdminRequest:
     properties:
@@ -808,6 +839,13 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  controller.VerifyOTPRequest:
+    properties:
+      otp:
+        type: string
+    required:
+    - otp
     type: object
   greenenvironment_features_challenges_controller.ImpactCategory:
     properties:
@@ -4279,6 +4317,105 @@ paths:
       summary: Delete user account
       tags:
       - Users
+  /users/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends an OTP to the user's email for password reset verification
+      parameters:
+      - description: Forgot password request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP sent successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "404":
+          description: Email not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Request OTP for password reset
+      tags:
+      - Users
+  /users/forgot-password/verify-otp:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the OTP sent to the user's email for password reset
+      parameters:
+      - description: Verify OTP request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP verified successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid OTP
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Verify OTP for password reset
+      tags:
+      - Users
   /users/google-callback:
     get:
       description: Handle the OAuth 2.0 callback from Google and authenticate the
@@ -4433,11 +4570,11 @@ paths:
       summary: Get user data
       tags:
       - Users
-  /users/register:
+  /users/register/request-otp:
     post:
       consumes:
       - application/json
-      description: Create a new user account in the system
+      description: Sends an OTP to the user's email for registration verification
       parameters:
       - description: User registration payload
         in: body
@@ -4449,13 +4586,13 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: OTP sent successfully
           schema:
             allOf:
             - $ref: '#/definitions/helper.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/controller.UserRegisterResponse'
+                  type: string
               type: object
         "400":
           description: Invalid input or validation error
@@ -4475,7 +4612,97 @@ paths:
                 data:
                   type: string
               type: object
-      summary: Register a new user
+      summary: Request OTP for user registration
+      tags:
+      - Users
+  /users/register/verify-otp:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the OTP sent to the user's email and registers the user
+      parameters:
+      - description: User verification payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UserVerifyRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.UserRegisterResponse'
+              type: object
+        "400":
+          description: Invalid OTP or input
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Verify OTP and register user
+      tags:
+      - Users
+  /users/reset-password:
+    put:
+      consumes:
+      - application/json
+      description: Resets the user's password after verifying OTP
+      parameters:
+      - description: Reset password request payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Reset user password
       tags:
       - Users
   /users/update:
@@ -4535,6 +4762,120 @@ paths:
                   type: string
               type: object
       summary: Update user data
+      tags:
+      - Users
+  /users/update/password:
+    put:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's password using OTP and old password
+        verification
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Password update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UserPasswordUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Update user password
+      tags:
+      - Users
+  /users/update/request-otp:
+    post:
+      consumes:
+      - application/json
+      description: Sends an OTP to the authenticated user's email for password update
+        verification
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: OTP sent successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input or validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Request OTP for password update
       tags:
       - Users
 securityDefinitions:

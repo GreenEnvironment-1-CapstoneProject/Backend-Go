@@ -128,7 +128,7 @@ func (h *UserHandler) ForgotPasswordRequest(c echo.Context) error {
 // @Success      200      {object}  helper.Response{data=string} "OTP verified successfully"
 // @Failure      400      {object}  helper.Response{data=string} "Invalid OTP"
 // @Failure      500      {object}  helper.Response{data=string} "Internal server error"
-// @Router       /users/verify-otp [post]
+// @Router       /users/forgot-password/verify-otp [post]
 func (h *UserHandler) VerifyForgotPasswordOTP(c echo.Context) error {
 	var request VerifyOTPRequest
 	if err := c.Bind(&request); err != nil {
@@ -271,7 +271,7 @@ func (h *UserHandler) UpdateUserInfo(c echo.Context) error {
 // @Failure      400            {object}  helper.Response{data=string} "Invalid input or validation error"
 // @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
 // @Failure      500            {object}  helper.Response{data=string} "Internal server error"
-// @Router       /users/request-otp [post]
+// @Router       /users/update/request-otp [post]
 func (h *UserHandler) RequestPasswordUpdateOTP(c echo.Context) error {
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
@@ -306,7 +306,7 @@ func (h *UserHandler) RequestPasswordUpdateOTP(c echo.Context) error {
 // @Failure      400            {object}  helper.Response{data=string} "Invalid input or validation error"
 // @Failure      401            {object}  helper.Response{data=string} "Unauthorized"
 // @Failure      500            {object}  helper.Response{data=string} "Internal server error"
-// @Router       /users/update-password [put]
+// @Router       /users/update/password [put]
 func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 	tokenString := c.Request().Header.Get(constant.HeaderAuthorization)
 	if tokenString == "" {
