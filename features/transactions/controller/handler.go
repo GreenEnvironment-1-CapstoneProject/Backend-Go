@@ -5,6 +5,7 @@ import (
 	"greenenvironment/features/transactions"
 	"greenenvironment/helper"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -42,7 +43,11 @@ func (tc *TransactionController) GetUserTransaction(c echo.Context) error {
 
 	userData := tc.jwtService.ExtractUserToken(token)
 	userId := userData[constant.JWT_ID].(string)
-	transactions, err := tc.transactionService.GetUserTransaction(userId)
+	page, err := strconv.Atoi(c.QueryParam("pages"))
+	if err != nil {
+		page = 1
+	}
+	transactions, totalPage, totalData, err := tc.transactionService.GetUserTransaction(userId, page)
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
@@ -51,7 +56,13 @@ func (tc *TransactionController) GetUserTransaction(c echo.Context) error {
 	for _, transaction := range transactions {
 		response = append(response, new(TransactionUserResponse).FromEntity(transaction))
 	}
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Success get user transaction", response))
+
+	metadata := map[string]interface{}{
+		"TotalTransaction": totalData,
+		"TotalPage":        totalPage,
+		"Page":             page,
+	}
+	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "Success get user transaction", metadata, response))
 
 }
 
@@ -169,7 +180,11 @@ func (tc *TransactionController) GetAllTransaction(c echo.Context) error {
 		return helper.UnauthorizedError(c)
 	}
 
-	transactions, err := tc.transactionService.GetAllTransaction()
+	page, err := strconv.Atoi(c.QueryParam("pages"))
+	if err != nil {
+		page = 1
+	}
+	transactions, totalPage, totalData, err := tc.transactionService.GetAllTransaction(page)
 	if err != nil {
 		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
 	}
@@ -177,7 +192,13 @@ func (tc *TransactionController) GetAllTransaction(c echo.Context) error {
 	for _, transaction := range transactions {
 		response = append(response, new(TransactionAllUserResponses).FromEntity(transaction))
 	}
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Get all Transactions", response))
+
+	metadata := map[string]interface{}{
+		"TotalTransaction": totalData,
+		"TotalPage":        totalPage,
+		"Page":             page,
+	}
+	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "Get all Transactions", metadata, response))
 }
 
 // Get Transaction By ID

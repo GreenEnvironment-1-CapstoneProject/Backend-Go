@@ -18,13 +18,13 @@ func NewTransactionService(transactionRepo transactions.TransactionRepositoryInt
 	return &TransactionService{transactionRepo: transactionRepo, midtransService: midtrans}
 }
 
-func (ts *TransactionService) GetUserTransaction(userId string) ([]transactions.TransactionData, error) {
-	transaction, err := ts.transactionRepo.GetUserTransaction(userId)
+func (ts *TransactionService) GetUserTransaction(userId string, page int) ([]transactions.TransactionData, int, int, error) {
+	transaction, totalPage, totalData, err := ts.transactionRepo.GetUserTransaction(userId, page)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
-	return transaction, nil
+	return transaction, totalPage, totalData, nil
 }
 func (ts *TransactionService) GetTransactionByID(transactionId string) (transactions.TransactionData, error) {
 	transaction, err := ts.transactionRepo.GetTransactionByID(transactionId)
@@ -137,6 +137,6 @@ func (ts *TransactionService) DeleteTransaction(transactionId string) error {
 	}
 	return ts.transactionRepo.DeleteTransaction(transactionId)
 }
-func (ts *TransactionService) GetAllTransaction() ([]transactions.TransactionData, error) {
-	return ts.transactionRepo.GetAllTransaction()
+func (ts *TransactionService) GetAllTransaction(page int) ([]transactions.TransactionData, int, int, error) {
+	return ts.transactionRepo.GetAllTransaction(page)
 }
