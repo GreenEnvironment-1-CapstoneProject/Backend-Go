@@ -147,6 +147,5 @@ func (m *Mailer) Send(to string, code string, subject string) error {
 		log.Printf("smtp error: %s", err)
 		return err
 	}
-	log.Println("Successfully sent to " + to)
 	return nil
 }
