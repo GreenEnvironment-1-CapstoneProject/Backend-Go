@@ -64,7 +64,7 @@ func (pc *ProductController) Create(c echo.Context) error {
 	productData := products.Product{
 		Name:        productInput.Name,
 		Description: productInput.Description,
-		Price:       productInput.Price,
+		Price:       float64(productInput.Price),
 		Coin:        productInput.Coin,
 		Stock:       productInput.Stock,
 		Category:    productInput.CategoryProduct,
@@ -260,7 +260,7 @@ func (pc *ProductController) Update(c echo.Context) error {
 		ID:          productID,
 		Name:        productInput.Name,
 		Description: productInput.Description,
-		Price:       productInput.Price,
+		Price:       float64(productInput.Price),
 		Coin:        productInput.Coin,
 		Stock:       productInput.Stock,
 		Category:    productInput.CategoryProduct,

@@ -54,7 +54,7 @@ type TransactionData struct {
 }
 
 type TransactionRepositoryInterface interface {
-	GetUserTransaction(userId string) ([]TransactionData, error)
+	GetUserTransaction(userId string, page int) ([]TransactionData, int, int, error)
 	GetTransactionByID(transactionId string) (TransactionData, error)
 	CreateTransactions(transaction Transaction) error
 	DeleteTransaction(transactionId string) error
@@ -62,17 +62,17 @@ type TransactionRepositoryInterface interface {
 	GetUserCoin(userId string) (int, error)
 	DecreaseUserCoin(userId string, coin int, total float64) (float64, int, error)
 	CreateTransactionItems(tansactionItems []TransactionItems) error
-	GetAllTransaction() ([]TransactionData, error)
+	GetAllTransaction(page int) ([]TransactionData, int, int, error)
 	GetDataCartTransaction(cartIds []string, userId string) ([]cart.Cart, error)
 	UpdateStockByProductID(productId string, stock int) error
 }
 
 type TransactionServiceInterface interface {
-	GetUserTransaction(userId string) ([]TransactionData, error)
+	GetUserTransaction(userId string, page int) ([]TransactionData, int, int, error)
 	GetTransactionByID(transactionId string) (TransactionData, error)
 	CreateTransaction(transaction CreateTransaction) (Transaction, error)
 	DeleteTransaction(transactionId string) error
-	GetAllTransaction() ([]TransactionData, error)
+	GetAllTransaction(page int) ([]TransactionData, int, int, error)
 }
 
 type TransactionControllerInterface interface {
