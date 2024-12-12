@@ -902,22 +902,26 @@ func (h *ChallengeHandler) GetChallengeDetailsWithConfirmations(c echo.Context) 
 			Exp:          details.ChallengeLog.Challenge.Exp,
 			Coin:         details.ChallengeLog.Challenge.Coin,
 		},
-		ChallengeConfirmation: ChallengeConfirmationResponse{
-			ID:     details.Confirmations.ID,
-			UserID: details.Confirmations.UserID,
-			Status: details.Confirmations.Status,
-			ChallengeTask: ChallengeTaskResponse{
-				ID:              details.Confirmations.ChallengeTask.ID,
-				ChallengeID:     details.Confirmations.ChallengeTask.ChallengeID,
-				Name:            details.Confirmations.ChallengeTask.Name,
-				DayNumber:       details.Confirmations.ChallengeTask.DayNumber,
-				TaskDescription: details.Confirmations.ChallengeTask.TaskDescription,
-			},
-			SubmissionDate: details.Confirmations.SubmissionDate,
-		},
+		ChallengeConfirmation: []ChallengeConfirmationResponse{},
 	}
 
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Challenge details retrieved successfully", response))
+	for _, confirmation := range details.Confirmations {
+		response.ChallengeConfirmation = append(response.ChallengeConfirmation, ChallengeConfirmationResponse{
+			ID:     confirmation.ID,
+			UserID: confirmation.UserID,
+			Status: confirmation.Status,
+			ChallengeTask: ChallengeTaskResponse{
+				ID:              confirmation.ChallengeTask.ID,
+				ChallengeID:     confirmation.ChallengeTask.ChallengeID,
+				Name:            confirmation.ChallengeTask.Name,
+				DayNumber:       confirmation.ChallengeTask.DayNumber,
+				TaskDescription: confirmation.ChallengeTask.TaskDescription,
+			},
+			SubmissionDate: confirmation.SubmissionDate,
+		})
+	}
+	
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Challenge details retrieved successfully", response))	
 }
 
 // GetChallengeDetails retrieves challenge details including tasks

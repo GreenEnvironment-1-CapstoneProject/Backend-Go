@@ -350,36 +350,41 @@ func (cd *ChallengeData) GetChallengeLogByChallengeIDAndUserID(challengeID, user
 	}, nil
 }
 
-func (cd *ChallengeData) GetConfirmationsByChallengeID(challengeID, userID string) (challenges.ChallengeConfirmation, error) {
-	var confirmation ChallengeConfirmation
+func (cd *ChallengeData) GetConfirmationsByChallengeID(challengeID, userID string) ([]challenges.ChallengeConfirmation, error) {
+	var confirmations []ChallengeConfirmation
 
 	err := cd.DB.Preload("ChallengeTask").
 		Where("challenge_tasks.challenge_id = ? AND challenge_confirmations.user_id = ?", challengeID, userID).
 		Joins("JOIN challenge_tasks ON challenge_tasks.id = challenge_confirmations.challenge_task_id").
-		First(&confirmation).Error
+		Find(&confirmations).Error
 
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return challenges.ChallengeConfirmation{}, constant.ErrChallengeConfirmationNotFound
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, constant.ErrChallengeConfirmationNotFound
+			}
+			return nil, err
 		}
-		return challenges.ChallengeConfirmation{}, err
+
+	var result []challenges.ChallengeConfirmation
+	for _, confirmation := range confirmations {
+		result = append(result, challenges.ChallengeConfirmation{
+			ID:              confirmation.ID,
+			ChallengeTaskID: confirmation.ChallengeTaskID,
+			UserID:          confirmation.UserID,
+			Status:          confirmation.Status,
+			ChallengeImg:    confirmation.ChallengeImg,
+			SubmissionDate:  confirmation.SubmissionDate,
+			ChallengeTask: challenges.ChallengeTask{
+				ID:              confirmation.ChallengeTask.ID,
+				ChallengeID:     confirmation.ChallengeTask.ChallengeID,
+				Name:            confirmation.ChallengeTask.Name,
+				DayNumber:       confirmation.ChallengeTask.DayNumber,
+				TaskDescription: confirmation.ChallengeTask.TaskDescription,
+			},
+		})
 	}
 
-	return challenges.ChallengeConfirmation{
-		ID:              confirmation.ID,
-		ChallengeTaskID: confirmation.ChallengeTaskID,
-		UserID:          confirmation.UserID,
-		Status:          confirmation.Status,
-		ChallengeImg:    confirmation.ChallengeImg,
-		SubmissionDate:  confirmation.SubmissionDate,
-		ChallengeTask: challenges.ChallengeTask{
-			ID:              confirmation.ChallengeTask.ID,
-			ChallengeID:     confirmation.ChallengeTask.ChallengeID,
-			Name:            confirmation.ChallengeTask.Name,
-			DayNumber:       confirmation.ChallengeTask.DayNumber,
-			TaskDescription: confirmation.ChallengeTask.TaskDescription,
-		},
-	}, nil
+	return result, nil
 }
 
 func (cd *ChallengeData) UpdateChallengeLog(log challenges.ChallengeLog) error {
@@ -615,6 +620,7 @@ func (cd *ChallengeData) GetTasksByChallengeIDforUser(challengeID string) ([]cha
 	for _, task := range tasks {
 		result = append(result, challenges.ChallengeTask{
 			ID:              task.ID,
+			Name:            task.Name,
 			ChallengeID:     task.ChallengeID,
 			DayNumber:       task.DayNumber,
 			TaskDescription: task.TaskDescription,
