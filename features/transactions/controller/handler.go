@@ -30,7 +30,7 @@ func NewTransactionController(s transactions.TransactionServiceInterface, j help
 // @Accept       json
 // @Produce      json
 // @Param        Authorization  header    string  true   "Bearer Token"
-// @Success      200  {object}  helper.Response{data=[]TransactionUserResponse} "Transactions retrieved successfully"
+// @Success      200  {object}  helper.MetadataResponse{data=[]TransactionUserResponse} "Transactions retrieved successfully"
 // @Failure      401  {object}  helper.Response{data=string} "Unauthorized"
 // @Failure      500  {object}  helper.Response{data=string} "Internal server error"
 // @Router       /transactions [get]
@@ -163,7 +163,7 @@ func (tc *TransactionController) DeleteTransaction(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        Authorization  header    string  true   "Bearer Token"
-// @Success      200  {object}  helper.Response{data=[]TransactionAllUserResponses} "Transactions retrieved successfully"
+// @Success      200  {object}  helper.MetadataResponse{data=[]TransactionAllUserResponses} "Transactions retrieved successfully"
 // @Failure      401  {object}  helper.Response{data=string} "Unauthorized"
 // @Failure      500  {object}  helper.Response{data=string} "Internal server error"
 // @Router       /admin/transactions [get]
