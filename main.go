@@ -81,6 +81,7 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
+
 func main() {
 	cfg := configs.InitConfig()
 	db, err := databases.InitDB(*cfg)

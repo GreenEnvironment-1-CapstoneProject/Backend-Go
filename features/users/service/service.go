@@ -1,16 +1,13 @@
 package service
 
 import (
-	"fmt"
 	"greenenvironment/configs"
 	"greenenvironment/constant"
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
-	"golang.org/x/exp/rand"
 	"gorm.io/gorm"
 )
 
@@ -48,8 +45,8 @@ func (s *UserService) RequestRegisterOTP(name, email, password string) error {
 		return err
 	}
 
-	otp := fmt.Sprintf("%06d", rand.Intn(1000000))
-	expiration := time.Now().Add(5 * time.Minute)
+	otp := helper.NewOTP().GenerateOTP()
+	expiration := helper.NewOTP().OTPExpiration(5)
 	err = s.userRepo.SaveOTP(email, otp, expiration)
 	if err != nil {
 		return err
@@ -102,6 +99,63 @@ func (s *UserService) VerifyRegisterOTP(otp string) (users.User, error) {
 	}
 
 	return createdUser, nil
+}
+
+func (s *UserService) IsEmailExist(email string) bool {
+	return s.userRepo.IsEmailExist(email)
+}
+
+func (s *UserService) RequestPasswordResetOTP(email string) error {
+	otp := helper.NewOTP().GenerateOTP()
+	expiration := helper.NewOTP().OTPExpiration(5)
+
+	err := s.userRepo.SaveOTP(email, otp, expiration)
+	if err != nil {
+		return err
+	}
+
+	smtpConfig := configs.InitConfig().SMTP
+	subject := "Your OTP for Password Reset"
+	body := "Your OTP is: " + otp + ". It expires in 5 minutes."
+
+	return helper.SendEmail(smtpConfig, email, subject, body)
+}
+
+func (s *UserService) VerifyPasswordResetOTP(otp string) error {
+	if otp == "" {
+		return constant.ErrInvalidInput
+	}
+
+	isValidOTP := s.userRepo.ValidateOTPByOTP(otp)
+	if !isValidOTP {
+		return constant.ErrOTPNotValid
+	}
+
+	return nil
+}
+
+func (s *UserService) ResetPassword(newPassword string) error {
+	email, err := s.userRepo.GetEmailByLatestOTP()
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := helper.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.UpdatePassword(email, hashedPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.DeleteVerifyOTPByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) Login(user users.User) (users.UserLogin, error) {
@@ -159,8 +213,8 @@ func (s *UserService) RequestPasswordUpdateOTP(email string) error {
 		return constant.ErrEmptyEmail
 	}
 
-	otp := fmt.Sprintf("%06d", rand.Intn(1000000))
-	expiration := time.Now().Add(5 * time.Minute)
+	otp := helper.NewOTP().GenerateOTP()
+	expiration := helper.NewOTP().OTPExpiration(5)
 
 	err := s.userRepo.SaveOTP(email, otp, expiration)
 	if err != nil {
@@ -200,6 +254,11 @@ func (s *UserService) UpdatePassword(update users.PasswordUpdate) error {
 	}
 
 	err = s.userRepo.UpdatePassword(update.Email, hashedPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.DeleteVerifyOTP(update.OTP)
 	if err != nil {
 		return err
 	}

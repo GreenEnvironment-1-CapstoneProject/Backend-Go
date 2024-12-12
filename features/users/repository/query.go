@@ -79,6 +79,28 @@ func (r *UserData) DeleteVerifyOTP(otp string) error {
 	return r.DB.Where("otp = ?", otp).Delete(&VerifyOTP{}).Error
 }
 
+func (u *UserData) ValidateOTPByOTP(otp string) bool {
+	var count int64
+	u.DB.Model(&VerifyOTP{}).Where("otp = ? AND expired_at > ?", otp, time.Now()).Count(&count)
+	return count > 0
+}
+
+func (u *UserData) GetEmailByLatestOTP() (string, error) {
+	var otpData VerifyOTP
+	err := u.DB.Order("created_at DESC").First(&otpData).Error
+	if err != nil {
+			return "", err
+	}
+	return otpData.Email, nil
+}
+
+func (u *UserData) DeleteVerifyOTPByEmail(email string) error {
+	if err := u.DB.Where("email = ?", email).Delete(&VerifyOTP{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *UserData) Login(user users.User) (users.User, error) {
 	var UserLoginData User
 	result := u.DB.Where("email = ?", user.Email).First(&UserLoginData)

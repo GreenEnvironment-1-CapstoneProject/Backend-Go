@@ -29,6 +29,10 @@ func RouteUser(e *echo.Echo, uh users.UserControllerInterface, cfg configs.GECon
 	e.POST(route.UserVerifyRegisterOTP, uh.VerifyRegisterOTP)
 	e.POST(route.UserLogin, uh.Login)
 
+	e.POST(route.UserForgotPassword, uh.ForgotPasswordRequest)
+	e.POST(route.UserVerifyForgotOTP, uh.VerifyForgotPasswordOTP)
+	e.PUT(route.UserResetPassword, uh.ResetPassword)
+
 	e.GET(route.UserLoginGoogle, uh.GoogleLogin)
 	e.GET(route.UserGoogleCallback, uh.GoogleCallback)
 

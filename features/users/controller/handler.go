@@ -88,6 +88,86 @@ func (h *UserHandler) VerifyRegisterOTP(c echo.Context) error {
 	return c.JSON(http.StatusCreated, helper.FormatResponse(true, "User registered successfully", user))
 }
 
+// Forgot Password Request
+// @Summary      Request OTP for password reset
+// @Description  Sends an OTP to the user's email for password reset verification
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.ForgotPasswordRequest  true  "Forgot password request payload"
+// @Success      200      {object}  helper.Response{data=string} "OTP sent successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      404      {object}  helper.Response{data=string} "Email not found"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/forgot-password [post]
+func (h *UserHandler) ForgotPasswordRequest(c echo.Context) error {
+	var request ForgotPasswordRequest
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrInvalidInput.Error(), nil))
+	}
+
+	if !h.userService.IsEmailExist(request.Email) {
+		return c.JSON(http.StatusNotFound, helper.FormatResponse(false, constant.ErrEmailNotFound.Error(), nil))
+	}
+
+	err := h.userService.RequestPasswordResetOTP(request.Email)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessForgotPassword, nil))
+}
+
+// Verify Forgot Password OTP
+// @Summary      Verify OTP for password reset
+// @Description  Verifies the OTP sent to the user's email for password reset
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.VerifyOTPRequest  true  "Verify OTP request payload"
+// @Success      200      {object}  helper.Response{data=string} "OTP verified successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid OTP"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/verify-otp [post]
+func (h *UserHandler) VerifyForgotPasswordOTP(c echo.Context) error {
+	var request VerifyOTPRequest
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrInvalidInput.Error(), nil))
+	}
+
+	err := h.userService.VerifyPasswordResetOTP(request.OTP)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessOTPValidation, nil))
+}
+
+// Reset Password
+// @Summary      Reset user password
+// @Description  Resets the user's password after verifying OTP
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      controller.ResetPasswordRequest  true  "Reset password request payload"
+// @Success      200      {object}  helper.Response{data=string} "Password reset successfully"
+// @Failure      400      {object}  helper.Response{data=string} "Invalid input or validation error"
+// @Failure      500      {object}  helper.Response{data=string} "Internal server error"
+// @Router       /users/reset-password [put]
+func (h *UserHandler) ResetPassword(c echo.Context) error {
+	var request ResetPasswordRequest
+	if err := c.Bind(&request); err != nil {
+			return c.JSON(http.StatusBadRequest, helper.FormatResponse(false, constant.ErrInvalidInput.Error(), nil))
+	}
+
+	err := h.userService.ResetPassword(request.NewPassword)
+	if err != nil {
+			return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, constant.UserSuccessResetPassword, nil))
+}
+
 // Login User
 // @Summary      User login
 // @Description  Authenticate user and generate JWT token

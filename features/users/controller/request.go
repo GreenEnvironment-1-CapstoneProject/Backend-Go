@@ -7,7 +7,7 @@ type UserRegisterRequest struct {
 }
 
 type UserVerifyRegisterRequest struct {
-	OTP      string `json:"otp" validate:"required"`
+	OTP string `json:"otp" validate:"required"`
 }
 
 type UserLoginRequest struct {
@@ -26,6 +26,18 @@ type UserPasswordUpdateRequest struct {
 	OldPassword string `json:"old_password" validate:"required"`
 	NewPassword string `json:"new_password" validate:"required"`
 	OTP         string `json:"otp" validate:"required"`
+}
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type VerifyOTPRequest struct {
+	OTP string `json:"otp" validate:"required"`
+}
+
+type ResetPasswordRequest struct {
+	NewPassword string `json:"new_password" validate:"required"`
 }
 
 // Admin

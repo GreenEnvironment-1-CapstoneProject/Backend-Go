@@ -86,9 +86,13 @@ type UserRepoInterface interface {
 	DeleteTemporaryUserByEmail(email string) error
 	GetVerifyOTP(otp string) (VerifyOTP, error)
 	DeleteVerifyOTP(otp string) error
+	ValidateOTPByOTP(otp string) bool
+	GetEmailByLatestOTP() (string, error)
+	DeleteVerifyOTPByEmail(email string) error
 	Login(User) (User, error)
 	UpdateUserInfo(user UserUpdate) (User, error)
 	Delete(User) error
+	IsEmailExist(email string) bool
 	GetUserByID(id string) (User, error)
 	GetUserByEmail(email string) (User, error)
 	UpdateAvatar(userID, avatarURL string) error
@@ -108,6 +112,10 @@ type UserRepoInterface interface {
 type UserServiceInterface interface {
 	RequestRegisterOTP(name, email, password string) error
 	VerifyRegisterOTP(otp string) (User, error)
+	IsEmailExist(email string) bool
+	RequestPasswordResetOTP(email string) error
+	VerifyPasswordResetOTP(otp string) error
+	ResetPassword(newPassword string) error
 	Login(User) (UserLogin, error)
 	RegisterOrLoginGoogle(User) (User, error)
 	UpdateUserInfo(user UserUpdate) error
@@ -128,6 +136,9 @@ type UserServiceInterface interface {
 type UserControllerInterface interface {
 	RequestRegisterOTP(c echo.Context) error
 	VerifyRegisterOTP(c echo.Context) error
+	ForgotPasswordRequest(c echo.Context) error
+	VerifyForgotPasswordOTP(c echo.Context) error
+	ResetPassword(c echo.Context) error
 	Login(c echo.Context) error
 	GoogleLogin(c echo.Context) error
 	GoogleCallback(c echo.Context) error
