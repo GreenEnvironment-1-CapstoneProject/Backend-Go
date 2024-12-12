@@ -1,6 +1,9 @@
 package controller
 
-import "greenenvironment/features/challenges"
+import (
+	"greenenvironment/features/challenges"
+	"time"
+)
 
 type ChallengeResponse struct {
 	ID               string                      `json:"id"`
@@ -14,6 +17,25 @@ type ChallengeResponse struct {
 	Coin             int                         `json:"coin"`
 	ImpactCategories []ChallengeImpactCategories `json:"categories"`
 	DeletedAt        *string                     `json:"deleted_at"`
+}
+
+type ChallengeLogResponse struct {
+	ID                      string                        `json:"id"`
+	Challenge               ChallengeResponse             `json:"challenge"`
+	UserID                  string                        `json:"user_id"`
+	RewardsGiven            bool                          `json:"rewards_given"`
+	Status                  string                        `json:"status"`
+	StartDate               time.Time                     `json:"start_date"`
+	Feed                    string                        `json:"feed"`
+	ChallengeConfirmation   ChallengeConfirmationResponse `json:"challenge_confirmation"`
+}
+
+type ChallengeConfirmationResponse struct {
+	ID              string                `json:"id"`
+	ChallengeTask   ChallengeTaskResponse `json:"challenge_task"`
+	UserID          string                `json:"user_id"`
+	Status          string                `json:"status"`
+	SubmissionDate  time.Time             `json:"submission_date"`
 }
 
 type ChallengeImpactCategories struct {

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"greenenvironment/constant"
 	cart "greenenvironment/features/cart/repository"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/products"
@@ -20,16 +21,28 @@ func NewTransactionRepository(db *gorm.DB) transactions.TransactionRepositoryInt
 	return &TransactionRepository{DB: db}
 }
 
-func (tr *TransactionRepository) GetUserTransaction(userId string) ([]transactions.TransactionData, error) {
+func (tr *TransactionRepository) GetUserTransaction(userId string, page int) ([]transactions.TransactionData, int, int, error) {
 	var transactionsModel []Transaction
-	err := tr.DB.Model(&Transaction{}).Preload("User").Preload("TransactionItems").Preload("TransactionItems.Product").
+	var totalTransactionData int64
+
+	err := tr.DB.Model(&Transaction{}).Where("user_id = ? AND deleted_at IS NULL", userId).Count(&totalTransactionData).Error
+	if err != nil {
+		return nil, 0, 0, constant.ErrTransactionEmpty
+	}
+
+	transactionDataPerPage := 20
+	totalPages := int((totalTransactionData + int64(transactionDataPerPage) - 1) / int64(transactionDataPerPage))
+
+	err = tr.DB.Model(&Transaction{}).Preload("User").Preload("TransactionItems").Preload("TransactionItems.Product").
 		Preload("TransactionItems.Product.Images").
 		Preload("TransactionItems.Product.ImpactCategories").
 		Preload("TransactionItems.Product.ImpactCategories.ImpactCategory").Where("user_id = ?", userId).
+		Offset((page - 1) * transactionDataPerPage).Limit(transactionDataPerPage).
+		Order("created_at DESC").
 		Find(&transactionsModel).Error
 
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	var result []transactions.TransactionData
@@ -102,7 +115,7 @@ func (tr *TransactionRepository) GetUserTransaction(userId string) ([]transactio
 		})
 	}
 
-	return result, nil
+	return result, totalPages, int(totalTransactionData), nil
 }
 func (tr *TransactionRepository) GetTransactionByID(transactionId string) (transactions.TransactionData, error) {
 	var transactionsData Transaction
@@ -282,10 +295,20 @@ func (tr *TransactionRepository) CreateTransactionItems(tansactionItems []transa
 	return nil
 }
 
-func (tr *TransactionRepository) GetAllTransaction() ([]transactions.TransactionData, error) {
+func (tr *TransactionRepository) GetAllTransaction(page int) ([]transactions.TransactionData, int, int, error) {
 	var transactionsData []Transaction
 
-	err := tr.DB.Model(&Transaction{}).Preload("User").
+	var totalTransactionData int64
+
+	err := tr.DB.Model(&Transaction{}).Where("deleted_at IS NULL").Count(&totalTransactionData).Error
+	if err != nil {
+		return nil, 0, 0, constant.ErrTransactionEmpty
+	}
+
+	transactionDataPerPage := 20
+	totalPages := int((totalTransactionData + int64(transactionDataPerPage) - 1) / int64(transactionDataPerPage))
+
+	err = tr.DB.Model(&Transaction{}).Preload("User").
 		Preload("TransactionItems").
 		Preload("TransactionItems.Product").
 		Preload("TransactionItems.Product.Images").
@@ -295,15 +318,15 @@ func (tr *TransactionRepository) GetAllTransaction() ([]transactions.Transaction
 		Find(&transactionsData).Error
 
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	var result []transactions.TransactionData
 	for _, txn := range transactionsData {
 		var txnItems []transactions.TransactionItems
-		var images []products.ProductImage
 		var impactCategories []products.ProductImpactCategory
 		for _, item := range txn.TransactionItems {
+			var images []products.ProductImage
 			for _, img := range item.Product.Images {
 				images = append(images, products.ProductImage{
 					ID:        img.ID,
@@ -368,7 +391,7 @@ func (tr *TransactionRepository) GetAllTransaction() ([]transactions.Transaction
 		})
 	}
 
-	return result, nil
+	return result, totalPages, int(totalTransactionData), nil
 }
 
 func (tr *TransactionRepository) GetDataCartTransaction(cartIds []string, userId string) ([]cart.Cart, error) {

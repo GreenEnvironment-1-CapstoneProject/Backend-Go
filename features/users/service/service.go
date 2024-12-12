@@ -1,11 +1,13 @@
 package service
 
 import (
+	"greenenvironment/configs"
 	"greenenvironment/constant"
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
 	"strings"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,21 +23,140 @@ func NewUserService(data users.UserRepoInterface, jwt helper.JWTInterface) users
 	}
 }
 
-func (s *UserService) Register(user users.User) (users.User, error) {
-	hashedPassword, err := helper.HashPassword(user.Password)
+func (s *UserService) RequestRegisterOTP(name, email, password string) error {
+	if email == "" || name == "" || password == "" {
+		return constant.ErrInvalidInput
+	}
+
+	hashedPassword, err := helper.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	tempUser := users.TemporaryUser{
+		ID:       uuid.New().String(),
+		Name:     name,
+		Email:    email,
+		Password: hashedPassword,
+	}
+
+	err = s.userRepo.SaveTemporaryUser(tempUser)
+	if err != nil {
+		return err
+	}
+
+	otp := helper.NewOTP().GenerateOTP()
+	expiration := helper.NewOTP().OTPExpiration(5)
+	err = s.userRepo.SaveOTP(email, otp, expiration)
+	if err != nil {
+		return err
+	}
+
+	smtpConfig := configs.InitConfig().SMTP
+	otpCode := otp
+	subject := "Register Account"
+
+	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
+}
+
+func (s *UserService) VerifyRegisterOTP(otp string) (users.User, error) {
+	if otp == "" {
+		return users.User{}, constant.ErrInvalidInput
+	}
+
+	verifyData, err := s.userRepo.GetVerifyOTP(otp)
+	if err != nil {
+		return users.User{}, constant.ErrOTPNotValid
+	}
+
+	tempUser, err := s.userRepo.GetTemporaryUserByEmail(verifyData.Email)
 	if err != nil {
 		return users.User{}, err
 	}
-	user.Password = hashedPassword
 
-	user.Username = "user_" + helper.GenerateRandomString(8)
+	username := "user_" + helper.GenerateRandomString(8)
 
-	createdUser, err := s.userRepo.Register(user)
+	newUser := users.User{
+		ID:       tempUser.ID,
+		Username: username,
+		Name:     tempUser.Name,
+		Email:    tempUser.Email,
+		Password: tempUser.Password,
+	}
+
+	createdUser, err := s.userRepo.Register(newUser)
+	if err != nil {
+		return users.User{}, err
+	}
+
+	err = s.userRepo.DeleteTemporaryUserByEmail(tempUser.Email)
+	if err != nil {
+		return users.User{}, err
+	}
+
+	err = s.userRepo.DeleteVerifyOTP(otp)
 	if err != nil {
 		return users.User{}, err
 	}
 
 	return createdUser, nil
+}
+
+func (s *UserService) IsEmailExist(email string) bool {
+	return s.userRepo.IsEmailExist(email)
+}
+
+func (s *UserService) RequestPasswordResetOTP(email string) error {
+	otp := helper.NewOTP().GenerateOTP()
+	expiration := helper.NewOTP().OTPExpiration(5)
+
+	err := s.userRepo.SaveOTP(email, otp, expiration)
+	if err != nil {
+		return err
+	}
+
+	smtpConfig := configs.InitConfig().SMTP
+	otpCode := otp
+	subject := "Reset Password"
+
+	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
+}
+
+func (s *UserService) VerifyPasswordResetOTP(otp string) error {
+	if otp == "" {
+		return constant.ErrInvalidInput
+	}
+
+	isValidOTP := s.userRepo.ValidateOTPByOTP(otp)
+	if !isValidOTP {
+		return constant.ErrOTPNotValid
+	}
+
+	return nil
+}
+
+func (s *UserService) ResetPassword(newPassword string) error {
+	email, err := s.userRepo.GetEmailByLatestOTP()
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := helper.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.UpdatePassword(email, hashedPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.DeleteVerifyOTPByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) Login(user users.User) (users.UserLogin, error) {
@@ -65,7 +186,8 @@ func (s *UserService) Login(user users.User) (users.UserLogin, error) {
 	return UserLoginData, nil
 }
 
-func (s *UserService) Update(user users.UserUpdate) error {
+
+func (s *UserService) UpdateUserInfo(user users.UserUpdate) error {
 	if user.ID == "" {
 		return constant.ErrUpdateUser
 	}
@@ -79,15 +201,65 @@ func (s *UserService) Update(user users.UserUpdate) error {
 		user.Phone = trimmedPhone
 	}
 
-	if user.Password != "" {
-		hashedPassword, err := helper.HashPassword(user.Password)
-		if err != nil {
-			return err
-		}
-		user.Password = hashedPassword
+	_, err := s.userRepo.UpdateUserInfo(user)
+	if err != nil {
+		return err
 	}
 
-	_, err := s.userRepo.Update(user)
+	return nil
+}
+
+func (s *UserService) RequestPasswordUpdateOTP(email string) error {
+	if email == "" {
+		return constant.ErrEmptyEmail
+	}
+
+	otp := helper.NewOTP().GenerateOTP()
+	expiration := helper.NewOTP().OTPExpiration(5)
+
+	err := s.userRepo.SaveOTP(email, otp, expiration)
+	if err != nil {
+		return err
+	}
+
+	smtpConfig := configs.InitConfig().SMTP
+	otpCode := otp
+	subject := "Update Password"
+
+	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
+}
+
+func (s *UserService) UpdatePassword(update users.PasswordUpdate) error {
+	if update.Email == "" || update.OTP == "" || update.OldPassword == "" || update.NewPassword == "" {
+		return constant.ErrInvalidInput
+	}
+
+	isValidOTP := s.userRepo.ValidateOTP(update.Email, update.OTP)
+	if !isValidOTP {
+		return constant.ErrOTPNotValid
+	}
+
+	existingUser, err := s.userRepo.GetUserByEmail(update.Email)
+	if err != nil {
+		return err
+	}
+
+	isOldPasswordValid := helper.CheckPasswordHash(update.OldPassword, existingUser.Password)
+	if !isOldPasswordValid {
+		return constant.ErrOldPasswordMismatch
+	}
+
+	hashedPassword, err := helper.HashPassword(update.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.UpdatePassword(update.Email, hashedPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepo.DeleteVerifyOTP(update.OTP)
 	if err != nil {
 		return err
 	}
@@ -143,12 +315,8 @@ func (s *UserService) GetUserByIDForAdmin(id string) (users.User, error) {
 	return s.userRepo.GetUserByIDForAdmin(id)
 }
 
-func (s *UserService) GetAllUsersForAdmin() ([]users.User, error) {
-	return s.userRepo.GetAllUsersForAdmin()
-}
-
-func (s *UserService) GetAllByPageForAdmin(page int) ([]users.User, int, error) {
-	return s.userRepo.GetAllByPageForAdmin(page)
+func (s *UserService) GetAllByPageForAdmin(page int, limit int) ([]users.User, int, error) {
+	return s.userRepo.GetAllByPageForAdmin(page, limit)
 }
 
 func (s *UserService) UpdateUserForAdmin(user users.UpdateUserByAdmin) error {
