@@ -100,7 +100,7 @@ func (m *Mailer) Send(to string, code string, subject string) error {
                             <td style="width: 16.66%; text-align: center"><div style="border: 1px solid #2e7d32; padding: 10px; font-size: 24px; font-weight: bold">` + string(code[5]) + `</div></td>
                         </tr>
                     </table>
-                    <p style="margin: 0 0 20px 0">This passcode will only be valid for the next 2 minutes. If the passcode does not work, you can use this login verification link:</p>
+                    <p style="margin: 0 0 20px 0">This passcode will only be valid for the next 5 minutes.</p>
                     <br />
                     <br />
                     <p style="margin: 20px 0 0 0">Thank you,</p>
