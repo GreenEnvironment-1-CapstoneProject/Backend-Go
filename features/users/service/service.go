@@ -53,9 +53,10 @@ func (s *UserService) RequestRegisterOTP(name, email, password string) error {
 	}
 
 	smtpConfig := configs.InitConfig().SMTP
-	subject := "Your OTP for Registration"
-	body := "Your OTP is: " + otp + ". It expires in 5 minutes."
-	return helper.SendEmail(smtpConfig, email, subject, body)
+	otpCode := otp
+	subject := "Register Account"
+
+	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
 }
 
 func (s *UserService) VerifyRegisterOTP(otp string) (users.User, error) {
@@ -115,10 +116,10 @@ func (s *UserService) RequestPasswordResetOTP(email string) error {
 	}
 
 	smtpConfig := configs.InitConfig().SMTP
-	subject := "Your OTP for Password Reset"
-	body := "Your OTP is: " + otp + ". It expires in 5 minutes."
+	otpCode := otp
+	subject := "Reset Password"
 
-	return helper.SendEmail(smtpConfig, email, subject, body)
+	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
 }
 
 func (s *UserService) VerifyPasswordResetOTP(otp string) error {
@@ -222,10 +223,10 @@ func (s *UserService) RequestPasswordUpdateOTP(email string) error {
 	}
 
 	smtpConfig := configs.InitConfig().SMTP
-	subject := "Your OTP for Password Update"
-	body := "Your OTP is: " + otp + ". It expires in 5 minutes."
+	otpCode := otp
+	subject := "Update Password"
 
-	return helper.SendEmail(smtpConfig, email, subject, body)
+	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
 }
 
 func (s *UserService) UpdatePassword(update users.PasswordUpdate) error {
