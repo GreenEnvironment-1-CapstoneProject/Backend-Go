@@ -74,7 +74,7 @@ type ChallengeConfirmation struct {
 
 type ChallengeLogDetails struct {
 	ChallengeLog  ChallengeLog
-	Confirmations ChallengeConfirmation
+	Confirmations []ChallengeConfirmation
 }
 
 type ChallengeDetails struct {
@@ -117,7 +117,7 @@ type ChallengeRepoInterface interface {
 	UpdateChallengeConfirmation(ChallengeConfirmation) error
 	GetChallengeTaskByID(taskID string) (ChallengeTask, error)
 	GetChallengeLogByChallengeIDAndUserID(challengeID, userID string) (ChallengeLog, error)
-	GetConfirmationsByChallengeID(challengeID, userID string) (ChallengeConfirmation, error)
+	GetConfirmationsByChallengeID(challengeID, userID string) ([]ChallengeConfirmation, error)
 	UpdateChallengeLog(log ChallengeLog) error
 	UpdateTaskAndChallengeStatus() error
 
