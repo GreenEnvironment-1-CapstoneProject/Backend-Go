@@ -27,7 +27,7 @@ type ChallengeLogResponse struct {
 	Status                  string                        `json:"status"`
 	StartDate               time.Time                     `json:"start_date"`
 	Feed                    string                        `json:"feed"`
-	ChallengeConfirmation   ChallengeConfirmationResponse `json:"challenge_confirmation"`
+	ChallengeConfirmation   []ChallengeConfirmationResponse `json:"challenge_confirmation"`
 }
 
 type ChallengeConfirmationResponse struct {

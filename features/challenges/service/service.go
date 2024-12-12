@@ -232,7 +232,20 @@ func (cs *ChallengeService) CheckAndUpdateChallengeLogStatusByConfirmation(confi
 		return err
 	}
 
-	if confirmation.Status == "Done" {
+	confirmations, err := cs.challengeRepo.GetConfirmationsByChallengeID(task.ChallengeID, userID)
+	if err != nil {
+		return err
+	}
+
+	allDone := true
+	for _, conf := range confirmations {
+		if conf.Status != "Done" {
+			allDone = false
+			break
+		}
+	}
+
+	if allDone {
 		challengeLog.Status = "Done"
 		err := cs.challengeRepo.UpdateChallengeLog(challengeLog)
 		if err != nil {
@@ -300,8 +313,8 @@ func (cs *ChallengeService) GetChallengeDetailsWithConfirmations(userID, challen
 	}
 
 	result := challenges.ChallengeLogDetails{
-		ChallengeLog:   challengeLog,
-		Confirmations:  confirmations,
+		ChallengeLog:  challengeLog,
+		Confirmations: confirmations,
 	}
 
 	return result, nil
