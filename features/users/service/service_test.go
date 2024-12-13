@@ -8,8 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type MockUserData struct {
@@ -141,559 +143,719 @@ func (m *MockUserData) DeleteUserForAdmin(userID string) error {
 	return args.Error(0)
 }
 
+type MockHasher struct {
+	mock.Mock
+}
+
+func (m *MockHasher) HashPassword(password string) (string, error) {
+	args := m.Called(password)
+	if args.Get(0) == nil {
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		return string(hashed), nil
+	}
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockHasher) CheckPasswordHash(password, hash string) bool {
+	args := m.Called(password, hash)
+	return args.Bool(0)
+}
+
+type MockJWTInterface struct {
+	mock.Mock
+}
+
+func (m *MockJWTInterface) GenerateUserJWT(user helper.UserJWT) (string, error) {
+	args := m.Called(user)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockJWTInterface) GenerateAdminJWT(user helper.AdminJWT) (string, error) {
+	args := m.Called(user)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockJWTInterface) GenerateUserToken(user helper.UserJWT) string {
+	args := m.Called(user)
+	return args.String(0)
+}
+
+func (m *MockJWTInterface) GenerateAdminToken(user helper.AdminJWT) string {
+	args := m.Called(user)
+	return args.String(0)
+}
+
+func (m *MockJWTInterface) ExtractUserToken(token *jwt.Token) map[string]interface{} {
+	args := m.Called(token)
+	return args.Get(0).(map[string]interface{})
+}
+
+func (m *MockJWTInterface) ExtractAdminToken(token *jwt.Token) map[string]interface{} {
+	args := m.Called(token)
+	return args.Get(0).(map[string]interface{})
+}
+
+func (m *MockJWTInterface) ValidateToken(token string) (*jwt.Token, error) {
+	args := m.Called(token)
+	return args.Get(0).(*jwt.Token), args.Error(1)
+}
+
+type MockMailerInterface struct {
+	mock.Mock
+}
+
+func (m *MockMailerInterface) Send(email, otpCode, subject string) error {
+	args := m.Called(email, otpCode, subject)
+	return args.Error(0)
+}
+
+type MockOTPInterface struct {
+	mock.Mock
+}
+
+func (m *MockOTPInterface) GenerateOTP() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+func (m *MockOTPInterface) OTPExpiration(durationMinutes int) time.Time {
+	args := m.Called(durationMinutes)
+	return args.Get(0).(time.Time)
+}
+
+type MockPasswordInterface struct {
+	mock.Mock
+}
+
+func (m *MockPasswordInterface) HashPassword(password string) (string, error) {
+	args := m.Called(password)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockPasswordInterface) CheckPasswordHash(hashedPassword, password string) error {
+	args := m.Called(hashedPassword, password)
+	return args.Error(0)
+}
+
 func TestRequestRegisterOTP(t *testing.T) {
-	mockUserRepo := new(MockUserData)
-	mockJWT := new(helper.MockJWTInterface)
-	mockMailer := new(helper.MockMailerInterface)
-	mockOTP := new(helper.MockOTPInterface)
-	mockHelper := new(helper.MockHelperInterface)
+	mockRepo := new(MockUserData)
+	mockMailer := new(MockMailerInterface)
+	mockOTP := new(MockOTPInterface)
 
-	service := NewUserService(mockUserRepo, mockJWT, mockMailer, mockOTP)
+	svc := NewUserService(mockRepo, nil, mockMailer, mockOTP)
 
-	t.Run("Success Case", func(t *testing.T) {
-		name := "John Doe"
-		email := "john@example.com"
-		password := "password123"
-		otp := "123456"
-		hashedPassword := "hashed-password"
-		expiration := time.Now().Add(5 * time.Minute)
+	t.Run("success", func(t *testing.T) {
+		mockRepo.On("SaveTemporaryUser", mock.Anything).Return(nil).Once()
+		mockRepo.On("SaveOTP", "test@example.com", mock.Anything, mock.Anything).Return(nil).Once()
+		mockMailer.On("Send", "test@example.com", mock.Anything, "Register Account").Return(nil).Once()
+		mockOTP.On("GenerateOTP").Return("123456").Once()
+		mockOTP.On("OTPExpiration", 5).Return(time.Now().Add(5 * time.Minute)).Once()
 
-		// Mock password hashing
-		mockHelper.On("HashPassword", password).Return(hashedPassword, nil)
-
-		// Mock OTP generation
-		mockOTP.On("GenerateOTP").Return(otp)
-		mockOTP.On("OTPExpiration", 5).Return(expiration)
-
-		// Mock repository calls
-		mockUserRepo.On("SaveTemporaryUser", mock.MatchedBy(func(u users.TemporaryUser) bool {
-			return u.Name == name && u.Email == email && u.Password == hashedPassword
-		})).Return(nil)
-		mockUserRepo.On("SaveOTP", email, otp, expiration).Return(nil)
-
-		// Mock mailer
-		mockMailer.On("Send", email, otp, "Register Account").Return(nil)
-
-		err := service.RequestRegisterOTP(name, email, password)
-
+		err := svc.RequestRegisterOTP("Test User", "test@example.com", "password123")
 		assert.NoError(t, err)
-		mockUserRepo.AssertExpectations(t)
+
+		mockRepo.AssertExpectations(t)
 		mockMailer.AssertExpectations(t)
 		mockOTP.AssertExpectations(t)
-		mockHelper.AssertExpectations(t)
 	})
 
-	t.Run("Empty Input", func(t *testing.T) {
-		err := service.RequestRegisterOTP("", "", "")
-		assert.Error(t, err)
-		assert.Equal(t, constant.ErrInvalidInput, err)
+	t.Run("error invalid input", func(t *testing.T) {
+		err := svc.RequestRegisterOTP("", "", "")
+		assert.EqualError(t, err, constant.ErrInvalidInput.Error())
 	})
 
-	t.Run("Password Hashing Error", func(t *testing.T) {
-		name := "John Doe"
-		email := "john@example.com"
-		password := "password123"
-		expectedErr := errors.New("hashing error")
+	t.Run("error saving temporary user", func(t *testing.T) {
+		mockRepo.On("SaveTemporaryUser", mock.Anything).Return(errors.New("failed to save temp user")).Once()
 
-		mockHelper.On("HashPassword", password).Return("", expectedErr)
+		err := svc.RequestRegisterOTP("Test User", "test@example.com", "password123")
+		assert.EqualError(t, err, "failed to save temp user")
 
-		err := service.RequestRegisterOTP(name, email, password)
-
-		assert.Error(t, err)
-		assert.Equal(t, expectedErr, err)
-		mockHelper.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("Save Temporary User Error", func(t *testing.T) {
-		name := "John Doe"
-		email := "john@example.com"
-		password := "password123"
-		hashedPassword := "hashed-password"
-		expectedErr := errors.New("database error")
+	t.Run("error sending otp", func(t *testing.T) {
+		mockRepo.On("SaveTemporaryUser", mock.Anything).Return(nil).Once()
+		mockRepo.On("SaveOTP", "test@example.com", mock.Anything, mock.Anything).Return(nil).Once()
+		mockMailer.On("Send", "test@example.com", mock.Anything, "Register Account").Return(errors.New("failed to send email")).Once()
+		mockOTP.On("GenerateOTP").Return("123456").Once()
+		mockOTP.On("OTPExpiration", 5).Return(time.Now().Add(5 * time.Minute)).Once()
 
-		mockHelper.On("HashPassword", password).Return(hashedPassword, nil)
-		mockUserRepo.On("SaveTemporaryUser", mock.MatchedBy(func(u users.TemporaryUser) bool {
-			return u.Name == name && u.Email == email && u.Password == hashedPassword
-		})).Return(expectedErr)
+		err := svc.RequestRegisterOTP("Test User", "test@example.com", "password123")
+		assert.EqualError(t, err, "failed to send email")
 
-		err := service.RequestRegisterOTP(name, email, password)
-
-		assert.Error(t, err)
-		assert.Equal(t, expectedErr, err)
-		mockHelper.AssertExpectations(t)
-		mockUserRepo.AssertExpectations(t)
-	})
-
-	t.Run("Save OTP Error", func(t *testing.T) {
-		name := "John Doe"
-		email := "john@example.com"
-		password := "password123"
-		hashedPassword := "hashed-password"
-		otp := "123456"
-		expiration := time.Now().Add(5 * time.Minute)
-		expectedErr := errors.New("otp error")
-
-		mockHelper.On("HashPassword", password).Return(hashedPassword, nil)
-		mockUserRepo.On("SaveTemporaryUser", mock.MatchedBy(func(u users.TemporaryUser) bool {
-			return u.Name == name && u.Email == email && u.Password == hashedPassword
-		})).Return(nil)
-
-		mockOTP.On("GenerateOTP").Return(otp)
-		mockOTP.On("OTPExpiration", 5).Return(expiration)
-		mockUserRepo.On("SaveOTP", email, otp, expiration).Return(expectedErr)
-
-		err := service.RequestRegisterOTP(name, email, password)
-
-		assert.Error(t, err)
-		assert.Equal(t, expectedErr, err)
-		mockHelper.AssertExpectations(t)
-		mockUserRepo.AssertExpectations(t)
-		mockOTP.AssertExpectations(t)
-	})
-
-	t.Run("Send Email Error", func(t *testing.T) {
-		name := "John Doe"
-		email := "john@example.com"
-		password := "password123"
-		hashedPassword := "hashed-password"
-		otp := "123456"
-		expiration := time.Now().Add(5 * time.Minute)
-		expectedErr := errors.New("email error")
-
-		mockHelper.On("HashPassword", password).Return(hashedPassword, nil)
-		mockUserRepo.On("SaveTemporaryUser", mock.MatchedBy(func(u users.TemporaryUser) bool {
-			return u.Name == name && u.Email == email && u.Password == hashedPassword
-		})).Return(nil)
-
-		mockOTP.On("GenerateOTP").Return(otp)
-		mockOTP.On("OTPExpiration", 5).Return(expiration)
-		mockUserRepo.On("SaveOTP", email, otp, expiration).Return(nil)
-		mockMailer.On("Send", email, otp, "Register Account").Return(expectedErr)
-
-		err := service.RequestRegisterOTP(name, email, password)
-
-		assert.Error(t, err)
-		assert.Equal(t, expectedErr, err)
-		mockHelper.AssertExpectations(t)
-		mockUserRepo.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
 		mockMailer.AssertExpectations(t)
 		mockOTP.AssertExpectations(t)
 	})
 }
 
-// func TestRequestRegisterOTP(t *testing.T) {
-// 	mockUserRepo := new(MockUserData)
-// 	mockMailer := new(helper.MockMailer)
-
-// 	service := NewUserService(mockUserRepo, nil)
-
-// 	t.Run("Success Case", func(t *testing.T) {
-// 		name := "John Doe"
-// 		email := "john.doe@example.com"
-// 		password := "password123"
-
-// 		otp := "123456"
-// 		expiration := helper.NewOTP().OTPExpiration(5)
-
-// 		mockUserRepo.On("SaveTemporaryUser", mock.MatchedBy(func(u users.TemporaryUser) bool {
-// 			match := helper.CheckPasswordHash(password, u.Password)
-// 			return u.Name == name && u.Email == email && match
-// 		})).Return(nil).Once()
-
-// 		mockUserRepo.On("SaveOTP", email, otp, expiration).Return(nil).Once()
-// 		mockMailer.On("Send", email, otp, "Register Account").Return(nil).Once()
-
-// 		err := service.RequestRegisterOTP(name, email, password)
-// 		assert.Nil(t, err)
-
-// 		mockUserRepo.AssertExpectations(t)
-// 		mockMailer.AssertExpectations(t)
-// 	})
-
-// 	t.Run("Missing Input", func(t *testing.T) {
-// 		name := ""
-// 		email := ""
-// 		password := ""
-
-// 		err := service.RequestRegisterOTP(name, email, password)
-// 		assert.Equal(t, constant.ErrInvalidInput, err)
-// 	})
-
-// 	t.Run("Error Saving Temporary User", func(t *testing.T) {
-// 		name := "John Doe"
-// 		email := "john.doe@example.com"
-// 		password := "password123"
-// 		hashedPassword, _ := helper.HashPassword(password)
-
-// 		tempUser := users.TemporaryUser{
-// 			ID:       "some-uuid",
-// 			Name:     name,
-// 			Email:    email,
-// 			Password: hashedPassword,
-// 		}
-
-// 		mockUserRepo.On("SaveTemporaryUser", tempUser).Return(errors.New("failed to save user")).Once()
-
-// 		err := service.RequestRegisterOTP(name, email, password)
-// 		assert.NotNil(t, err)
-// 		assert.Equal(t, "failed to save user", err.Error())
-// 		mockUserRepo.AssertExpectations(t)
-// 	})
-
-// 	t.Run("Error Sending OTP", func(t *testing.T) {
-// 		name := "John Doe"
-// 		email := "john.doe@example.com"
-// 		password := "password123"
-// 		hashedPassword, _ := helper.HashPassword(password)
-
-// 		tempUser := users.TemporaryUser{
-// 			ID:       "some-uuid",
-// 			Name:     name,
-// 			Email:    email,
-// 			Password: hashedPassword,
-// 		}
-
-// 		otp := "123456"
-// 		expiration := helper.NewOTP().OTPExpiration(5)
-
-// 		mockUserRepo.On("SaveTemporaryUser", tempUser).Return(nil).Once()
-// 		mockUserRepo.On("SaveOTP", email, otp, expiration).Return(nil).Once()
-// 		mockMailer.On("Send", email, otp, "Register Account").Return(errors.New("failed to send email")).Once()
-
-// 		err := service.RequestRegisterOTP(name, email, password)
-// 		assert.NotNil(t, err)
-// 		assert.Equal(t, "failed to send email", err.Error())
-// 		mockUserRepo.AssertExpectations(t)
-// 		mockMailer.AssertExpectations(t)
-// 	})
-// }
-
-// func TestVerifyRegisterOTP(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	otp := "123456"
-// 	tempUser := users.TemporaryUser{
-// 		ID:       "1",
-// 		Name:     "Test User",
-// 		Email:    "test@example.com",
-// 		Password: "hashedpassword123",
-// 	}
-
-// 	mockRepo.On("GetVerifyOTP", otp).Return(users.VerifyOTP{Email: tempUser.Email}, nil).Once()
-// 	mockRepo.On("GetTemporaryUserByEmail", tempUser.Email).Return(tempUser, nil).Once()
-// 	mockRepo.On("Register", mock.Anything).Return(users.User{}, nil).Once()
-// 	mockRepo.On("DeleteTemporaryUserByEmail", tempUser.Email).Return(nil).Once()
-// 	mockRepo.On("DeleteVerifyOTP", otp).Return(nil).Once()
-
-// 	_, err := service.VerifyRegisterOTP(otp)
+func TestVerifyRegisterOTP(t *testing.T) {
+	mockRepo := new(MockUserData)
+	mockOTP := new(MockOTPInterface)
+
+	svc := NewUserService(mockRepo, nil, nil, mockOTP)
+
+	t.Run("success", func(t *testing.T) {
+		mockRepo.On("GetVerifyOTP", "123456").Return(users.VerifyOTP{Email: "test@example.com"}, nil).Once()
+		mockRepo.On("GetTemporaryUserByEmail", "test@example.com").Return(users.TemporaryUser{
+			ID:       "1",
+			Name:     "Test User",
+			Email:    "test@example.com",
+			Password: "hashed_password",
+		}, nil).Once()
+		mockRepo.On("Register", mock.Anything).Return(users.User{
+			ID:       "1",
+			Username: "user_random1234",
+			Name:     "Test User",
+			Email:    "test@example.com",
+			Password: "hashed_password",
+		}, nil).Once()
+		mockRepo.On("DeleteTemporaryUserByEmail", "test@example.com").Return(nil).Once()
+		mockRepo.On("DeleteVerifyOTP", "123456").Return(nil).Once()
+
+		result, err := svc.VerifyRegisterOTP("123456")
+		assert.NoError(t, err)
+		assert.Equal(t, "test@example.com", result.Email)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("error invalid input", func(t *testing.T) {
+		result, err := svc.VerifyRegisterOTP("")
+		assert.EqualError(t, err, constant.ErrInvalidInput.Error())
+		assert.Equal(t, users.User{}, result)
+	})
+
+	t.Run("error getting verify OTP", func(t *testing.T) {
+		mockRepo.On("GetVerifyOTP", "123456").Return(users.VerifyOTP{}, errors.New("OTP not valid")).Once()
+
+		result, err := svc.VerifyRegisterOTP("123456")
+		assert.EqualError(t, err, constant.ErrOTPNotValid.Error())
+		assert.Equal(t, users.User{}, result)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("error getting temporary user", func(t *testing.T) {
+		mockRepo.On("GetVerifyOTP", "123456").Return(users.VerifyOTP{Email: "test@example.com"}, nil).Once()
+		mockRepo.On("GetTemporaryUserByEmail", "test@example.com").Return(users.TemporaryUser{}, errors.New("user not found")).Once()
+
+		result, err := svc.VerifyRegisterOTP("123456")
+		assert.EqualError(t, err, "user not found")
+		assert.Equal(t, users.User{}, result)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("error registering user", func(t *testing.T) {
+		mockRepo.On("GetVerifyOTP", "123456").Return(users.VerifyOTP{Email: "test@example.com"}, nil).Once()
+		mockRepo.On("GetTemporaryUserByEmail", "test@example.com").Return(users.TemporaryUser{
+			ID:       "1",
+			Name:     "Test User",
+			Email:    "test@example.com",
+			Password: "hashed_password",
+		}, nil).Once()
+		mockRepo.On("Register", mock.Anything).Return(users.User{}, errors.New("registration failed")).Once()
+
+		result, err := svc.VerifyRegisterOTP("123456")
+		assert.EqualError(t, err, "registration failed")
+		assert.Equal(t, users.User{}, result)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("error deleting temporary user", func(t *testing.T) {
+		mockRepo.On("GetVerifyOTP", "123456").Return(users.VerifyOTP{Email: "test@example.com"}, nil).Once()
+		mockRepo.On("GetTemporaryUserByEmail", "test@example.com").Return(users.TemporaryUser{
+			ID:       "1",
+			Name:     "Test User",
+			Email:    "test@example.com",
+			Password: "hashed_password",
+		}, nil).Once()
+		mockRepo.On("Register", mock.Anything).Return(users.User{
+			ID:       "1",
+			Username: "user_random1234",
+			Name:     "Test User",
+			Email:    "test@example.com",
+			Password: "hashed_password",
+		}, nil).Once()
+		mockRepo.On("DeleteTemporaryUserByEmail", "test@example.com").Return(errors.New("failed to delete temp user")).Once()
+
+		result, err := svc.VerifyRegisterOTP("123456")
+		assert.EqualError(t, err, "failed to delete temp user")
+		assert.Equal(t, users.User{}, result)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("error deleting verify OTP", func(t *testing.T) {
+		mockRepo.On("GetVerifyOTP", "123456").Return(users.VerifyOTP{Email: "test@example.com"}, nil).Once()
+		mockRepo.On("GetTemporaryUserByEmail", "test@example.com").Return(users.TemporaryUser{
+			ID:       "1",
+			Name:     "Test User",
+			Email:    "test@example.com",
+			Password: "hashed_password",
+		}, nil).Once()
+		mockRepo.On("Register", mock.Anything).Return(users.User{
+			ID:       "1",
+			Username: "user_random1234",
+			Name:     "Test User",
+			Email:    "test@example.com",
+			Password: "hashed_password",
+		}, nil).Once()
+		mockRepo.On("DeleteTemporaryUserByEmail", "test@example.com").Return(nil).Once()
+		mockRepo.On("DeleteVerifyOTP", "123456").Return(errors.New("failed to delete verify OTP")).Once()
+
+		result, err := svc.VerifyRegisterOTP("123456")
+		assert.EqualError(t, err, "failed to delete verify OTP")
+		assert.Equal(t, users.User{}, result)
 
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestIsEmailExist(t *testing.T) {
+	mockRepo := new(MockUserData)
+
+	svc := NewUserService(mockRepo, nil, nil, nil)
+
+	t.Run("email exists", func(t *testing.T) {
+		mockRepo.On("IsEmailExist", "test@example.com").Return(true).Once()
+
+		result := svc.IsEmailExist("test@example.com")
+		assert.True(t, result)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("email does not exist", func(t *testing.T) {
+		mockRepo.On("IsEmailExist", "test@example.com").Return(false).Once()
+
+		result := svc.IsEmailExist("test@example.com")
+		assert.False(t, result)
+
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestRequestPasswordResetOTP(t *testing.T) {
+	mockRepo := new(MockUserData)
+	mockMailer := new(MockMailerInterface)
+	mockOTP := new(MockOTPInterface)
+
+	svc := NewUserService(mockRepo, nil, mockMailer, mockOTP)
+
+	t.Run("success", func(t *testing.T) {
+		mockOTP.On("GenerateOTP").Return("123456").Once()
+		mockOTP.On("OTPExpiration", 5).Return(time.Now().Add(5 * time.Minute)).Once()
+		mockRepo.On("SaveOTP", "test@example.com", "123456", mock.Anything).Return(nil).Once()
+		mockMailer.On("Send", "test@example.com", "123456", "Reset Password").Return(nil).Once()
+
+		err := svc.RequestPasswordResetOTP("test@example.com")
+		assert.NoError(t, err)
+
+		mockRepo.AssertExpectations(t)
+		mockMailer.AssertExpectations(t)
+		mockOTP.AssertExpectations(t)
+	})
+
+	t.Run("error saving OTP", func(t *testing.T) {
+		mockOTP.On("GenerateOTP").Return("123456").Once()
+		mockOTP.On("OTPExpiration", 5).Return(time.Now().Add(5 * time.Minute)).Once()
+		mockRepo.On("SaveOTP", "test@example.com", "123456", mock.Anything).Return(errors.New("failed to save OTP")).Once()
+
+		err := svc.RequestPasswordResetOTP("test@example.com")
+		assert.EqualError(t, err, "failed to save OTP")
+
+		mockRepo.AssertExpectations(t)
+		mockOTP.AssertExpectations(t)
+	})
+
+	t.Run("error sending OTP", func(t *testing.T) {
+		mockOTP.On("GenerateOTP").Return("123456").Once()
+		mockOTP.On("OTPExpiration", 5).Return(time.Now().Add(5 * time.Minute)).Once()
+		mockRepo.On("SaveOTP", "test@example.com", "123456", mock.Anything).Return(nil).Once()
+		mockMailer.On("Send", "test@example.com", "123456", "Reset Password").Return(errors.New("failed to send email")).Once()
+
+		err := svc.RequestPasswordResetOTP("test@example.com")
+		assert.EqualError(t, err, "failed to send email")
+
+		mockRepo.AssertExpectations(t)
+		mockMailer.AssertExpectations(t)
+		mockOTP.AssertExpectations(t)
+	})
+}
+
+func TestVerifyPasswordResetOTP(t *testing.T) {
+	mockRepo := new(MockUserData)
+
+	svc := NewUserService(mockRepo, nil, nil, nil)
+
+	t.Run("valid OTP", func(t *testing.T) {
+		mockRepo.On("ValidateOTPByOTP", "123456").Return(true).Once()
+
+		err := svc.VerifyPasswordResetOTP("123456")
+		assert.NoError(t, err)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("invalid OTP", func(t *testing.T) {
+		mockRepo.On("ValidateOTPByOTP", "123456").Return(false).Once()
+
+		err := svc.VerifyPasswordResetOTP("123456")
+		assert.EqualError(t, err, constant.ErrOTPNotValid.Error())
 
-// func TestRequestPasswordResetOTP(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
+		mockRepo.AssertExpectations(t)
+	})
 
-// 	email := "test@example.com"
-// 	otp := "123456"
+	t.Run("error invalid input", func(t *testing.T) {
+		err := svc.VerifyPasswordResetOTP("")
+		assert.EqualError(t, err, constant.ErrInvalidInput.Error())
+	})
+}
+
+func TestUserService_Login(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	mockJWT := new(MockJWTInterface)
 
-// 	mockRepo.On("SaveOTP", email, otp, mock.Anything).Return(nil).Once()
+	mockUser := users.User{
+		ID:       "1",
+		Name:     "John Doe",
+		Email:    "johndoe@gmail.com",
+		Username: "johndoe",
+		Address:  "123 Street",
+		Password: "password",
+	}
 
-// 	err := service.RequestPasswordResetOTP(email)
+	mockUserLogin := helper.UserJWT{
+		ID:       mockUser.ID,
+		Name:     mockUser.Name,
+		Email:    mockUser.Email,
+		Username: mockUser.Username,
+		Address:  mockUser.Address,
+		Role:     constant.RoleUser,
+	}
+
+	mockToken := "sample.jwt.token"
+
+	service := &UserService{
+		userRepo: mockUserRepo,
+		jwt:      mockJWT,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Login", mock.AnythingOfType("users.User")).Return(mockUser, nil).Once()
+		mockJWT.On("GenerateUserJWT", mockUserLogin).Return(mockToken, nil).Once()
+
+		result, err := service.Login(mockUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, mockToken, result.Token)
+
+		mockUserRepo.AssertExpectations(t)
+		mockJWT.AssertExpectations(t)
+	})
+
+	t.Run("error in repository", func(t *testing.T) {
+		mockUserRepo.On("Login", mock.AnythingOfType("users.User")).Return(users.User{}, errors.New("repository error")).Once()
+
+		result, err := service.Login(mockUser)
+
+		assert.Error(t, err)
+		assert.Empty(t, result.Token)
+
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("error in JWT generation", func(t *testing.T) {
+		mockUserRepo.On("Login", mock.AnythingOfType("users.User")).Return(mockUser, nil).Once()
+		mockJWT.On("GenerateUserJWT", mockUserLogin).Return("", errors.New("JWT error")).Once()
+
+		result, err := service.Login(mockUser)
+
+		assert.Error(t, err)
+		assert.Empty(t, result.Token)
+
+		mockUserRepo.AssertExpectations(t)
+		mockJWT.AssertExpectations(t)
+	})
+}
+
+func TestUserService_UpdateUserInfo(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	service := &UserService{
+		userRepo: mockUserRepo,
+	}
+
+	mockUserUpdate := users.UserUpdate{
+		ID:    "1",
+		Phone: " 08123456789 ",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("UpdateUserInfo", mock.AnythingOfType("users.UserUpdate")).Return(users.User{}, nil).Once()
+
+		err := service.UpdateUserInfo(mockUserUpdate)
+
+		assert.NoError(t, err)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("missing user ID", func(t *testing.T) {
+		mockUserUpdate.ID = ""
+
+		err := service.UpdateUserInfo(mockUserUpdate)
+
+		assert.Error(t, err)
+		assert.Equal(t, constant.ErrUpdateUser, err)
+	})
+
+	t.Run("invalid phone", func(t *testing.T) {
+		mockUserUpdate.ID = "1"
+		mockUserUpdate.Phone = "invalid-phone"
+
+		err := service.UpdateUserInfo(mockUserUpdate)
+
+		assert.Error(t, err)
+		assert.Equal(t, constant.ErrInvalidPhone, err)
+	})
+}
+
+func TestUserService_RequestPasswordUpdateOTP(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	mockOTP := new(MockOTPInterface)
+	mockMailer := new(MockMailerInterface)
+
+	service := &UserService{
+		userRepo: mockUserRepo,
+		otp:      mockOTP,
+		mailer:   mockMailer,
+	}
+
+	mockEmail := "johndoe@gmail.com"
+	mockOTPCode := "123456"
+	mockExpiration := time.Now().Add(5 * time.Minute)
+
+	t.Run("success", func(t *testing.T) {
+		mockOTP.On("GenerateOTP").Return(mockOTPCode).Once()
+		mockOTP.On("OTPExpiration", 5).Return(mockExpiration).Once()
+		mockUserRepo.On("SaveOTP", mockEmail, mockOTPCode, mockExpiration).Return(nil).Once()
+		mockMailer.On("Send", mockEmail, mockOTPCode, "Update Password").Return(nil).Once()
+
+		err := service.RequestPasswordUpdateOTP(mockEmail)
+
+		assert.NoError(t, err)
+		mockOTP.AssertExpectations(t)
+		mockUserRepo.AssertExpectations(t)
+		mockMailer.AssertExpectations(t)
+	})
+
+	t.Run("empty email", func(t *testing.T) {
+		err := service.RequestPasswordUpdateOTP("")
+
+		assert.Error(t, err)
+		assert.Equal(t, constant.ErrEmptyEmail, err)
+	})
+
+	t.Run("error saving OTP", func(t *testing.T) {
+		mockOTP.On("GenerateOTP").Return(mockOTPCode).Once()
+		mockOTP.On("OTPExpiration", 5).Return(mockExpiration).Once()
+		mockUserRepo.On("SaveOTP", mockEmail, mockOTPCode, mockExpiration).Return(errors.New("save OTP error")).Once()
+
+		err := service.RequestPasswordUpdateOTP(mockEmail)
+
+		assert.Error(t, err)
+		mockOTP.AssertExpectations(t)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("error sending email", func(t *testing.T) {
+		mockOTP.On("GenerateOTP").Return(mockOTPCode).Once()
+		mockOTP.On("OTPExpiration", 5).Return(mockExpiration).Once()
+		mockUserRepo.On("SaveOTP", mockEmail, mockOTPCode, mockExpiration).Return(nil).Once()
+		mockMailer.On("Send", mockEmail, mockOTPCode, "Update Password").Return(errors.New("email error")).Once()
+
+		err := service.RequestPasswordUpdateOTP(mockEmail)
+
+		assert.Error(t, err)
+		mockOTP.AssertExpectations(t)
+		mockUserRepo.AssertExpectations(t)
+		mockMailer.AssertExpectations(t)
+	})
+}
+
+func TestUserService_GetUserData(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	service := &UserService{
+		userRepo: mockUserRepo,
+	}
+
+	mockUser := users.User{
+		ID: "1",
+		Name: "John Doe",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetUserByID", mockUser.ID).Return(mockUser, nil).Once()
+
+		result, err := service.GetUserData(mockUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, mockUser, result)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		mockUserRepo.On("GetUserByID", mockUser.ID).Return(users.User{}, errors.New("repository error")).Once()
+
+		result, err := service.GetUserData(mockUser)
+
+		assert.Error(t, err)
+		assert.Equal(t, users.User{}, result)
+		mockUserRepo.AssertExpectations(t)
+	})
+}
+
+func TestUserService_Delete(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	service := &UserService{
+		userRepo: mockUserRepo,
+	}
+
+	mockUser := users.User{
+		ID: "1",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("Delete", mockUser).Return(nil).Once()
+
+		err := service.Delete(mockUser)
+
+		assert.NoError(t, err)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("missing user ID", func(t *testing.T) {
+		mockUser.ID = ""
+
+		err := service.Delete(mockUser)
+
+		assert.Error(t, err)
+		assert.Equal(t, constant.ErrDeleteUser, err)
+	})
+}
+
+func TestUserService_GetUserByIDForAdmin(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	service := &UserService{
+		userRepo: mockUserRepo,
+	}
+
+	mockUser := users.User{
+		ID: "1",
+		Name: "Admin User",
+	}
 
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestVerifyPasswordResetOTP(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	otp := "123456"
-
-// 	mockRepo.On("ValidateOTPByOTP", otp).Return(true).Once()
-
-// 	err := service.VerifyPasswordResetOTP(otp)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestResetPassword(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	email := "test@example.com"
-// 	newPassword := "newpassword123"
-// 	hashedPassword := "hashednewpassword123"
-
-// 	mockRepo.On("GetEmailByLatestOTP", mock.Anything).Return(email, nil).Once()
-// 	mockRepo.On("UpdatePassword", email, hashedPassword).Return(nil).Once()
-// 	mockRepo.On("DeleteVerifyOTPByEmail", email).Return(nil).Once()
-
-// 	err := service.ResetPassword(newPassword)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestLogin(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	user := users.User{
-// 		Email:    "test@example.com",
-// 		Password: "password123",
-// 	}
-// 	userData := users.User{
-// 		ID:       "1",
-// 		Name:     "Test User",
-// 		Email:    "test@example.com",
-// 		Username: "testuser",
-// 		Address:  "Test Address",
-// 	}
-// 	mockRepo.On("Login", user).Return(userData, nil).Once()
-
-// 	token := "testtoken"
-// 	mockJWT.On("GenerateUserJWT", mock.Anything).Return(token, nil).Once()
-
-// 	result, err := service.Login(user)
-
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, token, result.Token)
-// 	mockRepo.AssertExpectations(t)
-// 	mockJWT.AssertExpectations(t)
-// }
-
-// func TestUpdateUserInfo(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	userUpdate := users.UserUpdate{
-// 		ID:      "1",
-// 		Name:    "Updated User",
-// 		Phone:   "08123456789",
-// 		Address: "Updated Address",
-// 	}
-
-// 	mockRepo.On("UpdateUserInfo", userUpdate).Return(users.User{}, nil).Once()
-
-// 	err := service.UpdateUserInfo(userUpdate)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestRequestPasswordUpdateOTP(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	email := "test@example.com"
-// 	otp := "123456"
-
-// 	mockRepo.On("SaveOTP", email, otp, mock.Anything).Return(nil).Once()
-
-// 	err := service.RequestPasswordUpdateOTP(email)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestUpdatePassword(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	update := users.PasswordUpdate{
-// 		Email:       "test@example.com",
-// 		OTP:         "123456",
-// 		OldPassword: "oldpassword123",
-// 		NewPassword: "newpassword123",
-// 	}
-
-// 	existingUser := users.User{
-// 		Email:    "test@example.com",
-// 		Password: "hashedoldpassword123",
-// 	}
-
-// 	mockRepo.On("ValidateOTP", update.Email, update.OTP).Return(true).Once()
-// 	mockRepo.On("GetUserByEmail", update.Email).Return(existingUser, nil).Once()
-// 	mockRepo.On("UpdatePassword", update.Email, mock.Anything).Return(nil).Once()
-// 	mockRepo.On("DeleteVerifyOTP", update.OTP).Return(nil).Once()
-
-// 	err := service.UpdatePassword(update)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestGetUserData(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	user := users.User{
-// 		ID: "1",
-// 	}
-
-// 	expectedUser := users.User{
-// 		ID:   "1",
-// 		Name: "Test User",
-// 	}
-
-// 	mockRepo.On("GetUserByID", user.ID).Return(expectedUser, nil).Once()
-
-// 	result, err := service.GetUserData(user)
-
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, expectedUser, result)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestDelete(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	user := users.User{
-// 		ID: "1",
-// 	}
-
-// 	mockRepo.On("Delete", user).Return(nil).Once()
-
-// 	err := service.Delete(user)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestRegisterOrLoginGoogle(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	user := users.User{
-// 		Email:    "test@example.com",
-// 		Name:     "Google User",
-// 		Username: "",
-// 	}
-
-// 	existingUser := users.User{
-// 		ID:    "1",
-// 		Email: "test@example.com",
-// 	}
-
-// 	mockRepo.On("GetUserByEmail", user.Email).Return(existingUser, nil).Once()
-
-// 	result, err := service.RegisterOrLoginGoogle(user)
-
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, existingUser, result)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestUpdateAvatar(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	userID := "1"
-// 	avatarURL := "https://example.com/avatar.png"
-
-// 	mockRepo.On("UpdateAvatar", userID, avatarURL).Return(nil).Once()
-
-// 	err := service.UpdateAvatar(userID, avatarURL)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestGetUserByIDForAdmin(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	userID := "1"
-
-// 	expectedUser := users.User{
-// 		ID:   "1",
-// 		Name: "Admin User",
-// 	}
-
-// 	mockRepo.On("GetUserByIDForAdmin", userID).Return(expectedUser, nil).Once()
-
-// 	result, err := service.GetUserByIDForAdmin(userID)
-
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, expectedUser, result)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestGetAllByPageForAdmin(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	page := 1
-// 	limit := 10
-
-// 	users := []users.User{
-// 		{ID: "1", Name: "User 1"},
-// 		{ID: "2", Name: "User 2"},
-// 	}
-// 	totalPages := 1
-
-// 	mockRepo.On("GetAllByPageForAdmin", page, limit).Return(users, totalPages, nil).Once()
-
-// 	result, total, err := service.GetAllByPageForAdmin(page, limit)
-
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, users, result)
-// 	assert.Equal(t, totalPages, total)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestUpdateUserForAdmin(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	userUpdate := users.UpdateUserByAdmin{
-// 		ID:    "1",
-// 		Name:  "Updated Admin User",
-// 		Address: "Updated Address",
-// 		Gender: "Male",
-// 		Phone: "08123456789",
-// 	}
-
-// 	mockRepo.On("UpdateUserForAdmin", userUpdate).Return(nil).Once()
-
-// 	err := service.UpdateUserForAdmin(userUpdate)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
-
-// func TestDeleteUserForAdmin(t *testing.T) {
-// 	mockRepo := new(MockUserData)
-// 	mockJWT := new(helper.MockJWTInterface)
-// 	service := NewUserService(mockRepo, mockJWT)
-
-// 	userID := "1"
-
-// 	mockRepo.On("DeleteUserForAdmin", userID).Return(nil).Once()
-
-// 	err := service.DeleteUserForAdmin(userID)
-
-// 	assert.NoError(t, err)
-// 	mockRepo.AssertExpectations(t)
-// }
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetUserByIDForAdmin", mockUser.ID).Return(mockUser, nil).Once()
+
+		result, err := service.GetUserByIDForAdmin(mockUser.ID)
+
+		assert.NoError(t, err)
+		assert.Equal(t, mockUser, result)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("missing user ID", func(t *testing.T) {
+		result, err := service.GetUserByIDForAdmin("")
+
+		assert.Error(t, err)
+		assert.Equal(t, constant.ErrUserIDNotFound, err)
+		assert.Equal(t, users.User{}, result)
+	})
+}
+
+func TestUserService_GetAllByPageForAdmin(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	service := &UserService{
+		userRepo: mockUserRepo,
+	}
+
+	mockUsers := []users.User{
+		{ID: "1", Name: "User 1"},
+		{ID: "2", Name: "User 2"},
+	}
+
+	mockPage := 1
+	mockLimit := 10
+	mockTotal := len(mockUsers)
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("GetAllByPageForAdmin", mockPage, mockLimit).Return(mockUsers, mockTotal, nil).Once()
+
+		result, total, err := service.GetAllByPageForAdmin(mockPage, mockLimit)
+
+		assert.NoError(t, err)
+		assert.Equal(t, mockUsers, result)
+		assert.Equal(t, mockTotal, total)
+		mockUserRepo.AssertExpectations(t)
+	})
+}
+
+func TestUserService_UpdateUserForAdmin(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	service := &UserService{
+		userRepo: mockUserRepo,
+	}
+
+	mockUser := users.UpdateUserByAdmin{
+		ID:   "1",
+		Name: "Updated User",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("UpdateUserForAdmin", mockUser).Return(nil).Once()
+
+		err := service.UpdateUserForAdmin(mockUser)
+
+		assert.NoError(t, err)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("missing user ID", func(t *testing.T) {
+		mockUser.ID = ""
+
+		err := service.UpdateUserForAdmin(mockUser)
+
+		assert.Error(t, err)
+		assert.Equal(t, constant.ErrUserIDNotFound, err)
+	})
+}
+
+func TestUserService_DeleteUserForAdmin(t *testing.T) {
+	mockUserRepo := new(MockUserData)
+	service := &UserService{
+		userRepo: mockUserRepo,
+	}
+
+	mockUserID := "1"
+
+	t.Run("success", func(t *testing.T) {
+		mockUserRepo.On("DeleteUserForAdmin", mockUserID).Return(nil).Once()
+
+		err := service.DeleteUserForAdmin(mockUserID)
+
+		assert.NoError(t, err)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("error in repository", func(t *testing.T) {
+		mockUserRepo.On("DeleteUserForAdmin", mockUserID).Return(errors.New("repository error")).Once()
+
+		err := service.DeleteUserForAdmin(mockUserID)
+
+		assert.Error(t, err)
+		mockUserRepo.AssertExpectations(t)
+	})
+}
