@@ -480,11 +480,11 @@ func (cd *ChallengeData) GetChallengeRewards(challengeID string) (int, int, erro
 	return challenge.Exp, challenge.Coin, nil
 }
 
-func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
+func (cd *ChallengeData) GetChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
 	var logs []challenges.ChallengeLog
 
 	query := cd.DB.Preload("Challenge").
-		Where("user_id = ? AND status = ?", userID, "Progress")
+		Where("user_id = ?", userID)
 
 	if difficulty != "" {
 		query = query.Where("challenges.difficulty LIKE ?", "%"+difficulty+"%")
@@ -502,7 +502,9 @@ func (cd *ChallengeData) GetActiveChallengeLogByUserID(userID string, page, perP
 	}
 
 	var totalRecords int64
-	err = query.Count(&totalRecords).Error
+	err = cd.DB.Model(&challenges.ChallengeLog{}).
+		Where("user_id = ?", userID).
+		Count(&totalRecords).Error
 	if err != nil {
 		return nil, 0, err
 	}

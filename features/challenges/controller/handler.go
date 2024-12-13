@@ -770,6 +770,7 @@ func (h *ChallengeHandler) GetActiveChallenges(c echo.Context) error {
 			"status":        challenge.Status,
 			"start_date":    challenge.StartDate,
 			"feed":          challenge.Feed,
+			"rewards_given": challenge.RewardsGiven,
 		})
 	}
 	metadata := map[string]interface{}{
@@ -920,8 +921,8 @@ func (h *ChallengeHandler) GetChallengeDetailsWithConfirmations(c echo.Context) 
 			SubmissionDate: confirmation.SubmissionDate,
 		})
 	}
-	
-	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Challenge details retrieved successfully", response))	
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "Challenge details retrieved successfully", response))
 }
 
 // GetChallengeDetails retrieves challenge details including tasks

@@ -145,7 +145,7 @@ func (m *MockChallengeRepository) GetChallengeRewards(challengeID string) (int, 
 	return args.Int(0), args.Int(1), args.Error(2)
 }
 
-func (m *MockChallengeRepository) GetActiveChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
+func (m *MockChallengeRepository) GetChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
 	args := m.Called(userID, page, perPage, difficulty, title)
 	return args.Get(0).([]challenges.ChallengeLog), args.Int(1), args.Error(2)
 }
@@ -1277,8 +1277,8 @@ func TestGetActiveChallenges_Success(t *testing.T) {
 	difficulty := "medium"
 	title := "Save"
 
-	mockChallengeRepo.On("GetActiveChallengeLogByUserID", userID, page, perPage, difficulty, title).Return([]challenges.ChallengeLog{
-		{ID: "log1", UserID: userID, Status: "Active"},
+	mockChallengeRepo.On("GetChallengeLogByUserID", userID, page, perPage, difficulty, title).Return([]challenges.ChallengeLog{
+		{ID: "log1", UserID: userID},
 	}, 1, nil)
 
 	challenges, total, err := service.GetActiveChallenges(userID, page, perPage, difficulty, title)
@@ -1286,8 +1286,10 @@ func TestGetActiveChallenges_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, total)
 	assert.Len(t, challenges, 1)
-	mockChallengeRepo.AssertCalled(t, "GetActiveChallengeLogByUserID", userID, page, perPage, difficulty, title)
+
+	mockChallengeRepo.AssertCalled(t, "GetChallengeLogByUserID", userID, page, perPage, difficulty, title)
 }
+
 
 func TestGetUnclaimedChallenges_Success(t *testing.T) {
 	mockChallengeRepo := new(MockChallengeRepository)
