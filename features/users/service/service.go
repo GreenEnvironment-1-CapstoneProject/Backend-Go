@@ -1,7 +1,6 @@
 package service
 
 import (
-	"greenenvironment/configs"
 	"greenenvironment/constant"
 	"greenenvironment/features/users"
 	"greenenvironment/helper"
@@ -14,12 +13,16 @@ import (
 type UserService struct {
 	userRepo users.UserRepoInterface
 	jwt      helper.JWTInterface
+	mailer   helper.MailerInterface
+	otp      helper.OTPInterface
 }
 
-func NewUserService(data users.UserRepoInterface, jwt helper.JWTInterface) users.UserServiceInterface {
+func NewUserService(data users.UserRepoInterface, jwt helper.JWTInterface, mailer helper.MailerInterface, otp helper.OTPInterface) users.UserServiceInterface {
 	return &UserService{
 		userRepo: data,
 		jwt:      jwt,
+		mailer:   mailer,
+		otp:      otp,
 	}
 }
 
@@ -45,18 +48,22 @@ func (s *UserService) RequestRegisterOTP(name, email, password string) error {
 		return err
 	}
 
-	otp := helper.NewOTP().GenerateOTP()
-	expiration := helper.NewOTP().OTPExpiration(5)
+	otp := s.otp.GenerateOTP()
+	expiration := s.otp.OTPExpiration(5)
 	err = s.userRepo.SaveOTP(email, otp, expiration)
 	if err != nil {
 		return err
 	}
 
-	smtpConfig := configs.InitConfig().SMTP
 	otpCode := otp
 	subject := "Register Account"
 
-	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
+	err = s.mailer.Send(email, otpCode, subject)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) VerifyRegisterOTP(otp string) (users.User, error) {
@@ -107,19 +114,23 @@ func (s *UserService) IsEmailExist(email string) bool {
 }
 
 func (s *UserService) RequestPasswordResetOTP(email string) error {
-	otp := helper.NewOTP().GenerateOTP()
-	expiration := helper.NewOTP().OTPExpiration(5)
+	otp := s.otp.GenerateOTP()
+	expiration := s.otp.OTPExpiration(5)
 
 	err := s.userRepo.SaveOTP(email, otp, expiration)
 	if err != nil {
 		return err
 	}
 
-	smtpConfig := configs.InitConfig().SMTP
 	otpCode := otp
 	subject := "Reset Password"
 
-	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
+	err = s.mailer.Send(email, otpCode, subject)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) VerifyPasswordResetOTP(otp string) error {
@@ -186,7 +197,6 @@ func (s *UserService) Login(user users.User) (users.UserLogin, error) {
 	return UserLoginData, nil
 }
 
-
 func (s *UserService) UpdateUserInfo(user users.UserUpdate) error {
 	if user.ID == "" {
 		return constant.ErrUpdateUser
@@ -214,19 +224,23 @@ func (s *UserService) RequestPasswordUpdateOTP(email string) error {
 		return constant.ErrEmptyEmail
 	}
 
-	otp := helper.NewOTP().GenerateOTP()
-	expiration := helper.NewOTP().OTPExpiration(5)
+	otp := s.otp.GenerateOTP()
+	expiration := s.otp.OTPExpiration(5)
 
 	err := s.userRepo.SaveOTP(email, otp, expiration)
 	if err != nil {
 		return err
 	}
 
-	smtpConfig := configs.InitConfig().SMTP
 	otpCode := otp
 	subject := "Update Password"
 
-	return helper.NewMailer(smtpConfig).Send(email, otpCode, subject)
+	err = s.mailer.Send(email, otpCode, subject)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserService) UpdatePassword(update users.PasswordUpdate) error {

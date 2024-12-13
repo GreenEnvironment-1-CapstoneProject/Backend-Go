@@ -91,6 +91,8 @@ func main() {
 
 	databases.Migrate(db)
 	jwt := helper.NewJWT(cfg.JWT_Secret)
+	mailer := helper.NewMailer(cfg.SMTP)
+	otp := helper.NewOTP()
 	storage := storages.NewStorage(cfg.Cloudinary)
 	midtransService := midtrans.NewPaymentGateway(cfg.Midtrans)
 	openAIservice := OpenAIservice.NewOpenAIService(cfg.OpenAi.ApiKey)
@@ -103,7 +105,7 @@ func main() {
 	}))
 
 	userRepo := UserRepository.NewUserRepository(db)
-	userService := UserService.NewUserService(userRepo, jwt)
+	userService := UserService.NewUserService(userRepo, jwt, mailer, otp)
 	userController := UserController.NewUserController(userService, jwt, storage)
 
 	adminRepo := AdminRepository.NewAdminRepository(db)
