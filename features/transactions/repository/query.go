@@ -48,9 +48,9 @@ func (tr *TransactionRepository) GetUserTransaction(userId string, page int) ([]
 	var result []transactions.TransactionData
 	for _, txn := range transactionsModel {
 		var txnItems []transactions.TransactionItems
-		var images []products.ProductImage
 		var impactCategories []products.ProductImpactCategory
 		for _, item := range txn.TransactionItems {
+			var images []products.ProductImage
 			for _, img := range item.Product.Images {
 				images = append(images, products.ProductImage{
 					ID:        img.ID,

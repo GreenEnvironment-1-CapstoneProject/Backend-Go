@@ -9,7 +9,6 @@ import (
 	"greenenvironment/features/chatbot"
 	"greenenvironment/features/dashboard"
 	"greenenvironment/features/forum"
-	"greenenvironment/features/guest"
 	"greenenvironment/features/impacts"
 	"greenenvironment/features/leaderboard"
 	"greenenvironment/features/products"
@@ -101,10 +100,6 @@ func RouteStorage(e *echo.Echo, sc storages.StorageInterface, cfg configs.GEConf
 	}
 
 	e.POST("/api/v1/media/upload", sc.UploadFileHandler, echojwt.WithConfig(jwtConfig))
-}
-
-func RouteGuest(e *echo.Echo, gc guest.GuestControllerInterface) {
-	e.GET("/api/v1/guest/products", gc.GetGuestProduct)
 }
 
 func RouteCart(e *echo.Echo, cc cart.CartControllerInterface, cfg configs.GEConfig) {
