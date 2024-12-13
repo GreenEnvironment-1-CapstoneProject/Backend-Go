@@ -37,7 +37,7 @@ func TestGetDashboardData(t *testing.T) {
 	service := NewDashboardService(mockRepo)
 
 	filter := "monthly"
-	fixedTime := time.Date(2024, time.December, 13, 11, 15, 0, 0, time.Local) // Waktu tetap untuk pengujian
+	fixedTime := time.Date(2024, time.December, 13, 11, 15, 0, 0, time.Local)
 
 	expectedData := dashboard.DashboardData{
 		TotalTransactions: 100,
