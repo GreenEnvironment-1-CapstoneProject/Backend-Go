@@ -12,6 +12,9 @@ import (
 	CartController "greenenvironment/features/cart/controller"
 	CartRepository "greenenvironment/features/cart/repository"
 	CartService "greenenvironment/features/cart/service"
+	ChallengeController "greenenvironment/features/challenges/controller"
+	ChallengeRepository "greenenvironment/features/challenges/repository"
+	ChallengeService "greenenvironment/features/challenges/service"
 	ChatbotController "greenenvironment/features/chatbot/controller"
 	ChatbotRepository "greenenvironment/features/chatbot/repository"
 	ChatbotService "greenenvironment/features/chatbot/service"
@@ -21,12 +24,6 @@ import (
 	ForumController "greenenvironment/features/forum/controller"
 	ForumRepository "greenenvironment/features/forum/repository"
 	ForumService "greenenvironment/features/forum/service"
-	ChallengeController "greenenvironment/features/challenges/controller"
-	ChallengeRepository "greenenvironment/features/challenges/repository"
-	ChallengeService "greenenvironment/features/challenges/service"
-	GuestController "greenenvironment/features/guest/controller"
-	GuestRepository "greenenvironment/features/guest/repository"
-	guestService "greenenvironment/features/guest/service"
 	ImpactController "greenenvironment/features/impacts/controller"
 	ImpactRepository "greenenvironment/features/impacts/repository"
 	ImpactService "greenenvironment/features/impacts/service"
@@ -120,10 +117,6 @@ func main() {
 	productService := ProductService.NewProductService(productRepo, impactRepo)
 	productController := ProductController.NewProductController(productService, jwt)
 
-	guestRepo := GuestRepository.NewGuestRepository(db)
-	guestService := guestService.NewGuestService(guestRepo)
-	guestController := GuestController.NewGuestController(guestService)
-
 	cartRepo := CartRepository.NewCartRepository(db)
 	cartService := CartService.NewCartService(cartRepo)
 	cartController := CartController.NewCartController(cartService, jwt)
@@ -176,7 +169,6 @@ func main() {
 	routes.RoutesProducts(e, productController, *cfg)
 	routes.RouteImpacts(e, impactController, *cfg)
 	routes.RouteStorage(e, storage, *cfg)
-	routes.RouteGuest(e, guestController)
 	routes.RouteCart(e, cartController, *cfg)
 	routes.RouteTransaction(e, transactionController, *cfg)
 	routes.PaymentNotification(e, webhookController)
