@@ -290,7 +290,7 @@ func (cs *ChallengeService) ClaimRewards(challengeLogID, userID string) error {
 }
 
 func (cs *ChallengeService) GetActiveChallenges(userID string, page, perPage int, difficulty, title string) ([]challenges.ChallengeLog, int, error) {
-	return cs.challengeRepo.GetActiveChallengeLogByUserID(userID, page, perPage, difficulty, title)
+	return cs.challengeRepo.GetChallengeLogByUserID(userID, page, perPage, difficulty, title)
 }
 
 func (cs *ChallengeService) GetUnclaimedChallenges(userID string, isAdmin bool, page, limit int, difficulty, title string) ([]challenges.Challenge, int, error) {

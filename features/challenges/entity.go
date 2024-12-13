@@ -127,7 +127,7 @@ type ChallengeRepoInterface interface {
 	GetChallengeIDByLogID(challengeLogID string) (string, error)
 	GetChallengeRewards(challengeID string) (int, int, error)
 
-	GetActiveChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]ChallengeLog, int, error)
+	GetChallengeLogByUserID(userID string, page, perPage int, difficulty, title string) ([]ChallengeLog, int, error)
 	GetUnclaimedChallenges(userID string, isAdmin bool, page int, limit int, difficulty, title string) ([]Challenge, int, error)
 	GetChallengeLogByID(challengeLogID string) (ChallengeLog, error)
 	GetChallengeByID(challengeID string) (Challenge, error)
