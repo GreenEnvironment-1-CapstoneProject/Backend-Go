@@ -87,30 +87,30 @@ func (cs *ChallengeService) Delete(challengeID string) error {
 func (cs *ChallengeService) CreateTask(challengeID, name string, dayNumber int, taskDescription string) error {
 	challenge, err := cs.challengeRepo.GetByID(challengeID)
 	if err != nil || challenge.ID == "" {
-			return constant.ErrChallengeNotFound
+		return constant.ErrChallengeNotFound
 	}
 
 	if dayNumber < 1 || dayNumber > challenge.DurationDays {
-			return constant.ErrInvalidDayNumber
+		return constant.ErrInvalidDayNumber
 	}
 
 	tasks, err := cs.challengeRepo.GetTasksByChallengeID(challengeID)
 	if err != nil {
-			return err
+		return err
 	}
 
 	for _, task := range tasks {
-			if task.DayNumber == dayNumber {
-					return constant.ErrTaskAlreadyExists
-			}
+		if task.DayNumber == dayNumber {
+			return constant.ErrTaskAlreadyExists
+		}
 	}
 
 	task := challenges.ChallengeTask{
-			ID:              uuid.New().String(),
-			ChallengeID:     challengeID,
-			Name:            name,
-			DayNumber:       dayNumber,
-			TaskDescription: taskDescription,
+		ID:              uuid.New().String(),
+		ChallengeID:     challengeID,
+		Name:            name,
+		DayNumber:       dayNumber,
+		TaskDescription: taskDescription,
 	}
 
 	return cs.challengeRepo.CreateTask(task)
@@ -332,15 +332,17 @@ func (cs *ChallengeService) GetChallengeDetails(challengeID string) (challenges.
 	}
 
 	details := challenges.ChallengeDetails{
-		ID:           challenge.ID,
-		Title:        challenge.Title,
-		Difficulty:   challenge.Difficulty,
-		ChallengeImg: challenge.ChallengeImg,
-		Description:  challenge.Description,
-		DurationDays: challenge.DurationDays,
-		Exp:          challenge.Exp,
-		Coin:         challenge.Coin,
-		Tasks:        tasks,
+		ID:               challenge.ID,
+		Title:            challenge.Title,
+		Difficulty:       challenge.Difficulty,
+		ActionCount:      challenge.ActionCount,
+		ParticipantCount: challenge.ParticipantCount,
+		ChallengeImg:     challenge.ChallengeImg,
+		Description:      challenge.Description,
+		DurationDays:     challenge.DurationDays,
+		Exp:              challenge.Exp,
+		Coin:             challenge.Coin,
+		Tasks:            tasks,
 	}
 
 	return details, nil
