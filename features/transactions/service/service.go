@@ -140,3 +140,21 @@ func (ts *TransactionService) DeleteTransaction(transactionId string) error {
 func (ts *TransactionService) GetAllTransaction(page int) ([]transactions.TransactionData, int, int, error) {
 	return ts.transactionRepo.GetAllTransaction(page)
 }
+
+func (ts *TransactionService) CancelTransaction(transactionId string) error {
+	transaction, err := ts.GetTransactionByID(transactionId)
+	if err != nil {
+		return err
+	}
+	if transaction.Status == "cancel" {
+		return errors.New("transaction already cancel")
+	}
+	ts.midtransService.InitializeClientMidtrans()
+
+	err = ts.midtransService.CancelTransaction(transactionId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -89,6 +89,11 @@ func (m *MockMidtransService) CreateUrlTransactionWithGateway(snap midtrans.Crea
 	args := m.Called(snap)
 	return args.String(0)
 }
+
+func (m *MockMidtransService) CancelTransaction(orderId string) error {
+	args := m.Called(orderId)
+	return args.Error(0)
+}
 func TestGetUserTransaction(t *testing.T) {
 	mockRepo := new(MockTransactionRepo)
 	mockMidtrans := new(MockMidtransService)

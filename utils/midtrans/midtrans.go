@@ -2,19 +2,23 @@ package midtrans
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"greenenvironment/configs"
 
 	"github.com/midtrans/midtrans-go"
+	"github.com/midtrans/midtrans-go/coreapi"
 	"github.com/midtrans/midtrans-go/snap"
 )
 
 var snapClient snap.Client
+var coreApiClient coreapi.Client
 
 type PaymentGatewayInterface interface {
 	InitializeClientMidtrans()
 	CreateTransaction(snap CreatePaymentGateway) string
 	CreateUrlTransactionWithGateway(snap CreatePaymentGateway) string
+	CancelTransaction(orderId string) error
 }
 
 type CreatePaymentGateway struct {
@@ -35,6 +39,7 @@ func NewPaymentGateway(conf configs.MidtransConfig) PaymentGatewayInterface {
 }
 func (r PaymentGateway) InitializeClientMidtrans() {
 	snapClient.New(r.conf.ServerKey, midtrans.Sandbox)
+	coreApiClient.New(r.conf.ServerKey, midtrans.Sandbox)
 }
 
 func (r PaymentGateway) CreateTransaction(req CreatePaymentGateway) string {
@@ -59,6 +64,15 @@ func (r PaymentGateway) CreateUrlTransactionWithGateway(req CreatePaymentGateway
 	}
 
 	return snapUrl
+}
+
+func (r PaymentGateway) CancelTransaction(orderId string) error {
+	_, err := coreApiClient.CancelTransaction(orderId)
+	if err != nil {
+		return errors.New("not found transaction id")
+	}
+
+	return nil
 }
 
 func generateSnapReq(req CreatePaymentGateway) *snap.Request {

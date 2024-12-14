@@ -73,6 +73,7 @@ type TransactionServiceInterface interface {
 	CreateTransaction(transaction CreateTransaction) (Transaction, error)
 	DeleteTransaction(transactionId string) error
 	GetAllTransaction(page int) ([]TransactionData, int, int, error)
+	CancelTransaction(transactionId string) error
 }
 
 type TransactionControllerInterface interface {
@@ -81,4 +82,5 @@ type TransactionControllerInterface interface {
 	DeleteTransaction(c echo.Context) error
 	GetAllTransaction(c echo.Context) error
 	GetTransactionByID(c echo.Context) error
+	CancelTransaction(c echo.Context) error
 }

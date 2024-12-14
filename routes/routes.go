@@ -125,6 +125,7 @@ func RouteTransaction(e *echo.Echo, tc transactions.TransactionControllerInterfa
 
 	e.GET("/api/v1/admin/transactions", tc.GetAllTransaction, echojwt.WithConfig(jwtConfig))
 	e.GET("/api/v1/admin/transactions/:id", tc.GetTransactionByID, echojwt.WithConfig(jwtConfig))
+	e.PUT("/api/v1/transactions/:id/cancel", tc.CancelTransaction, echojwt.WithConfig(jwtConfig))
 }
 
 func PaymentNotification(e *echo.Echo, wh webhook.MidtransNotificationController) {
