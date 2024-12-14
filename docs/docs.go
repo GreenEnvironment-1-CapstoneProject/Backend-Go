@@ -1523,7 +1523,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/helper.Response"
+                                    "$ref": "#/definitions/helper.MetadataResponse"
                                 },
                                 {
                                     "type": "object",
@@ -4018,59 +4018,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/guest/products": {
-            "get": {
-                "description": "Retrieve a list of products available for guest users.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Guest"
-                ],
-                "summary": "Get Guest Product",
-                "responses": {
-                    "200": {
-                        "description": "Successful response with product data",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controller.GuestResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/impacts": {
             "get": {
                 "description": "Get a list of all impact categories",
@@ -5541,7 +5488,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/helper.Response"
+                                    "$ref": "#/definitions/helper.MetadataResponse"
                                 },
                                 {
                                     "type": "object",
@@ -5733,6 +5680,93 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Transaction deleted successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/{id}/cancel": {
+            "put": {
+                "description": "Cancel a transaction by ID. Only accessible by admin users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Cancel a transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transaction canceled successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -6995,6 +7029,9 @@ const docTemplate = `{
         "challenges.ChallengeDetails": {
             "type": "object",
             "properties": {
+                "actionCount": {
+                    "type": "integer"
+                },
                 "challengeImg": {
                     "type": "string"
                 },
@@ -7015,6 +7052,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "participantCount": {
+                    "type": "integer"
                 },
                 "tasks": {
                     "type": "array",
@@ -7233,7 +7273,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/controller.ChallengeResponse"
                 },
                 "challenge_confirmation": {
-                    "$ref": "#/definitions/controller.ChallengeConfirmationResponse"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.ChallengeConfirmationResponse"
+                    }
                 },
                 "feed": {
                     "type": "string"
@@ -7573,23 +7616,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "views": {
-                    "type": "integer"
-                }
-            }
-        },
-        "controller.GuestResponse": {
-            "type": "object",
-            "properties": {
-                "new_products": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/controller.ProductResponse"
-                    }
-                },
-                "total_new_product_this_month": {
-                    "type": "integer"
-                },
-                "total_product": {
                     "type": "integer"
                 }
             }
@@ -8344,7 +8370,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "https://greenenvironment.my.id",
+	Host:             "greenenvironment.my.id",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "capstone project green environment",

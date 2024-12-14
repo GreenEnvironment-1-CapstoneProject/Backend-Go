@@ -240,3 +240,36 @@ func (tc *TransactionController) GetTransactionByID(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, helper.FormatResponse(true, "get transactions by id successfully", response))
 }
+
+// Cancel Transaction
+// @Summary      Cancel a transaction
+// @Description  Cancel a transaction by ID. Only accessible by admin users.
+// @Tags         Transactions
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true   "Bearer Token"
+// @Param        id             path      string  true   "Transaction ID"
+// @Success      200  {object}  helper.Response{data=string} "Transaction canceled successfully"
+// @Failure      401  {object}  helper.Response{data=string} "Unauthorized"
+// @Failure      500  {object}  helper.Response{data=string} "Internal server error"
+// @Router       /transactions/{id}/cancel [put]
+func (tc *TransactionController) CancelTransaction(c echo.Context) error {
+	tokenString := c.Request().Header.Get("Authorization")
+	_, err := tc.jwtService.ValidateToken(tokenString)
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	paramId := c.Param("id")
+	transactionId, err := uuid.Parse(paramId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	err = tc.transactionService.CancelTransaction(transactionId.String())
+	if err != nil {
+		return c.JSON(helper.ConvertResponseCode(err), helper.FormatResponse(false, err.Error(), nil))
+	}
+
+	return c.JSON(http.StatusOK, helper.FormatResponse(true, "cancel transaction successfully", nil))
+}
