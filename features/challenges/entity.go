@@ -78,15 +78,17 @@ type ChallengeLogDetails struct {
 }
 
 type ChallengeDetails struct {
-	ID           string
-	Title        string
-	Difficulty   string
-	ChallengeImg string
-	Description  string
-	DurationDays int
-	Exp          int
-	Coin         int
-	Tasks        []ChallengeTask
+	ID               string
+	Title            string
+	Difficulty       string
+	ChallengeImg     string
+	Description      string
+	DurationDays     int
+	Exp              int
+	Coin             int
+	ActionCount      int
+	ParticipantCount int
+	Tasks            []ChallengeTask
 }
 
 type ChallengeWithCounts struct {

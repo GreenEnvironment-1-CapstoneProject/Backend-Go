@@ -1407,24 +1407,28 @@ func TestGetChallengeDetails_Success(t *testing.T) {
 	challengeID := "challenge1"
 
 	mockChallengeRepo.On("GetChallengeByID", challengeID).Return(challenges.Challenge{
-		ID:           challengeID,
-		Title:        "Plant Trees",
-		Difficulty:   "medium",
-		ChallengeImg: "image_url",
-		Description:  "Description of challenge",
-		DurationDays: 30,
-		Exp:          100,
-		Coin:         50,
+			ID:               challengeID,
+			Title:            "Plant Trees",
+			Difficulty:       "medium",
+			ChallengeImg:     "image_url",
+			Description:      "Description of challenge",
+			DurationDays:     30,
+			Exp:              100,
+			Coin:             50,
+			ParticipantCount: 10,
+			ActionCount:      3,
 	}, nil)
 
 	mockChallengeRepo.On("GetTasksByChallengeIDforUser", challengeID).Return([]challenges.ChallengeTask{
-		{ID: "task1", Name: "Task 1", DayNumber: 1, TaskDescription: "Description for task 1"},
+			{ID: "task1", Name: "Task 1", DayNumber: 1, TaskDescription: "Description for task 1"},
 	}, nil)
 
 	details, err := service.GetChallengeDetails(challengeID)
 
 	assert.NoError(t, err)
 	assert.Equal(t, challengeID, details.ID)
+	assert.Equal(t, 10, details.ParticipantCount)
+	assert.Equal(t, 3, details.ActionCount)
 	assert.Len(t, details.Tasks, 1)
 	mockChallengeRepo.AssertCalled(t, "GetChallengeByID", challengeID)
 	mockChallengeRepo.AssertCalled(t, "GetTasksByChallengeIDforUser", challengeID)
