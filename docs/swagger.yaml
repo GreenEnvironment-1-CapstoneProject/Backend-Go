@@ -2,6 +2,8 @@ basePath: /api/v1
 definitions:
   challenges.ChallengeDetails:
     properties:
+      actionCount:
+        type: integer
       challengeImg:
         type: string
       coin:
@@ -16,6 +18,8 @@ definitions:
         type: integer
       id:
         type: string
+      participantCount:
+        type: integer
       tasks:
         items:
           $ref: '#/definitions/challenges.ChallengeTask'
@@ -158,7 +162,9 @@ definitions:
       challenge:
         $ref: '#/definitions/controller.ChallengeResponse'
       challenge_confirmation:
-        $ref: '#/definitions/controller.ChallengeConfirmationResponse'
+        items:
+          $ref: '#/definitions/controller.ChallengeConfirmationResponse'
+        type: array
       feed:
         type: string
       id:
@@ -386,17 +392,6 @@ definitions:
       updated_at:
         type: string
       views:
-        type: integer
-    type: object
-  controller.GuestResponse:
-    properties:
-      new_products:
-        items:
-          $ref: '#/definitions/controller.ProductResponse'
-        type: array
-      total_new_product_this_month:
-        type: integer
-      total_product:
         type: integer
     type: object
   controller.ImpactCategoryResponse:
@@ -888,7 +883,7 @@ definitions:
       image_url:
         type: string
     type: object
-host: https://greenenvironment.my.id
+host: greenenvironment.my.id
 info:
   contact:
     email: support@swagger.io
@@ -1746,7 +1741,7 @@ paths:
           description: Transactions retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/helper.Response'
+            - $ref: '#/definitions/helper.MetadataResponse'
             - properties:
                 data:
                   items:
@@ -3236,35 +3231,6 @@ paths:
       summary: Get Forums by User ID
       tags:
       - Forum
-  /guest/products:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a list of products available for guest users.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successful response with product data
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/controller.GuestResponse'
-              type: object
-        "500":
-          description: Internal server error
-          schema:
-            allOf:
-            - $ref: '#/definitions/helper.Response'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: Get Guest Product
-      tags:
-      - Guest
   /impacts:
     get:
       consumes:
@@ -4080,7 +4046,7 @@ paths:
           description: Transactions retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/helper.Response'
+            - $ref: '#/definitions/helper.MetadataResponse'
             - properties:
                 data:
                   items:
@@ -4213,6 +4179,55 @@ paths:
                   type: string
               type: object
       summary: Delete a transaction
+      tags:
+      - Transactions
+  /transactions/{id}/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Cancel a transaction by ID. Only accessible by admin users.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transaction canceled successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/helper.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Cancel a transaction
       tags:
       - Transactions
   /users/avatar:

@@ -15,7 +15,7 @@
         },
         "version": "1.0"
     },
-    "host": "https://greenenvironment.my.id",
+    "host": "greenenvironment.my.id",
     "basePath": "/api/v1",
     "paths": {
         "/admin": {
@@ -1517,7 +1517,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/helper.Response"
+                                    "$ref": "#/definitions/helper.MetadataResponse"
                                 },
                                 {
                                     "type": "object",
@@ -4012,59 +4012,6 @@
                 }
             }
         },
-        "/guest/products": {
-            "get": {
-                "description": "Retrieve a list of products available for guest users.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Guest"
-                ],
-                "summary": "Get Guest Product",
-                "responses": {
-                    "200": {
-                        "description": "Successful response with product data",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controller.GuestResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/helper.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/impacts": {
             "get": {
                 "description": "Get a list of all impact categories",
@@ -5535,7 +5482,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/helper.Response"
+                                    "$ref": "#/definitions/helper.MetadataResponse"
                                 },
                                 {
                                     "type": "object",
@@ -5727,6 +5674,93 @@
                 "responses": {
                     "200": {
                         "description": "Transaction deleted successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helper.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/{id}/cancel": {
+            "put": {
+                "description": "Cancel a transaction by ID. Only accessible by admin users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Cancel a transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transaction canceled successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -6989,6 +7023,9 @@
         "challenges.ChallengeDetails": {
             "type": "object",
             "properties": {
+                "actionCount": {
+                    "type": "integer"
+                },
                 "challengeImg": {
                     "type": "string"
                 },
@@ -7009,6 +7046,9 @@
                 },
                 "id": {
                     "type": "string"
+                },
+                "participantCount": {
+                    "type": "integer"
                 },
                 "tasks": {
                     "type": "array",
@@ -7227,7 +7267,10 @@
                     "$ref": "#/definitions/controller.ChallengeResponse"
                 },
                 "challenge_confirmation": {
-                    "$ref": "#/definitions/controller.ChallengeConfirmationResponse"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.ChallengeConfirmationResponse"
+                    }
                 },
                 "feed": {
                     "type": "string"
@@ -7567,23 +7610,6 @@
                     "type": "string"
                 },
                 "views": {
-                    "type": "integer"
-                }
-            }
-        },
-        "controller.GuestResponse": {
-            "type": "object",
-            "properties": {
-                "new_products": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/controller.ProductResponse"
-                    }
-                },
-                "total_new_product_this_month": {
-                    "type": "integer"
-                },
-                "total_product": {
                     "type": "integer"
                 }
             }
