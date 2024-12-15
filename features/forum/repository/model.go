@@ -14,7 +14,7 @@ type Forum struct {
 	TopicImage    string     `gorm:"column:topic_image"`
 	View          int        `gorm:"default:0;column:view"`
 	UserID        string     `gorm:"type:varchar(50);not null;column:user_id"`
-	User          users.User `gorm:"foreignKey:UserID;references:ID"`
+	User          users.User `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Description   string     `gorm:"type:varchar(255);not null;column:description"`
 	LastMessageAt time.Time  `gorm:"column:last_message_at"`
 	CreatedAt     time.Time  `gorm:"column:created_at"`
@@ -24,11 +24,11 @@ type MessageForum struct {
 	*gorm.Model
 	ID           string     `gorm:"primary_key;type:varchar(50);not null;column:id"`
 	ForumID      string     `gorm:"type:varchar(50);not null;column:forum_id"`
-	Forum        Forum      `gorm:"foreignKey:ForumID;references:ID"`
+	Forum        Forum      `gorm:"foreignKey:ForumID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	MessageImage string     `gorm:"column:message_image"`
 	Message      string     `gorm:"type:varchar(255);not null;column:message"`
 	UserID       string     `gorm:"type:varchar(50);not null;column:user_id"`
-	User         users.User `gorm:"foreignKey:UserID;references:ID"`
+	User         users.User `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (Forum) TableName() string {

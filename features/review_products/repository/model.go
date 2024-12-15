@@ -15,8 +15,8 @@ type ReviewProduct struct {
 	ProductID string               `gorm:"not null;type:varchar(50);column:product_id"`
 	Review    string               `gorm:"not null;type:text;column:review"`
 	Rate      int                  `gorm:"not null;column:rate"`
-	Product   productModel.Product `gorm:"foreignKey:ProductID;references:ID"`
-	User      userModel.User       `gorm:"foreignKey:UserID;references:ID"`
+	Product   productModel.Product `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	User      userModel.User       `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (c *ReviewProduct) TableName() string {
