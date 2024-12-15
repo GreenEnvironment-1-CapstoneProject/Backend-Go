@@ -17,7 +17,7 @@ type User struct {
 	Gender       string `gorm:"type:varchar(255);column:gender"`
 	Phone        string `gorm:"type:varchar(255);column:phone"`
 	Exp          int    `gorm:"type:int;not null;column:exp"`
-	Coin         int    `gorm:"type:int;not nullcolumn:coin"`
+	Coin         int    `gorm:"type:int;not null;column:coin"`
 	AvatarURL    string `gorm:"type:varchar(255);column:avatar_url"`
 	IsMembership bool   `gorm:"type:boolean;column:is_membership;default:false"`
 }
