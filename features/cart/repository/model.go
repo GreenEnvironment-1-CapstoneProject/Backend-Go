@@ -17,10 +17,10 @@ type Cart struct {
 	UserID                string                               `gorm:"not null;type:varchar(50);column:user_id"`
 	ProductID             string                               `gorm:"not null;type:varchar(50);column:product_id"`
 	Quantity              int                                  `gorm:"not null;column:quantity"`
-	Product               productModel.Product                 `gorm:"foreignKey:ProductID;references:ID"`
-	ProductImage          []productModel.ProductImage          `gorm:"foreignKey:ProductID;references:ID"`
-	ProductImpactCategory []productModel.ProductImpactCategory `gorm:"foreignKey:ProductID;references:ID"`
-	User                  userModel.User                       `gorm:"foreignKey:UserID;references:ID"`
+	Product               productModel.Product                 `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ProductImage          []productModel.ProductImage          `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ProductImpactCategory []productModel.ProductImpactCategory `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	User                  userModel.User                       `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (c *Cart) TableName() string {

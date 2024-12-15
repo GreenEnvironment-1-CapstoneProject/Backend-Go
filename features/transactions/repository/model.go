@@ -17,8 +17,8 @@ type Transaction struct {
 	PaymentMethod    string            `gorm:"type:varchar(50);column:payment_method"`
 	SnapURL          string            `gorm:"type:varchar(255);not null;column:snap_url"`
 	Coin             int               `gorm:"type:int;column:coin"`
-	User             users.User        `gorm:"foreignKey:UserID;references:ID"`
-	TransactionItems []TransactionItem `gorm:"foreignKey:TransactionID;references:ID"`
+	User             users.User        `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	TransactionItems []TransactionItem `gorm:"foreignKey:TransactionID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type TransactionItem struct {
@@ -27,8 +27,8 @@ type TransactionItem struct {
 	TransactionID string           `gorm:"type:varchar(50);not null;column:transaction_id"`
 	ProductID     string           `gorm:"type:varchar(50);not null;column:product_id"`
 	Quantity      int              `gorm:"type:int;not null;column:quantity"`
-	Transaction   Transaction      `gorm:"foreignKey:TransactionID;references:ID"`
-	Product       products.Product `gorm:"foreignKey:ProductID;references:ID"`
+	Transaction   Transaction      `gorm:"foreignKey:TransactionID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Product       products.Product `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (Transaction) TableName() string {

@@ -16,8 +16,8 @@ type Product struct {
 	Coin             int                     `gorm:"type:int;not null;column:coin"`
 	Stock            int                     `gorm:"type:int;not null;column:stock"`
 	Category         string                  `gorm:"type:varchar(255);not null;column:category"`
-	Images           []ProductImage          `gorm:"foreignKey:ProductID"`
-	ImpactCategories []ProductImpactCategory `gorm:"foreignKey:ProductID"`
+	Images           []ProductImage          `gorm:"foreignKey:ProductID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ImpactCategories []ProductImpactCategory `gorm:"foreignKey:ProductID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type ProductImage struct {
@@ -25,7 +25,7 @@ type ProductImage struct {
 	ID        string  `gorm:"primary_key;type:varchar(50);not null;column:id"`
 	ProductID string  `gorm:"type:varchar(50);not null;column:product_id"`
 	AlbumsURL string  `gorm:"type:varchar(255);not null;column:albums_url"`
-	Product   Product `gorm:"foreignKey:ProductID;references:ID"`
+	Product   Product `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type ProductImpactCategory struct {
@@ -33,8 +33,8 @@ type ProductImpactCategory struct {
 	ID               string                        `gorm:"primary_key;type:varchar(50);not null;column:id"`
 	ProductID        string                        `gorm:"type:varchar(50);not null;column:product_id"`
 	ImpactCategoryID string                        `gorm:"type:varchar(50);not null;column:impact_category_id"`
-	Product          Product                       `gorm:"foreignKey:ProductID;references:ID"`
-	ImpactCategory   impactcategory.ImpactCategory `gorm:"foreignKey:ImpactCategoryID;references:ID"`
+	Product          Product                       `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ImpactCategory   impactcategory.ImpactCategory `gorm:"foreignKey:ImpactCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type ProductLog struct {
@@ -42,6 +42,6 @@ type ProductLog struct {
 	ID        string     `gorm:"primary_key;type:varchar(50);not null;column:id"`
 	UserID    string     `gorm:"type:varchar(50);not null;column:user_id"`
 	ProductID string     `gorm:"type:varchar(50);not null;column:product_id"`
-	User      users.User `gorm:"foreignKey:UserID;references:ID"`
-	Product   Product    `gorm:"foreignKey:ProductID;references:ID"`
+	User      users.User `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Product   Product    `gorm:"foreignKey:ProductID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

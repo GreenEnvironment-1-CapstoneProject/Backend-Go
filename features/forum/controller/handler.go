@@ -336,14 +336,19 @@ func (h *ForumController) DeleteForum(c echo.Context) error {
 		return helper.UnauthorizedError(c)
 	}
 
-	adminData := h.jwtService.ExtractAdminToken(token)
-	role := adminData[constant.JWT_ROLE]
-
-	if role != constant.RoleAdmin {
-		return helper.UnauthorizedError(c)
-	}
+	userData := h.jwtService.ExtractUserToken(token)
+	userId := userData[constant.JWT_ID].(string)
 
 	forumID := c.Param("id")
+
+	existingForum, err := h.forumService.GetForumByID(forumID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, helper.FormatResponse(false, string(err.Error()), nil))
+	}
+
+	if existingForum.UserID != userId {
+		return c.JSON(http.StatusForbidden, helper.FormatResponse(false, "error forbidden", nil))
+	}
 
 	err = h.forumService.DeleteForum(forumID)
 	if err != nil {
