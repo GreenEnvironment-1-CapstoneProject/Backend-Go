@@ -13,99 +13,70 @@
   
 </div>
 
+## Table of Contents
+
+- [About](#-about-ecomate)
+- [Features](#-key-features)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Technology Stack](#️-technology-stack)
+- [Getting Started](#-getting-started)
+- [API Documentation](#-api-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
+
 ## 📖 About EcoMate
 
 EcoMate is a comprehensive environmental platform designed to empower users in their journey towards sustainable living. Our mission is to make eco-friendly choices accessible and rewarding for everyone.
 
-### 🌟 Key Features
+## 🌟 Key Features
+
+### Core Features
 
 - **Eco-friendly Marketplace**: Browse and purchase sustainable products
 - **Community Challenges**: Participate in eco-challenges
 - **Discussion Forums**: Connect with like-minded individuals
-- **Reward System**: Earn points for sustainable actions
-- **Chatbot**: ask AI about the green environment
+- **Impact Tracking**: Monitor environmental contributions
+- **Leaderboard System**: Compete and earn recognition
 
-## 🛠️ Technology Stack
+### Technical Features
 
-- **Backend**: Go (Golang)
-- **Framework**: Echo
-- **Database**: MySQL with GORM
-- **Authentication**: JWT
-- **Cloud Storage**: Cloudinary
-- **Payment Gateway**: Midtrans
-- **ChatBot**: OpenAI
-- **Email Service**: SMTP
+- **AI-Powered Chatbot**: Environmental information assistant
+- **Secure Authentication**: JWT and Google OAuth integration
+- **Cloud Storage**: Efficient media handling with Cloudinary
+- **Payment Processing**: Secure transactions via Midtrans
+- **Email Notifications**: Automated communications via SMTP
 
-## 🚀 Getting Started
+## 📊 Architecture
 
-### Prerequisites
+### Clean Architecture Implementation
 
-- Go 1.23 or higher
-- MySQL 7.0 or higher
-- Git
+The project follows clean architecture principles with clear separation of concerns:
 
-### Installation
+1. **Entity Layer** (`entity.go`)
 
-1. Clone the repository
+   - Core business rules and entities
+   - Independent of external frameworks
 
-```bash
-git clone https://github.com/GreenEnvironment-1-CapstoneProject/Backend-Go.git
-cd backend-capstone
-```
+2. **Use Case Layer** (`service/`)
 
-2. Install dependencies
+   - Application-specific business rules
+   - Orchestrates data flow between entities
 
-```bash
-go mod tidy
-```
+3. **Interface Adapters** (`controller/`, `repository/`)
 
-3. Configure environment variables
+   - Controllers handle HTTP requests
+   - Repositories manage data persistence
 
-```env
-# APP
-APP_PORT=your_app_port
+4. **External Interfaces** (`utils/`, `helper/`)
+   - Frameworks and tools
+   - External service integrations
 
-# Database Configuration
-DB_HOST=your_db_host
-DB_PORT=your_db_port
-DB_USER=your_db_user
-DB_PASS=your_db_password
-DB_NAME=your_db_name
+### Visual Architecture
 
-# Email Configuration
-SMTP_USER=your_smtp_user
-SMTP_PASS=your_smtp_password
-SMTP_HOST=your_smtp_host
-SMTP_PORT=your_smtp_port
-
-# Authentication
-JWT_SECRET=your_jwt_secret
-
-# Google Cloud Storage
-PROJECT_ID=your_project_id
-BUCKET_NAME=your_bucket_name
-GOOGLE_APPLICATION_CREDENTIALS=path_to_credentials
-
-# Payment Gateway
-MIDTRANS_CLIENT_KEY=your_client_key
-MIDTRANS_SERVER_KEY=your_server_key
-
-# Open AI
-OPENAI_API_KEY=
-
-
-# Google
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-```
-
-4. Run the application
-
-```bash
-go run main.go
-```
-
-## 📊 System Architecture
+<div align="center">
+  <img src="./assets/HLA Capastone Project.png" alt="High-Level Architecture" width="800"/>
+</div>
 
 ### Database Schema
 
@@ -113,41 +84,126 @@ go run main.go
   <img src="./assets/Capstone-_Kelompok1-ERD.drawio (2).png" alt="Database Schema" width="800"/>
 </div>
 
-### High-Level Architecture
+## 📂 Project Structure
 
-<div align="center">
-  <img src="./assets/HLA Capastone Project.png" alt="High-Level Architecture" width="800"/>
-</div>
+```
+├── assets/                    # Static assets and images
+├── configs/                   # Application configuration
+├── constant/                  # Constants and enums
+│   ├── route/                # Route constants
+│   └── ...                   # Other constants
+├── docs/                      # API documentation
+├── features/                  # Core business features
+│   ├── users/                # User management
+│   ├── products/             # Product management
+│   ├── challenges/           # Challenge system
+│   ├── forum/                # Discussion forums
+│   ├── transactions/         # Payment processing
+│   └── ...                   # Other features
+├── helper/                    # Utility helpers
+├── routes/                    # Route definitions
+├── utils/                     # Shared utilities
+│   ├── databases/            # Database utilities
+│   ├── google/               # Google OAuth
+│   ├── midtrans/             # Payment gateway
+│   ├── openai/               # AI integration
+│   └── storages/             # File storage
+└── main.go                    # Application entry point
+```
 
-## 🔐 API Features
+Each feature follows a consistent structure:
 
-### User Management
+```
+feature/
+├── controller/               # HTTP handlers
+│   ├── handler.go           # Request handling
+│   ├── request.go           # Request DTOs
+│   └── response.go          # Response DTOs
+├── repository/              # Data access
+│   ├── model.go             # Database models
+│   └── query.go             # Database queries
+├── service/                 # Business logic
+│   ├── service.go           # Core logic
+│   └── service_test.go      # Unit tests
+└── entity.go                # Domain entities
+```
 
-- Registration and Authentication
-- Profile Management
-- Password Reset
-- Role-based Access Control
+## 🛠️ Technology Stack
 
-### Product Management
+### Core Technologies
 
-- Product Catalog
-- Shopping Cart
-- Order Management
-- Payment Processing
+- **Backend**: Go 1.23+
+- **Framework**: Echo
+- **Database**: MySQL 7.0+ with GORM
+- **Documentation**: Swagger
 
-### Community Features
+### External Services
 
-- Challenge Participation
-- Leaderboards
-- Discussion Forums
-- Impacts
+- **Authentication**: JWT, Google OAuth
+- **Storage**: Cloudinary
+- **Payments**: Midtrans
+- **AI**: OpenAI
+- **Email**: SMTP
 
-### Administrative Tools
+## 🚀 Getting Started
 
-- User Management
-- Product Management
-- Challenge Administration
-- Analytics Dashboard
+### Prerequisites
+
+- Go 1.23+
+- MySQL 7.0+
+- Git
+
+### Installation
+
+1. **Clone Repository**
+
+```bash
+git clone https://github.com/GreenEnvironment-1-CapstoneProject/Backend-Go.git
+cd backend-capstone
+```
+
+2. **Install Dependencies**
+
+```bash
+go mod tidy
+```
+
+3. **Configure Environment**
+   Create `.env` file:
+
+```env
+# Application
+APP_PORT=your_app_port
+
+# Database
+DB_HOST=your_db_host
+DB_PORT=your_db_port
+DB_USER=your_db_user
+DB_PASS=your_db_password
+DB_NAME=your_db_name
+
+# Authentication
+JWT_SECRET=your_jwt_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# External Services
+OPENAI_API_KEY=your_openai_key
+MIDTRANS_CLIENT_KEY=your_midtrans_client_key
+MIDTRANS_SERVER_KEY=your_midtrans_server_key
+
+# Email
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+SMTP_HOST=your_smtp_host
+SMTP_PORT=your_smtp_port
+```
+
+4. **Run Application**
+
+```bash
+go run main.go
+```
 
 ## 👥 Contributors
 
