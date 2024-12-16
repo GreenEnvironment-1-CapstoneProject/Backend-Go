@@ -27,8 +27,8 @@ func (u *ForumRepository) GetAllForum() ([]forum.Forum, error) {
 	return forum, nil
 }
 
-func (u *ForumRepository) GetAllByPage(page int) ([]forum.Forum, int, error) {
-	var forumData []forum.Forum
+func (u *ForumRepository) GetAllByPage(page int) ([]forum.ForumGetAll, int, error) {
+	var forumData []forum.ForumGetAll
 
 	var total int64
 	count := u.DB.Model(&forum.Forum{}).Where("deleted_at IS NULL").Count(&total)
@@ -39,7 +39,7 @@ func (u *ForumRepository) GetAllByPage(page int) ([]forum.Forum, int, error) {
 	dataforumPerPage := 20
 	totalPages := int((total + int64(dataforumPerPage) - 1) / int64(dataforumPerPage))
 
-	tx := u.DB.Model(&Forum{}).Preload("User").Order("GREATEST(COALESCE(last_message_at, '2000-01-01'), created_at) DESC").Offset((page - 1) * dataforumPerPage).Limit(dataforumPerPage).Find(&forumData)
+	tx := u.DB.Model(&Forum{}).Preload("User").Select("forums.*, (SELECT COUNT(*) FROM message_forums WHERE message_forums.forum_id = forums.id) AS message_count").Order("GREATEST(COALESCE(last_message_at, '2000-01-01'), created_at) DESC").Offset((page - 1) * dataforumPerPage).Limit(dataforumPerPage).Find(&forumData)
 	if tx.Error != nil {
 		return nil, 0, tx.Error
 	}

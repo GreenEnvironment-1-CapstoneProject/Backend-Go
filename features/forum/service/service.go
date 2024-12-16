@@ -21,7 +21,7 @@ func (s *ForumService) GetAllForum() ([]forum.Forum, error) {
 	return s.forumRepo.GetAllForum()
 }
 
-func (s *ForumService) GetAllByPage(page int) ([]forum.Forum, int, error) {
+func (s *ForumService) GetAllByPage(page int) ([]forum.ForumGetAll, int, error) {
 	return s.forumRepo.GetAllByPage(page)
 }
 
