@@ -60,14 +60,14 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-// @title capstone project green environment
+// @title Ecomate Rest API
 // @version 1.0
-// @description This is a sample server Swagger server.
+// @description API Documentation for Ecomate.
 // @termsOfService http://swagger.io/terms/
 
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
+// @contact.name Ecomate Team
+// @contact.email greenenvironmentcaps@gmail.com
+// @contact.url https://github.com/GreenEnvironment-1-CapstoneProject/Backend-Go
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
