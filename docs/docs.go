@@ -11,9 +11,9 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
+            "name": "Ecomate Team",
+            "url": "https://github.com/GreenEnvironment-1-CapstoneProject/Backend-Go",
+            "email": "greenenvironmentcaps@gmail.com"
         },
         "license": {
             "name": "Apache 2.0",
@@ -8373,8 +8373,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "greenenvironment.my.id",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "capstone project green environment",
-	Description:      "This is a sample server Swagger server.",
+	Title:            "Ecomate Rest API",
+	Description:      "API Documentation for Ecomate.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
