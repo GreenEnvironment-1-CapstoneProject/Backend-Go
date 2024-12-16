@@ -886,15 +886,15 @@ definitions:
 host: greenenvironment.my.id
 info:
   contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
-  description: This is a sample server Swagger server.
+    email: greenenvironmentcaps@gmail.com
+    name: Ecomate Team
+    url: https://github.com/GreenEnvironment-1-CapstoneProject/Backend-Go
+  description: API Documentation for Ecomate.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: capstone project green environment
+  title: Ecomate Rest API
   version: "1.0"
 paths:
   /admin:
