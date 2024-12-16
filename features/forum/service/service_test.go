@@ -20,9 +20,9 @@ func (m *MockForumRepository) GetAllForum() ([]forum.Forum, error) {
 	return args.Get(0).([]forum.Forum), args.Error(1)
 }
 
-func (m *MockForumRepository) GetAllByPage(page int) ([]forum.Forum, int, error) {
+func (m *MockForumRepository) GetAllByPage(page int) ([]forum.ForumGetAll, int, error) {
 	args := m.Called(page)
-	return args.Get(0).([]forum.Forum), args.Int(1), args.Error(2)
+	return args.Get(0).([]forum.ForumGetAll), args.Int(1), args.Error(2)
 }
 
 func (m *MockForumRepository) GetForumByID(ID string) (forum.Forum, error) {
@@ -143,7 +143,7 @@ func TestGetAllByPage(t *testing.T) {
 	mockRepo := new(MockForumRepository)
 	service := NewForumService(mockRepo)
 
-	expectedForums := []forum.Forum{{ID: "1", Title: "Forum 1"}, {ID: "2", Title: "Forum 2"}}
+	expectedForums := []forum.ForumGetAll{{ID: "1", Title: "Forum 1"}, {ID: "2", Title: "Forum 2"}}
 
 	// Positive case
 	mockRepo.On("GetAllByPage", 1).Return(expectedForums, 2, nil)

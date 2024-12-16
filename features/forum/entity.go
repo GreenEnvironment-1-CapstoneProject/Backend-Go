@@ -19,6 +19,19 @@ type Forum struct {
 	UpdatedAt   time.Time
 }
 
+type ForumGetAll struct {
+	ID           string
+	Title        string
+	Description  string
+	UserID       string
+	View         int
+	TopicImage   string
+	User         users.User
+	MessageCount int
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
 type MessageForum struct {
 	ID           string
 	UserID       string
@@ -63,7 +76,7 @@ type ForumControllerInterface interface {
 
 type ForumServiceInterface interface {
 	GetAllForum() ([]Forum, error)
-	GetAllByPage(page int) ([]Forum, int, error)
+	GetAllByPage(page int) ([]ForumGetAll, int, error)
 	GetForumByID(ID string) (Forum, error)
 	PostForum(Forum) error
 	GetForumByUserID(ID string, page int) ([]Forum, int, error)
@@ -80,7 +93,7 @@ type ForumServiceInterface interface {
 
 type ForumRepositoryInterface interface {
 	GetAllForum() ([]Forum, error)
-	GetAllByPage(page int) ([]Forum, int, error)
+	GetAllByPage(page int) ([]ForumGetAll, int, error)
 	GetForumByID(ID string) (Forum, error)
 	PostForum(Forum) error
 	GetForumByUserID(ID string, page int) ([]Forum, int, error)

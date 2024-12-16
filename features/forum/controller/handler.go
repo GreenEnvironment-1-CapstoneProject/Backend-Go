@@ -60,7 +60,7 @@ func (h *ForumController) GetAllForum(c echo.Context) error {
 	}
 
 	var totalPages int
-	var forums []forum.Forum
+	var forums []forum.ForumGetAll
 	forums, totalPages, err = h.forumService.GetAllByPage(page)
 	metadata := MetadataResponse{
 		CurrentPage: page,
@@ -75,14 +75,15 @@ func (h *ForumController) GetAllForum(c echo.Context) error {
 	var response []ForumGetAllResponse
 	for _, f := range forums {
 		response = append(response, ForumGetAllResponse{
-			ID:          f.ID,
-			Title:       f.Title,
-			Description: f.Description,
-			View:        f.View,
-			TopicImage:  f.TopicImage,
-			CreatedAt:   f.CreatedAt.Format("02/01/2006"),
-			UpdatedAt:   f.UpdatedAt.Format("02/01/2006"),
-			Author:      Author{ID: f.User.ID, Name: f.User.Name, Username: f.User.Username, Email: f.User.Email, AvatarURL: f.User.AvatarURL},
+			ID:           f.ID,
+			Title:        f.Title,
+			Description:  f.Description,
+			View:         f.View,
+			TopicImage:   f.TopicImage,
+			CreatedAt:    f.CreatedAt.Format("02/01/2006 15:04:05"),
+			UpdatedAt:    f.UpdatedAt.Format("02/01/2006 15:04:05"),
+			MessageCount: f.MessageCount,
+			Author:       Author{ID: f.User.ID, Name: f.User.Name, Username: f.User.Username, Email: f.User.Email, AvatarURL: f.User.AvatarURL},
 		})
 	}
 	return c.JSON(http.StatusOK, helper.MetadataFormatResponse(true, "get all forum successfully", metadata, response))
