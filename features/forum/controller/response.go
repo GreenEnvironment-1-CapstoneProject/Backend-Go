@@ -1,14 +1,15 @@
 package controller
 
 type ForumGetAllResponse struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	View        int    `json:"views"`
-	TopicImage  string `json:"topic_image"`
-	Author      Author `json:"author"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	View         int    `json:"views"`
+	TopicImage   string `json:"topic_image"`
+	Author       Author `json:"author"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
+	MessageCount int    `json:"message_count"`
 }
 
 type ForumGetDetailResponse struct {

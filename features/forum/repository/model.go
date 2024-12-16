@@ -16,6 +16,7 @@ type Forum struct {
 	UserID        string     `gorm:"type:varchar(50);not null;column:user_id"`
 	User          users.User `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Description   string     `gorm:"type:text;not null;column:description"`
+	MessageCount  int        `gorm:"-" json:"message_count"`
 	LastMessageAt time.Time  `gorm:"column:last_message_at"`
 	CreatedAt     time.Time  `gorm:"column:created_at"`
 }
